@@ -10,11 +10,13 @@ import settingIcon from '../icons/settingIcon.png';
 import '../styles/sideBar.css';
 
 function SideBar() {
+  console.log("수정사항")
+
   return (
     <div className="sidebar-container">
       <div className="profile-container">
         <img src={profileImg} alt="profile-img" className="profile-img" />
-        <span className="user-name">사용자이름</span>
+        <span className="user-name">사용자 이름</span>
       </div>
       <div className="menu-container">
         <a href="#">
