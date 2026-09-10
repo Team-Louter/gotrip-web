@@ -1,0 +1,8 @@
+#root {
+  max-width: 1280px;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
