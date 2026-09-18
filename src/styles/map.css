@@ -1,0 +1,133 @@
+button {
+  background-color: #FFE982;
+  border: none;
+  cursor: pointer;
+  width: 50px;
+  text-align: center;
+  padding: 5px;
+  border-radius: 40px;
+}
+
+button:hover {
+  background-color: #f9d869;
+}
+
+.map-image {
+  width: 540px;
+  height: 280px;
+  border-radius: 30px;
+}
+
+.map-container {
+  padding: 20px 70px;
+  display: flex;
+  gap: 20px;
+}
+
+.map-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mappin-icon {
+  width: 25px;
+}
+
+.map-contents-box {
+  background-color: #FFFEF7;
+  width: 500px;
+  height: 350px;
+  padding: 20px;
+  border-radius: 30px;
+  border: 1px solid #cbcbcb;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.map-elements-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.mappin-delete-button {
+  font-size: 13px;
+}
+
+.add-mappin-icon {
+  margin-top: 40px;
+  width: 30px;
+  align-self: center;
+}
+
+/* 오른쪽 스케줄 박스 디자인 */
+.map-schedule-container {
+  width: 510px;
+  height: 650px;
+  padding: 20px;
+  background-color: #FFFEF7;
+  border-radius: 30px;
+  border: 1px solid #cbcbcb;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.schedule-title {
+  font-size: 30px;
+  font-weight: bolder;
+}
+
+.schedule-title-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schedule-add-button {
+  padding: 10px;
+}
+
+.schedule-date {
+  padding: 10px;
+  border-bottom: 1px solid #cbcbcb;
+}
+
+.schedule-icon {
+  width: 20px;
+  padding: 5px;
+}
+
+.schedule-icon:hover {
+  border-radius: 50%;
+  background-color: #FFE982;
+}
+
+.schedule-content {
+  font-size: 20px;
+  font-weight: bolder;
+}
+
+.schedule-content-box {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schedule-icons-box {
+  display: flex;
+  gap: 5px;
+}
+
+.schedule-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-mappin-icon {
+  cursor: pointer;
+}
