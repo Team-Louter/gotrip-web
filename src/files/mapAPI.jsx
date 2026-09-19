@@ -6,7 +6,7 @@ import mappin from '../icons/mappin.png';
 
 function MapAPI() {
   return (
-    <>
+    <div className='map-background'>
       <div className="map-schedule-container">
         <div className="schedule-scroll">
           <div className="schedule-title-box">
@@ -153,10 +153,9 @@ function MapAPI() {
       </div>
 
       <div>
-        <span></span>
        <img src={mappin} alt="mappin" className="mappin" />
       </div>
-    </>
+    </div>
   );
 }
 export default MapAPI;

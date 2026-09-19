@@ -1,6 +1,10 @@
-body {
-  background-image: url('../images/mapAPIimg.jpg');
+.map-background {
+  flex: 1;
+  height: 100vh;
+
+  background-image: url(../images/mapAPIimg.jpg);
   background-size: cover;
+  background-position: center;
 }
 
 .map-schedule-container {
@@ -24,6 +28,6 @@ body {
 
 .mappin {
   width: 30px;
-  margin-top: 620px;
-  margin-left: 620px;
+  margin-top: 190px;
+  margin-left: 1020px;
 }
