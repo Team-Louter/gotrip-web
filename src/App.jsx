@@ -1,17 +1,21 @@
-// // import SignUp from './files/signUp.jsx'
-// import SignUp2 from './files/signUp2.jsx';
-// import IsLogin from './files/isLogin.jsx';
-// import SignUpTerms from './files/signUpTerms.jsx'
 import PayForm from './files/PayForm.jsx'
+import SideBar from './components/sideBar.jsx'
+import ChatRoom from './files/chatRoom.jsx';
+import MemoPage from './files/memoPage.jsx';
+import ChatHome from './files/chatHome.jsx'
 
 function App() {
   return (
     <div>
-      {/* <SignUp /> */}
-      {/* <SignUp2 /> */}
-      {/* <IsLogin/> */}
-      {/* <SignUpTerms/> */}
-      <PayForm/>
+      <div style={{ display: "flex" }}>
+      <SideBar />
+      <div style={{ flex: 1 }}>
+        {/* <PayForm />    */}
+        {/* <ChatRoom/> */}
+        {/* <MemoPage/> */}
+        <ChatHome/>
+      </div>
+    </div>
     </div>
   );
 }
