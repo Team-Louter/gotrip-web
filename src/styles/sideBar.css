@@ -4,8 +4,9 @@
 }
 
 .sidebar-container {
+  align-self: flex-start;
   padding: 20px;  
-  width: 20vh;
+  width: 200;
   height: 95vh;
   background-color: #FFFAD9;
   display: flex;
@@ -28,7 +29,7 @@
   font-weight: bolder;
 }
 
-.menu-container > a {
+a {
   text-decoration: none;
   color: rgb(94, 94, 94);
 }
@@ -39,10 +40,7 @@
 }
 
 .sidebar-item {
-<<<<<<< HEAD
-=======
   color: rgb(109, 109, 109);
->>>>>>> f955b337668275fb7329e2b9bcd9b99db25c9daa
   display: flex;
   align-items: center;
   gap: 10px;

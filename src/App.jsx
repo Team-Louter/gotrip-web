@@ -1,23 +1,13 @@
-import PayForm from './files/PayForm.jsx'
-import SideBar from './components/sideBar.jsx'
-import ChatRoom from './files/chatRoom.jsx';
-import MemoPage from './files/memoPage.jsx';
-import ChatHome from './files/chatHome.jsx'
+import SideBar from './components/sideBar';
+import MainPage from './files/mainPage';
+import './App.css';
 
 function App() {
   return (
-    <div>
-      <div style={{ display: "flex" }}>
+    <div className="layout">
       <SideBar />
-      <div style={{ flex: 1 }}>
-        {/* <PayForm />    */}
-        {/* <ChatRoom/> */}
-        {/* <MemoPage/> */}
-        <ChatHome/>
-      </div>
-    </div>
+      <MainPage />
     </div>
   );
 }
-
 export default App;
