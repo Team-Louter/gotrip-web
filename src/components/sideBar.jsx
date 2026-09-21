@@ -1,4 +1,3 @@
-
 import profileImg from '../images/profile.jpg';
 import homeIcon from '../icons/homeIcon.png';
 import chatIcon from '../icons/chatIcon.png';

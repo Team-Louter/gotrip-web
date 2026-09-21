@@ -1,0 +1,226 @@
+.chat-header {
+  width: 260px;
+  height: 100px;
+  box-sizing: border-box;
+  display: flow-root;
+  border-right: 1px solid #cacaca;
+  border-bottom: 1px solid #cacaca;
+}
+
+.chat-h {
+  margin-top: 0;
+  padding-top: 10px;
+  margin-left: 15px;
+}
+
+.search-box {
+  position: relative;
+  width: 230px;
+  margin-top: 15px;
+  margin-left: 15px;
+}
+
+.chattext-input {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border: none;
+  background-color: #F7F7F7;
+  box-sizing: border-box;
+  padding-right: 30px;
+  
+}
+
+.search-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  cursor: pointer;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 260px;
+  box-sizing: border-box;
+  padding: 15px 0 15px 15px;
+  border-bottom: 1px solid #969696;
+  cursor: pointer;
+}
+
+.gotrip-pro {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.chatroom-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.chat-detail {
+  font-size: 15px;
+  margin: 0;
+}
+
+.chat-plus {
+  width: 260px;
+  height: 70px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  border-top: 1px solid #cacaca;
+}
+
+.chat-plus p {
+  margin: 0;
+}
+
+.chat-gotriplogo {
+  width: 170px;
+  display: block;
+  margin: 0 auto;
+}
+
+.chatroom-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.chat-left {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.room-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: 100px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  border-bottom: 1px solid #cacaca;
+}
+
+.room-profile {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.room-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.room-status {
+  font-size: 14px;
+  color: gray;
+  margin: 5px 0 0 0;
+}
+
+.message-area {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.msg-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.msg-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.me-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 30px;
+}
+
+.msg-profile {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+}
+
+.left-bubble {
+  max-width: 350px;
+  margin: 0;
+  padding: 15px 20px;
+  border-radius: 15px;
+  background-color: #FFF6BF;
+}
+
+.right-bubble {
+  max-width: 350px;
+  margin: 0;
+  padding: 15px 20px;
+  border-radius: 15px;
+  background-color: #EFEFEF;
+}
+
+.msg-time {
+  font-size: 12px;
+  color: gray;
+  margin: 5px 0 0 0;
+}
+
+.me-time {
+  font-size: 12px;
+  color: gray;
+  margin: 5px 0 0 0;
+  text-align: right;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: 70px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  border-top: 1px solid #cacaca;
+}
+
+.input-icon {
+  width: 20px;
+  cursor: pointer;
+}
+
+.message-input {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background-color: #F7F7F7;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
