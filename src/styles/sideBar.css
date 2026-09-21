@@ -39,6 +39,7 @@
 }
 
 .sidebar-item {
+  color: rgb(109, 109, 109);
   display: flex;
   align-items: center;
   gap: 10px;
