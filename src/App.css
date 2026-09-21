@@ -1,8 +1,19 @@
 #root {
+<<<<<<< HEAD
+  width: 100%;
+  min-height: 100vh;
+=======
   max-width: 1280px;
+>>>>>>> origin/main
 }
 
 .layout {
   display: flex;
+<<<<<<< HEAD
+  width: 100%;
   min-height: 100vh;
 }
+=======
+  min-height: 100vh;
+}
+>>>>>>> origin/main

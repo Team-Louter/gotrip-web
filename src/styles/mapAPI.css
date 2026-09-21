@@ -1,0 +1,86 @@
+.mini-map-background {
+  width: 100%;
+  height: 100vh;
+  background-image: url('../images/mapAPIimg.jpg');
+  background-size: cover;
+}
+
+.mini-map-schedule-container {
+  margin: 20px;
+  padding: 15px;
+  width: 360px;
+  height: 500px;
+  top: 50px;
+  left: 80px;
+  background-color: white;
+  border: 1.5px solid #222;
+  border-radius: 35px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mini-schedule-box {
+  top: 20px;
+  bottom: 20px;
+  left: 25px;
+  right: 12px;
+  overflow-y: auto;
+  padding-right: 15px;
+  box-sizing: border-box;
+}
+
+.mini-schedule-title-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.mini-schedule-title {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.15;
+  color: #111;
+}
+
+.mini-schedule-date {
+  display: block;
+  margin-top: 20px;
+  font-size: 24px;
+  font-weight: 400;
+  color: #111;
+}
+
+.mini-schedule-line {
+  width: 100%;
+  height: 1px;
+  background-color: #cfcfcf;
+  margin-top: 8px;
+}
+
+.mini-schedule-content-container {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.mini-schedule-content-box {
+  width: 100%;
+  min-height: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.mini-schedule-content {
+  font-size: 19px;
+  font-weight: 400;
+  color: #111;
+  white-space: nowrap;
+}
+
+.mappin {
+  width: 30px;
+  margin-top: 100px;
+  margin-left: 1200px;
+}
