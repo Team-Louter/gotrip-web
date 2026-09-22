@@ -21,7 +21,7 @@ function IsLogin() {
         </div>
 
         <div className='login-button'>
-          <button>로그인</button>
+          <button className='lets-login'>로그인</button>
         </div>
  
         <div className='ifyou-not'>

@@ -18,67 +18,69 @@ function ChatRoom() {
        </div>
        <div className="chat-bar"></div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+        <div className="chat-list">
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-item">
-          <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
-          <div>
-            <p className='chatroom-name'>team 제주도</p>
-            <p className='chat-detail'>한라봉 먹고오자</p>
+          <div className="chat-item">
+            <img className='gotrip-pro' src={gotrippro} alt="gotrip-profile" />
+            <div>
+              <p className='chatroom-name'>team 제주도</p>
+              <p className='chat-detail'>한라봉 먹고오자</p>
+            </div>
           </div>
         </div>
 

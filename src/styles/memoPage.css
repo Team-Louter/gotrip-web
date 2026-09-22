@@ -1,39 +1,51 @@
-.top-bar {
-  height: 90px;                
-  border-bottom: 1px solid #333; 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
 }
 
 .memo-page {
-  display: flex;                
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;      /* 페이지 전체가 화면 밖으로 안 나가게 */
 }
 
 .memo-board {
-  flex: 1;                  
+  flex: 2.7;
   padding: 40px;
   background-image:
     linear-gradient(#eee 1px, transparent 1px),
     linear-gradient(90deg, #eee 1px, transparent 1px);
   background-size: 40px 40px;
+  overflow: hidden;      /* 그리드가 화면 밖으로 안 나가게 */
 }
 
 .memo-side {
-  width: 460px;                 
+  flex: 1.3;
+  min-width: 320px;
   display: flex;
-  flex-direction: column;     
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;      /* 스크롤 없이 한 화면에 다 들어오게 */
 }
 
 .memo-header {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   padding: 30px;
+  flex-shrink: 0;
 }
 
 .memo-plus {
   width: 50px;
   height: 50px;
   border: none;
-  border-radius: 50%;          
+  border-radius: 50%;
   background: #f8e38a;
   font-size: 24px;
   cursor: pointer;
@@ -42,6 +54,7 @@
 .memo-list-box {
   background: #f3f3f3;
   padding: 20px;
+  flex-shrink: 0;
 }
 
 .memo-search {
@@ -50,7 +63,6 @@
   border: 1px solid #333;
   border-radius: 15px;
   padding: 0 15px;
-  box-sizing: border-box;
   margin-bottom: 15px;
 }
 
@@ -63,7 +75,7 @@
 }
 
 .memo-item.selected {
-  border-color: orange;     
+  border-color: orange;
   background: #fffbe6;
 }
 
@@ -74,11 +86,18 @@
 
 .memo-detail {
   padding: 20px 30px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
+
 
 .memo-detail-top {
   display: flex;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .memo-badge {
@@ -88,21 +107,32 @@
   font-size: 12px;
 }
 
+.memo-detail-title {
+  flex-shrink: 0;
+  margin: 12px 0;
+}
+
 .memo-textarea {
   width: 100%;
-  height: 200px;
-  border: none;
-  resize: none;                
+  flex: 1;              /* 260px 고정 대신, 남는 공간만큼만 */
+  min-height: 80px;     /* 너무 작아지지 않게 최소값만 지정 */
+  max-height: 260px;    /* 너무 커지지 않게 최대값도 지정 */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  resize: none;
   outline: none;
   box-sizing: border-box;
 }
-
 .memo-save {
-  display: block;
-  margin-left: auto;          
+  flex-shrink: 0;
+  align-self: flex-end;
   border: none;
   border-radius: 15px;
   background: #f8e38a;
   padding: 10px 24px;
   cursor: pointer;
+  margin-top: 10px;
+  white-space: nowrap;
+  width: fit-content;
 }

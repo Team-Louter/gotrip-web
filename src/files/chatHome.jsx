@@ -5,6 +5,8 @@ import gotripcamers from '../icons/gotrip-camera.png'
 import gotripclip from '../icons/gotrip-clip.png'
 import gotripsmile from '../icons/gotrip-smile.png'
 import gotripplane from '../icons/gotrip-plane.png'
+import gotripdots from '../icons/gotrip-dots.png'
+import gotripreply from '../icons/gotrip-reply.png'
 
 
 
@@ -110,12 +112,24 @@ function ChatRoom() {
               <p className="left-bubble">제주도 가는거 너무 설렌당</p>
               <p className="msg-time">04:45 PM</p>
             </div>
+
+            <div className='chat-emotion'>
+              <img className='chat-dots' src={gotripdots} alt="gotrip-dots" />
+              <img className='chat-smile' src={gotripsmile} alt="gotrip-smile" />
+              <img className='chat-reply' src={gotripreply} alt="gotrip-reply" />
+            </div>
           </div>
 
           <div className="me-row">
             <div>
               <p className="right-bubble">그니까 빨리 가고싶다</p>
               <p className="me-time">04:45 PM</p>
+            </div>
+
+            <div className='chat-emotion'>
+              <img className='rightchat-dots' src={gotripdots} alt="gotrip-dots" />
+              <img className='rightchat-smile' src={gotripsmile} alt="gotrip-smile" />
+              <img className='rightchat-reply' src={gotripreply} alt="gotrip-reply" />
             </div>
           </div>
 
@@ -125,12 +139,27 @@ function ChatRoom() {
               <p className="left-bubble">가서 뭐할거야?</p>
               <p className="msg-time">04:46 PM</p>
             </div>
+
+            <div className='chat-emotion'>
+              <img className='chat-dots' src={gotripdots} alt="gotrip-dots" />
+              <img className='chat-smile' src={gotripsmile} alt="gotrip-smile" />
+              <img className='chat-reply' src={gotripreply} alt="gotrip-reply" />
+            </div>
+            <div>
+
+            </div>
           </div>
 
           <div className="me-row">
             <div>
               <p className="right-bubble">요즘 한라봉이 그렇게 맛있대</p>
               <p className="me-time">04:46 PM</p>
+            </div>
+
+            <div className='chat-emotion'>
+              <img className='rightchat-dots' src={gotripdots} alt="gotrip-dots" />
+              <img className='rightchat-smile' src={gotripsmile} alt="gotrip-smile" />
+              <img className='rightchat-reply' src={gotripreply} alt="gotrip-reply" />
             </div>
           </div>
 
@@ -139,6 +168,12 @@ function ChatRoom() {
             <div>
               <p className="left-bubble">한라봉 먹고오자</p>
               <p className="msg-time">04:47 PM</p>
+            </div>
+
+            <div className='chat-emotion'>
+              <img className='chat-dots' src={gotripdots} alt="gotrip-dots" />
+              <img className='chat-smile' src={gotripsmile} alt="gotrip-smile" />
+              <img className='chat-reply' src={gotripreply} alt="gotrip-reply" />
             </div>
           </div>
 

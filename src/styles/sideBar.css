@@ -4,14 +4,14 @@
 }
 
 .sidebar-container {
-  align-self: flex-start;
   padding: 20px;  
   width: 180px;
-  height: 95vh;
+  height: 100vh;      /* 95vh → 100vh */
   background-color: #FFFAD9;
   display: flex;
   flex-direction: column;
   gap: 60px;
+  box-sizing: border-box;   /* padding 때문에 100vh 넘치는 것 방지 */
 }
 
 .profile-img {
