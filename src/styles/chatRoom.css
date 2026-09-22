@@ -1,7 +1,11 @@
 .chat-header {
-  width: 260px;    
+  
+  width: 260px;
+  height: 100px;
+  box-sizing: border-box;
   display: flow-root;
-  border-right: 1px solid #cacaca; 
+  border-right: 1px solid #cacaca;
+  border-bottom: 1px solid #cacaca;
 }
 
 .chat-h {
@@ -11,7 +15,7 @@
 }
 
 .search-box {
-  position: relative;      /* 돋보기 위치의 기준 */
+  position: relative;    
   width: 230px;
   margin-top: 15px;
   margin-left: 15px;
@@ -19,27 +23,26 @@
 
 .chattext-input {
   display: block;
-  width: 100%;             /* search-box 너비에 맞춤 */
+  width: 100%;            
   height: 28px;
   border: none;
   background-color: #F7F7F7;
   box-sizing: border-box;
-  padding-right: 30px;     /* 글자가 돋보기 밑으로 안 들어가게 */
-  /* margin-top, margin-left는 삭제 (search-box로 이동) */
+  padding-right: 30px;     
 }
 
 .search-icon {
   position: absolute;
-  right: 8px;              /* 오른쪽에서 8px */
+  right: 8px;             
   top: 50%;
-  transform: translateY(-50%);   /* 세로 가운데 */
-  width: 16px;             /* 이미지 쓸 때 크기 */
+  transform: translateY(-50%);  
+  width: 16px;             
   cursor: pointer;
 }
 
 .chat-bar {
   
-  margin-left: 260px;        /* 인풋과 같은 시작 위치 */
+  margin-left: 260px;       
   border-top: 1px solid #cacaca;
 }
 
@@ -47,10 +50,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 260px;                        /* 선 길이 = 세로선 위치까지 */
-  box-sizing: border-box;              /* padding이 width에 포함되게 */
-  padding: 15px 0 15px 15px;          /* 왼쪽 15px은 기존 margin-left 대신 */
-  border-bottom: 1px solid #969696;   /* 아래 선 */
+  width: 260px;                        
+  box-sizing: border-box;              
+  padding: 15px 0 15px 15px;          
+  border-bottom: 1px solid #969696;  
+  cursor: pointer;
 }
 
 .gotrip-pro {
@@ -71,13 +75,12 @@
 }
 
 .chat-plus {
-  width: 260px;            /* 패널 너비와 같게 */
-  text-align: center;      /* + 가로 중앙 */
-  font-size: 30px;  
+  
 }
 
+
 .chat-plus p {
-  margin: 10px 0;          /* p 기본 여백 조절 */
+  margin: 10px 0;          
 }
 
 .chat-gotriplogo {
@@ -89,32 +92,40 @@
 
 .chatroom-layout {
   display: flex;
+  flex: 1;          
+  min-width: 0;     
   min-height: 100vh;
 }
 
 .chat-left {
   width: 260px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;        /* 화면 높이에 맞춤 */
+}
+
+.chat-list {
+  flex: 1;               /* 남은 공간을 다 차지 */
+  overflow-y: auto;      /* 넘치면 스크롤 */
+}
+
+
+.chat-plus {
+  flex-shrink: 0;         /* + 버튼은 항상 하단 고정 */
 }
 
 .chat-right {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.chat-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;   /* 추가: 위→아래로 쌓기 */
+  flex-direction: column;   
   justify-content: center;
   align-items: center;
   background-color: #FAFAFA;
 }
 
 .chat-empty {
-  text-align: center;   /* 문구 + 버튼 모두 가운데 */
+  text-align: center;  
 }
 
 .lets-plan {

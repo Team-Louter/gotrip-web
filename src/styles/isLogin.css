@@ -70,10 +70,12 @@
 }
 
 .lets-find {
+  color: #FFDC5B;
   font-weight: bold;
+
 }
 
-button {
+.lets-login {
   width: 350px;
   height: 35px;
   border-radius: 10px;
@@ -116,9 +118,6 @@ button:hover {
   margin: 0;
 }
 
-span {
-  color: #FFDC5B;
-}
 
 .personal-information {
   height: 200px;

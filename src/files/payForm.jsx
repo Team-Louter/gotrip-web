@@ -4,7 +4,7 @@ import gotripwallet from '../icons/wallet.png'
 function PayForm() {
   return(
     <div>
-      <div className="top-bar"></div>
+      
 
       <div className="pay-card">
         <h2 className='lets-pay'><img className="gotrip-wallet"  src={gotripwallet} alt="wallet-image" /> 정산</h2>
@@ -39,11 +39,11 @@ function PayForm() {
               <span className="pay-check">✓</span>
             </div>
 
-            <div className="pay-item">
+            <div className="green-item">
               <span className="pay-name">숙소 예약금</span>
               <span className="pay-item-money">210,000원</span>
               <span className="pay-who">곤니치와~</span>
-              <span className="pay-check">✓</span>
+              <span className="pay-check2">✓</span>
             </div>
           </div>
         </div>
