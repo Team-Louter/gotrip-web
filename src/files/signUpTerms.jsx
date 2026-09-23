@@ -9,7 +9,7 @@ function SignUpTerms() {
     <div className='login-container2'>
       <div className='login-left2'>
         <div className='service-start2'>
-          <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/><br />
+          <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/>
           <img src={gotriplogotext} alt="gotrip-logotext" className='gotrip-logotext'/>
           <h2>약관 동의서</h2>
         </div>

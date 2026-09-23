@@ -9,6 +9,7 @@
 }
 
 .calender-container {
+  margin: 0px auto;
   padding: 20px 40px;
   display: flex;
   gap: 30px;

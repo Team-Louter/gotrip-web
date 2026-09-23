@@ -5,8 +5,9 @@
   margin-bottom: 40px;
 }
 
-h1 {
+.join-cont > h1 {
   font-size: 20px;
+  margin-bottom: 15px;
 }
 
 .gotrip-join {
