@@ -1,9 +1,12 @@
 import gotriplogo from '../images/gotrip-logo.png'
 import gotripjoin from '../images/gotrip-join.jpeg'
 import gotripcheck from '../images/gotrip-check.png'
+import { useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
 
 function SignUp() {
+  const navigate = useNavigate();
+
   return (
 
     <div className='join-cont'>
@@ -23,7 +26,7 @@ function SignUp() {
           <p>비밀번호 확인</p>
           <input type="text" />
           <br />
-          <button className='Next-button'>다음</button>
+          <button className='Next-button' onClick={() => navigate('/signup/step2')}>다음</button>
         </div>
         
       </div>

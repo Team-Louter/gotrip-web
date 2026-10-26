@@ -1,10 +1,12 @@
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
-import gotripbackground from '../images/gotrip-join.jpeg'
+import gotripbackground from '../images/gotrip-join.jpeg';
+import { useNavigate } from 'react-router-dom';
 import '../styles/signUpTerms.css'
 
 
 function SignUpTerms() {
+  const navigate = useNavigate();
   return(
     <div className='login-container2'>
       <div className='login-left2'>
@@ -20,14 +22,14 @@ function SignUpTerms() {
             <div className='agree-wrapper2'>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input type="checkbox" />
+                  <input className='check-agree' type="checkbox" />
                   <h4>전체 동의 하기</h4>
                 </div>
               </div>
 
               <div className='agree-box2'>
                 <div className='lets-check2'>      
-                  <input type="checkbox" />
+                  <input className='check-agree' type="checkbox" />
                   <h4>개인정보 수집 및 이용 동의 <span className='first-check'>(필수)</span></h4>
                 </div>
 
@@ -77,11 +79,11 @@ function SignUpTerms() {
               </div>
 
               <div className='login-button2'>
-                <button>동의합니다.</button>
+                <button className='yes-login' onClick={() => navigate('/islogin')}>동의합니다.</button>
               </div>
 
               <div className='ifyou-not2'>
-                <p>이미 계정이 있으신가요? <span className='lets-signup2'>로그인</span></p>
+                <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')}  style={{ cursor: 'pointer' }}>로그인</span></p>
               </div>
             </div>
           </div>
@@ -106,3 +108,4 @@ function SignUpTerms() {
 }
 
 export default SignUpTerms
+                            

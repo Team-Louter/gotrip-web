@@ -1,3 +1,5 @@
+                                
+                                
 .login-container2 {
   display: flex;
   width: 100%;
@@ -11,6 +13,8 @@
   flex-direction: column;
   justify-content: center;
   padding: 0 80px;
+  overflow-y: auto;      /* 추가 */
+  min-height: 100vh;   
 }
 
 .login-right2 {
@@ -27,12 +31,13 @@
 .gotrip-logo2 {
   display: block;
   width: 50px;
+  margin: 0;
 }
 
 .gotrip-logotext {
   display: block;
   width: 150px;
-  
+  margin: 0;
 }
 
 .service-start2 {
@@ -40,7 +45,7 @@
   flex-direction: column;
   text-align: left;
   margin-left: -10px;
-  margin-bottom: 100px;
+  padding-top: 70px;
 }
 
 .service-start2 h2 {
@@ -60,37 +65,42 @@
 
 .lets-check2 {
   display: flex;
-  align-items: center;
+  align-items: center;   /* 늘어남 방지 */
   gap: 4px;
-  
 }
 
-
-.lets-check2 input[type="checkbox"]:checked {
-  background-color: rgb(99, 99, 99);
-  border-color: rgb(99, 99, 99);
-}
-
-
-.lets-check2 input[type="checkbox"] {
+.check-agree {
   appearance: none;
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
   border: 1.5px solid #999;
   border-radius: 50%;
-  margin: 0;
   cursor: pointer;
-  position: relative;
-  box-sizing: border-box;   /* 혹시 빠졌으면 추가 */
 }
 
-.lets-check2 input[type="checkbox"]:checked {
+
+.lets-check2 input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 16px !important;
+  height: 16px !important;
+  border: 1.5px solid #999;
+  border-radius: 50%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.check-agree:checked {
   background-color: rgb(99, 99, 99);
   border-color: rgb(99, 99, 99);
 }
 
-.lets-check2 input[type="checkbox"]:checked::after {
+.check-agree:checked::after {
   content: "";
   position: absolute;
   left: 4px;
@@ -111,18 +121,12 @@
   
 }
 
-.first-check2 {
-  line-height: 2px;
+.login-button2 {
+  display: flex;
+  justify-content: center;
 }
 
-.lets-agree {
-  position: relative;
-  top: -50px;
-}
-
-
-
-button {
+.yes-login {
   width: 350px;
   height: 35px;
   border-radius: 10px;
@@ -131,10 +135,8 @@ button {
   font-weight: bold;
   color: rgb(0, 0, 0);
   cursor: pointer;
-  /* transition: background-color 0.2s ease; */
-  display: block;
-  margin-left: -10px;
-  
+  /* display: block;      ← 삭제 */
+  /* margin-left: -10px;  ← 삭제 */
 }
 
 button:hover {
@@ -178,3 +180,4 @@ button:hover {
   border-radius: 20px;
   padding: 16px;
 }
+                            

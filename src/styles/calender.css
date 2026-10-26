@@ -9,7 +9,7 @@
 }
 
 .calender-container {
-  margin: 0px auto;
+  margin: auto;
   padding: 20px 40px;
   display: flex;
   gap: 30px;
@@ -18,7 +18,7 @@
 .calender-content-box {
   padding: 25px;
   width: 770px;
-  height: 650px;
+  height: 600px;
   border: 1px solid #cbcbcb;
   border-radius: 20px;
 }
@@ -26,7 +26,7 @@
 .calender-today-box {
   padding: 25px;
   width: 250px;
-  height: 650px;
+  height: 600px;
   border: 1px solid #cbcbcb;
   border-radius: 20px;
 }

@@ -3,13 +3,15 @@ import mappinIcon from '../icons/mappinIcon.png';
 import addMappin from '../icons/addMappin.png';
 import editIcon from '../icons/editIcon.png';
 import deleteIcon from '../icons/deleteIcon.png';
+import { useNavigate } from 'react-router-dom';
 import '../styles/map.css';
 
 function Map() {
+  const navigate = useNavigate();
   return (
     <div className="map-container">
       <div className='map-box'>
-        <img src={mapImg} alt="map-img" className="map-image" />
+        <img src={mapImg} alt="map-img" className="map-image" onClick={() => navigate('/map-api')} style={{ cursor: 'pointer' }} />
         {/* 지도에서 찍은 위치 표시 */}
         <div className="map-contents-box">
 
