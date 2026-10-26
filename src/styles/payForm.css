@@ -14,13 +14,16 @@
 }
 
 .pay-card {
-  background: #FDFCF4;                        /* 옅은 노란색 */
-  border-radius: 40px;                        /* 둥근 모서리 */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); /* 옅은 그림자 */
-  padding: 40px;                              /* 안쪽 여백 */
-  width: 800px;                               /* 원하는 너비 */
-  height: 550px;
-  margin: 60px auto;                          /* 가운데 정렬 */
+  background: #FDFCF4;                       
+  border-radius: 40px;                        
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 40px;                              
+  width: 800px;                               
+  min-height: 550px;                      
+  margin: 0px auto;
+  position: relative;
+  left: 175px;   
+  top: 20px;
 }
 
 .total-pay {
@@ -87,10 +90,12 @@
 .pay-add,
 .pay-edit,
 .pay-delete {
+  flex-shrink: 0;          
+  width: 70px;
   height: 50px;
   border: none;
-  border-radius: 25px;
-  padding: 0 24px;
+  border-radius: 30px;    
+  padding: 0;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-weight: bold;
@@ -150,4 +155,14 @@
 
 .pay-check {
   font-size: 22px;
+}
+
+.green-item {
+  background-color: #FAFAD6;
+
+}
+
+.pay-check2 {
+  font-size: 22px;
+  color: #5BC046;
 }

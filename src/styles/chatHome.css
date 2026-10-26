@@ -239,4 +239,50 @@
 .chat-list {
   flex: 1;
   overflow-y: auto;
+<<<<<<< Updated upstream
+=======
+}
+
+.chat-emotion {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border:none;
+  align-self: flex-start;    
+  padding-bottom: 10px;
+  flex-shrink: 0;
+  margin-top: 35px;
+}
+
+.chat-dots,
+.chat-smile,
+.chat-reply,
+.rightchat-dots,
+.rightchat-smile,
+.rightchat-reply {
+  height: 18px;
+  width: auto;
+  display: block;
+  cursor: pointer;
+}
+
+.me-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.me-row .chat-emotion {
+  order: -1;               
+  align-self: center;
+  margin-top: 0;
+  margin-bottom: 25px;     
+}
+
+.chat-bubble {
+  height: auto;          /* 고정 height 있으면 auto로 */
+  
+>>>>>>> Stashed changes
 }

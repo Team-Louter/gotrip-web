@@ -8,7 +8,9 @@ import gotripplane from '../icons/gotrip-plane.png'
 import gotripdots from '../icons/gotrip-dots.png'
 import gotripreply from '../icons/gotrip-reply.png'
 
-function ChatHoom() {
+
+
+function ChatRoom() {
   return (
     <div className="chatroom-layout">
       <div className="chat-left">

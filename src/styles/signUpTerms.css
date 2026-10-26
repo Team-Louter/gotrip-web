@@ -45,12 +45,12 @@
   flex-direction: column;
   text-align: left;
   margin-left: -10px;
-  margin-bottom: 100px;
+  padding-top: 70px;
 }
 
 .service-start2 h2 {
-  margin-top: 10px;
-  margin-bottom: -10px;   /* 이 부분이 핵심 */
+  margin-top: -20px;
+  margin: 0;          /* 위아래 기본 여백 전부 제거 */
 }
 
 .personal-information2 {
