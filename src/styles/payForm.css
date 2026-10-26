@@ -1,66 +1,65 @@
-.top-bar {
-  height: 90px;                
-  border-bottom: 1px solid #333; 
-}
-
 .lets-pay {
   display: flex;
-  align-items: center;   /* 세로 가운데 정렬 */
+  align-items: center;   
   gap: 4px;
-  line-height: 1;        /* 글자 위아래 여백 제거 */
+  line-height: 1;        
   margin: 0;
 }
 
 .gotrip-wallet{
   width: 32px;
   height: 30px;
-  vertical-align: middle;  /* 글자와 세로 가운데 */
+  vertical-align: middle;
   margin-right: 2px;
 }
 
 .pay-card {
-  background: #FDFCF4;                        /* 옅은 노란색 */
-  border-radius: 40px;                        /* 둥근 모서리 */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); /* 옅은 그림자 */
-  padding: 40px;                              /* 안쪽 여백 */
-  width: 800px;                               /* 원하는 너비 */
-  height: 550px;
-  margin: 60px auto;                          /* 가운데 정렬 */
+  background: #FDFCF4;                       
+  border-radius: 40px;                        
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 40px;                              
+  width: 800px;                               
+  min-height: 550px;                      
+  margin: auto;
+  position: relative;
+  left: 175px;   
+  top: 20px;
 }
 
 .total-pay {
   background-color: white;
   border-radius: 30px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  height: 190px;
+  min-height: 190px;
   margin-top: 30px;
-  padding: 35px;
+  padding: 20px 35px; 
   box-sizing: border-box;
+  margin-bottom: 20px
 }
 
 #total-usepay {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
 }
 
 #total-money {
   font-size: 28px;
   font-weight: bolder;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   color: #0885FE;
 }
 
 #expec-pay {
   font-size: 18px;
   font-weight: 600;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .pay-row {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .pay-input,
@@ -74,6 +73,12 @@
   outline: none;
 }
 
+.pay-input, 
+.pay-money {
+  background-color: white;
+  border-radius: 30px;
+}
+
 .pay-input {
   width: 200px;
 }
@@ -85,13 +90,17 @@
 .pay-add,
 .pay-edit,
 .pay-delete {
+  flex-shrink: 0;          
+  width: 70px;
   height: 50px;
   border: none;
-  border-radius: 25px;
-  padding: 0 24px;
+  border-radius: 30px;    
+  padding: 0;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;     
 }
 
 .pay-add,
@@ -105,18 +114,19 @@
 
 .pay-add:hover,
 .pay-edit:hover {
-  background: #f3d660;   /* 원래 #f8e38a보다 조금 진한 노란색 */
+  background: #f3d660;   
 }
 
 .pay-delete:hover {
-  background: #e88a82;   /* 원래 #f0a19a보다 조금 진한 빨간색 */
+  background: #e88a82;   
 }
 
 .budget-pay {
   margin-top: 20px;
 }
 
-.pay-item {
+.pay-item,
+.green-item {
   display: flex;
   align-items: center;
   height: 55px;
@@ -130,7 +140,7 @@
 }
 
 .pay-name {
-  flex: 1;                 /* 남은 공간을 다 차지해서 나머지를 오른쪽으로 밀어요 */
+  flex: 1;                 
 }
 
 .pay-item-money {
@@ -140,9 +150,20 @@
 .pay-who {
   width: 120px;
   font-size: 14px;
-  font-weight: normal;     /* 이름은 얇게 */
+  font-weight: normal;     
 }
 
 .pay-check {
   font-size: 22px;
 }
+
+.green-item {
+  background-color: #FAFAD6;
+
+}
+
+.pay-check2 {
+  font-size: 22px;
+  color: #5BC046;
+}
+                            
