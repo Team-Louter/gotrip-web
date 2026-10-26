@@ -9,25 +9,24 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;           /* 요소 간 간격은 여기서 통제 */
+  gap: 16px;
   padding: 0 80px;
-  
 }
 
 .login-right {
-  flex: 2;   /* 2/3 비율 */
+  flex: 2;
   overflow: hidden;
 }
 
 .gotrip-background {
   width: 100%;
   height: 100%;
-  object-fit: cover;   /* scaleX 제거 */
+  object-fit: cover;
 }
 
 .gotrip-logo2 {
   width: 50px;
-  transform: translateY(-60px); /* margin-top 대신 이거 */
+  transform: translateY(-60px);
 }
 
 .gotrip-logotext {
@@ -43,26 +42,22 @@
 
 .service-start h2 {
   margin-top: 8px;
-  
 }
 
 .text-in {
   width: 330px;
   margin-left: -10px;
-  
 }
 
 .text-in input {
   width: 100%;
-  height: 20px;    
+  height: 20px;
   border: none;
   border-bottom: 1px solid #ccc;
   outline: none;
-  padding: 14px 7px;      
-  font-size: 16px;    
+  padding: 20px 5px;
+  font-size: 16px;
 }
-
-
 
 .forgot-pw {
   text-align: right;
@@ -84,23 +79,22 @@
   font-weight: bold;
   color: white;
   cursor: pointer;
-  /* transition: background-color 0.2s ease; */
   display: block;
   margin-left: -10px;
-  
 }
 
 button:hover {
-  background-color: #000000; /* 마우스 올렸을 때 살짝 진하게 */
+  background-color: #000000;
 }
 
 .ifyou-not {
   display: flex;
   flex-direction: column;
-  align-items: center;  
+  align-items: center;
 }
 
 .lets-signup {
+  color: #FFDC5B;
   font-weight: bold;
 }
 
@@ -110,14 +104,15 @@ button:hover {
   gap: 4px;
 }
 
-
-
 .lets-check input[type="checkbox"] {
   width: 14px;
   height: 14px;
   margin: 0;
 }
 
+span {
+  color: #FFDC5B;
+}
 
 .personal-information {
   height: 200px;
@@ -128,4 +123,3 @@ button:hover {
   line-height: 1.5;
   border-radius: 20px;
 }
-

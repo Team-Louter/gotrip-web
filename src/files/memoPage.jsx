@@ -1,3 +1,5 @@
+                                
+                                
 import '../styles/memoPage.css'
 
 function Memo() {
@@ -41,3 +43,4 @@ function Memo() {
 }
 
 export default Memo
+                            

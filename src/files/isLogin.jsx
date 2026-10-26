@@ -1,10 +1,12 @@
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
-import gotripbackground from '../images/gotrip-join.jpeg'
+import gotripbackground from '../images/gotrip-join.jpeg';
+import { useNavigate } from 'react-router-dom';
 import '../styles/isLogin.css';
 
 
 function IsLogin() {
+  const navigate = useNavigate();
   return(
     <div className='login-container'>
       <div className='login-left'>
@@ -21,11 +23,11 @@ function IsLogin() {
         </div>
 
         <div className='login-button'>
-          <button className='lets-login'>로그인</button>
+          <button>로그인</button>
         </div>
  
         <div className='ifyou-not'>
-          <p>계정이 없으시다면? <span className='lets-signup'>회원가입 하러가기</span>
+          <p>계정이 없으시다면? <span className='lets-signup' onClick={() => navigate('/signup')} style={{ cursor: 'pointer' }}>회원가입 하러가기</span>
           </p>
         </div>
 
@@ -35,14 +37,9 @@ function IsLogin() {
          <img src={gotripbackground} alt="background" className='gotrip-background'/>
        </div>
 
-      
-      
-      
-     
-      
-      
     </div>
   )
 }
 
 export default IsLogin
+                            

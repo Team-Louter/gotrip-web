@@ -3,15 +3,18 @@
   padding: 0px;
 }
 
+.user-name {
+  width: 90px;
+}
+
 .sidebar-container {
   padding: 20px;  
   width: 180px;
-  height: 100vh;      /* 95vh → 100vh */
+  height: 95vh;
   background-color: #FFFAD9;
   display: flex;
   flex-direction: column;
   gap: 60px;
-  box-sizing: border-box;   /* padding 때문에 100vh 넘치는 것 방지 */
 }
 
 .profile-img {

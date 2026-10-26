@@ -1,10 +1,6 @@
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  height: 100%;
+.top-bar {
+  height: 90px;                
+  border-bottom: 1px solid #333; 
 }
 
 .memo-page {
@@ -136,3 +132,4 @@ html, body {
   white-space: nowrap;
   width: fit-content;
 }
+                            

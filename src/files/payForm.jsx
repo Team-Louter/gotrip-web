@@ -1,3 +1,5 @@
+                                
+                                
 import '../styles/payForm.css'
 import gotripwallet from '../icons/wallet.png'
 
@@ -54,3 +56,4 @@ function PayForm() {
 }
 
 export default PayForm
+                            

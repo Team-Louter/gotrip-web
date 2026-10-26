@@ -1,3 +1,5 @@
+                                
+                                
 .chat-header {
   
   width: 260px;
@@ -75,9 +77,10 @@
 }
 
 .chat-plus {
-  
+  width: 260px;            /* 패널 너비와 같게 */
+  text-align: center;      /* + 가로 중앙 */
+  font-size: 30px;  
 }
-
 
 .chat-plus p {
   margin: 10px 0;          
@@ -142,3 +145,4 @@
   font-size: 15px;
   border-radius: 10px;
 }
+                            

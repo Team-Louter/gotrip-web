@@ -1,12 +1,17 @@
 #root {
   width: 100%;
   min-height: 100vh;
-  
+=======
+  max-width: 1280px;
+>>>>>>> origin/main
 }
 
 .layout {
   display: flex;
   width: 100%;
-  height: 100vh;      /* min-height 대신 height로 고정 */
-  overflow: hidden;    /* 넘치면 잘리게 */
+  min-height: 100vh;
 }
+=======
+  min-height: 100vh;
+}
+>>>>>>> origin/main

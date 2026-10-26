@@ -1,15 +1,17 @@
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
-import gotripbackground from '../images/gotrip-join.jpeg'
+import gotripbackground from '../images/gotrip-join.jpeg';
+import { useNavigate } from 'react-router-dom';
 import '../styles/signUpTerms.css'
 
 
 function SignUpTerms() {
+  const navigate = useNavigate();
   return(
     <div className='login-container2'>
       <div className='login-left2'>
         <div className='service-start2'>
-          <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/><br />
+          <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/>
           <img src={gotriplogotext} alt="gotrip-logotext" className='gotrip-logotext'/>
           <h2>약관 동의서</h2>
         </div>
@@ -77,11 +79,11 @@ function SignUpTerms() {
               </div>
 
               <div className='login-button2'>
-                <button className='yes-login'>동의합니다.</button>
+                <button>동의합니다.</button>
               </div>
 
               <div className='ifyou-not2'>
-                <p>이미 계정이 있으신가요? <span className='lets-signup2'>로그인</span></p>
+                <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')}  style={{ cursor: 'pointer' }}>로그인</span></p>
               </div>
             </div>
           </div>
@@ -106,3 +108,4 @@ function SignUpTerms() {
 }
 
 export default SignUpTerms
+                            

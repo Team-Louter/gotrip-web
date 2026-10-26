@@ -143,7 +143,11 @@
 .room-status {
   font-size: 14px;
   color: gray;
-  margin: 5px 0 0 0;
+  margin: -20px 0 0 0;
+}
+
+.status-one {
+  color: #70B26A;
 }
 
 .message-area {
@@ -170,7 +174,7 @@
   
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .msg-profile {
@@ -235,46 +239,4 @@
 .chat-list {
   flex: 1;
   overflow-y: auto;
-}
-
-.chat-emotion {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 30px;
-  box-sizing: border-box;
-  padding: 0 12px;
-  border:none;
-  border-radius: 999px;      
-  background-color: #fff;
-  align-self: flex-start;    
-  margin-top: 10px;
-  flex-shrink: 0;
-}
-
-.chat-dots,
-.chat-smile,
-.chat-reply,
-.rightchat-dots,
-.rightchat-smile,
-.rightchat-reply {
-  height: 18px;
-  width: auto;
-  display: block;
-  cursor: pointer;
-}
-
-.me-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.me-row .chat-emotion {
-  order: -1;               
-  align-self: center;
-  margin-top: 0;
-  margin-bottom: 25px;     
 }

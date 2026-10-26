@@ -8,9 +8,7 @@ import gotripplane from '../icons/gotrip-plane.png'
 import gotripdots from '../icons/gotrip-dots.png'
 import gotripreply from '../icons/gotrip-reply.png'
 
-
-
-function ChatRoom() {
+function ChatHoom() {
   return (
     <div className="chatroom-layout">
       <div className="chat-left">
@@ -100,7 +98,7 @@ function ChatRoom() {
           <img className="room-profile" src={gotrippro} alt="profile" />
           <div>
             <p className="room-name">송하율</p>
-            <p className="room-status">현재 활동중 ●</p>
+            <p className="room-status">현재 활동중 <span className='status-one'>●</span></p>
           </div>
         </div>
 
@@ -108,7 +106,7 @@ function ChatRoom() {
 
           <div className="msg-row">
             <img className="msg-profile" src={gotrippro} alt="profile" />
-            <div>
+            <div className='chat-bubble'>
               <p className="left-bubble">제주도 가는거 너무 설렌당</p>
               <p className="msg-time">04:45 PM</p>
             </div>
@@ -121,7 +119,7 @@ function ChatRoom() {
           </div>
 
           <div className="me-row">
-            <div>
+            <div className='chat-bubble'>
               <p className="right-bubble">그니까 빨리 가고싶다</p>
               <p className="me-time">04:45 PM</p>
             </div>
@@ -135,7 +133,7 @@ function ChatRoom() {
 
           <div className="msg-row">
             <img className="msg-profile" src={gotrippro} alt="profile" />
-            <div>
+            <div className='chat-bubble'>
               <p className="left-bubble">가서 뭐할거야?</p>
               <p className="msg-time">04:46 PM</p>
             </div>
@@ -151,7 +149,7 @@ function ChatRoom() {
           </div>
 
           <div className="me-row">
-            <div>
+            <div  className='chat-bubble'>
               <p className="right-bubble">요즘 한라봉이 그렇게 맛있대</p>
               <p className="me-time">04:46 PM</p>
             </div>
@@ -165,7 +163,7 @@ function ChatRoom() {
 
           <div className="msg-row">
             <img className="msg-profile" src={gotrippro} alt="profile" />
-            <div>
+            <div className='chat-bubble'>
               <p className="left-bubble">한라봉 먹고오자</p>
               <p className="msg-time">04:47 PM</p>
             </div>
@@ -198,4 +196,4 @@ function ChatRoom() {
   )
 }
 
-export default ChatRoom
+export default ChatHoom
