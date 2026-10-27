@@ -55,3 +55,20 @@ a {
   background-color: #fdef96;
   color: rgb(0, 0, 0);
 }
+
+.sidebar-link { display: block; color: inherit; border-radius: 15px; }
+.sidebar-link .sidebar-item { position: relative; }
+.sidebar-link .sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  width: 4px;
+  height: 24px;
+  border-radius: 4px;
+  background: #e4b72f;
+  transform: translateY(-50%);
+  opacity: 0;
+}
+.sidebar-link[aria-current="page"] .sidebar-item { background: #ffed9b; color: #213547; font-weight: 700; }
+.sidebar-link:focus-visible { outline: 2px solid #b19529; outline-offset: 3px; }

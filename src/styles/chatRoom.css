@@ -30,7 +30,7 @@
   border: none;
   background-color: #F7F7F7;
   box-sizing: border-box;
-  padding-right: 30px;     
+  padding-right: 30px;   
 }
 
 .search-icon {
@@ -78,6 +78,7 @@
 
 
 .chat-plus p {
+  font-size: 30px;
   margin: 10px 0;          
 }
 
