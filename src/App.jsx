@@ -4,7 +4,7 @@ import MainPage from './files/mainPage';
 import Map from './files/map';
 import MapAPI from './files/mapAPI';
 import Calender from './files/calender';
-import ChatHome from './files/chatHome';
+import ChatHomeAPI from './files/chatHomeAPI';
 import ChatRoom from './files/chatRoom';
 import IsLogin from './files/isLogin';
 import MemoPage from './files/memoPage';
@@ -51,7 +51,8 @@ function App() {
         <Route path="/map" element={<Map />} />
         <Route path="/map-api" element={<MapAPI />} />
         <Route path="/calendar" element={<Calender />} />
-        <Route path="/chat" element={<ChatHome />} />
+        <Route path="/chat" element={<ChatRoom />} />
+        <Route path="/chat-api" element={<ChatHomeAPI />} />
         <Route path="/chat/:roomId" element={<ChatRoom />} />
         <Route path="/memo" element={<MemoPage />} />
         <Route path="/pay" element={<PayForm />} />

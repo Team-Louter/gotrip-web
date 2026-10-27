@@ -1,128 +1,82 @@
-import '../styles/calender.css';
+import { useState } from 'react';
+import { useSchedules } from '../hooks/useSchedules';
+import { TRIP_DURATION, addDays, calendarDates, dateKey, formatDate, schedulesOn, shiftMonth } from '../data/scheduleDates';
+import { deleteSchedule, selectScheduleDate } from '../data/scheduleStore';
 import todayPlaceIcon from '../icons/todaySchedulePlaceIcon.png';
+import '../styles/calender.css';
 
 function Calender() {
+  const { startDate, selectedDate, events } = useSchedules();
+  const [monthView, setMonthView] = useState(() => ({ selectedDate, month: selectedDate.slice(0, 7) }));
+  const month = monthView.selectedDate === selectedDate ? monthView.month : selectedDate.slice(0, 7);
+  const dates = calendarDates(month);
+  const selectedEvents = schedulesOn(events, selectedDate);
+  const today = dateKey();
+  const travelEnd = addDays(startDate, TRIP_DURATION - 1);
+
+  function changeMonth(offset) {
+    setMonthView({ selectedDate, month: shiftMonth(month, offset) });
+  }
+
+  function selectDate(date) {
+    selectScheduleDate(date);
+    setMonthView({ selectedDate: date, month: date.slice(0, 7) });
+  }
+
   return (
-    <div className='calender-container'>
-      <div className='calender-content-box'>
-        <div className='content-box'>
-          <div className='calender-text-box'>
-            <span className='calender-title'>2026년 7월 · 제주 3박 4일</span>
-            <span className='today-period'>7월 14일 화요일부터 7월 17일 금요일까지</span>
+    <div className="calender-container">
+      <section className="calender-content-box" aria-label="여행 캘린더">
+        <div className="calendar-heading">
+          <div className="calender-text-box">
+            <h1 className="calender-title">{formatDate(selectedDate, { year: 'numeric', month: 'long', day: 'numeric' })}</h1>
+            <p className="today-period">{formatDate(startDate, { month: 'long', day: 'numeric', weekday: 'long' })}부터 {formatDate(travelEnd, { month: 'long', day: 'numeric', weekday: 'long' })}까지</p>
           </div>
-
-          <table className='calender'>
-            <thead>
-              <tr>
-                <td className='weekdays sunday'>일</td>
-                <td className='weekdays'>월</td>
-                <td className='weekdays'>화</td>
-                <td className='weekdays'>수</td>
-                <td className='weekdays'>목</td>
-                <td className='weekdays'>금</td>
-                <td className='weekdays'>토</td>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td>7</td>
-                <td><div className='today'>8</div></td>
-                <td>9</td>
-                <td>10</td>
-                <td>11</td>
-                <td>12</td>
-                <td>13</td>
-              </tr>
-              <tr>
-                <td className='travel-days'>
-                  14
-                  <div className='schedule-card yellow-card'>항공</div>
-                  <div className='schedule-card blue-card'>렌터카</div>
-                </td>
-                <td className='travel-days'>
-                  15
-                  <div className='schedule-card green-card'>숙소</div>
-                  <div className='schedule-card purple-card'>맛집</div>
-                </td>
-                <td className='travel-days'>
-                  16
-                  <div className='schedule-card blue-card'>우도</div>
-                  <div className='schedule-card yellow-card'>사진</div>
-                </td>
-                <td className='travel-days'>
-                  17
-                  <div className='schedule-card green-card'>체크아웃</div>
-                </td>
-                <td>18</td>
-                <td>19</td>
-                <td>20</td>
-              </tr>
-              <tr>
-                <td>21</td>
-                <td>
-                  22
-                  <div className='schedule-card purple-card'>회의</div>
-                </td>
-                <td>23</td>
-                <td>24</td>
-                <td>25</td>
-                <td>26</td>
-                <td>27</td>
-              </tr>
-              <tr>
-                <td>28</td>
-                <td>29</td>
-                <td>30</td>
-                <td>31</td>
-                <td>1</td>
-                <td>2</td>
-                <td>3</td>
-              </tr>
-            </tbody>
-            
-          </table>
+          <nav className="calendar-month-nav" aria-label="캘린더 월 이동">
+            <button type="button" aria-label="이전 달" disabled={month === '0001-01'} onClick={() => changeMonth(-1)}>‹</button>
+            <span aria-live="polite">{formatDate(`${month}-01`, { year: 'numeric', month: 'long' })}</span>
+            <button type="button" aria-label="다음 달" disabled={month === '9999-12'} onClick={() => changeMonth(1)}>›</button>
+          </nav>
         </div>
-      </div>  
-
-      <div className='calender-today-box'>
-        <div className='today-title'>
-          <span className='today-schedule-title'>오늘 일정</span>
-          <span className='today-info'>7월 15일 수요일</span>
+        <table className="calender" aria-label={formatDate(`${month}-01`, { year: 'numeric', month: 'long' })}>
+          <thead><tr>{['일', '월', '화', '수', '목', '금', '토'].map((day, index) => <th scope="col" key={day} className={`weekdays${index === 0 ? ' sunday' : ''}`}>{day}</th>)}</tr></thead>
+          <tbody>{Array.from({ length: dates.length / 7 }, (_, week) => (
+            <tr key={week}>{dates.slice(week * 7, week * 7 + 7).map((date) => {
+              const dayEvents = schedulesOn(events, date);
+              const inTrip = date >= startDate && date <= travelEnd;
+              const outsideMonth = date.slice(0, 7) !== month;
+              return (
+                <td key={date} className={`${inTrip ? 'travel-days ' : ''}${outsideMonth ? 'calendar-outside' : ''}`}>
+                  <button type="button" className="calendar-day-button" aria-label={`${formatDate(date, { year: 'numeric', month: 'long', day: 'numeric' })}, 일정 ${dayEvents.length}개`}
+                    aria-pressed={date === selectedDate} aria-current={date === today ? 'date' : undefined} onClick={() => selectDate(date)}>
+                    <span className={`calendar-day-number${date === today ? ' today' : ''}`}>{Number(date.slice(8))}</span>
+                    {dayEvents.slice(0, 2).map((event) => <span className="schedule-card" key={event.id} title={`${event.time} ${event.content}`}>{event.content}</span>)}
+                  </button>
+                </td>
+              );
+            })}</tr>
+          ))}</tbody>
+        </table>
+      </section>
+      <aside className="calender-today-box" aria-label="선택한 날짜의 일정">
+        <div className="today-title">
+          <h2 className="today-schedule-title">{selectedDate === today ? '오늘 일정' : '선택한 날 일정'}</h2>
+          <span className="today-info">{formatDate(selectedDate, { month: 'long', day: 'numeric', weekday: 'long' })}</span>
         </div>
-
-        <div className='today-schedule-line'></div>
-        
-        <div className='today-schedule-box'>
-          <div className='today-schedule-content today-schedule'>
-            <span className='today-schedule-time today-time'>09:30</span>
-            <span className='today-schedule-text'>성산 이동</span>
-            <div className='today-schedule-place-box'>
-              <img src={todayPlaceIcon} alt="today-schedule-place-icon" className='schedule-place-icon'/>
-              <span className='today-schedule-place'>성산읍</span>
-            </div>
-          </div>
-
-          <div className='today-schedule-content'>
-            <span className='today-schedule-time'>12:10</span>
-            <span className='today-schedule-text'>점심 예약</span>
-            <div className='today-schedule-place-box'>
-              <img src={todayPlaceIcon} alt="today-schedule-place-icon" className='schedule-place-icon'/>
-              <span className='today-schedule-place'>갈치조림</span>
-            </div>
-          </div>
-
-          <div className='today-schedule-content'>
-            <span className='today-schedule-time'>16:00</span>
-            <span className='today-schedule-text'>카페 투어</span>
-            <div className='today-schedule-place-box'>
-              <img src={todayPlaceIcon} alt="today-schedule-place-icon" className='schedule-place-icon'/>
-              <span className='today-schedule-place'>월정리</span>
-            </div>
-          </div>
+        <div className="today-schedule-line" />
+        <div className="today-schedule-box">
+          {selectedEvents.length === 0 ? <p className="calendar-empty">등록된 일정이 없습니다.</p> : selectedEvents.map((event) => (
+            <article className="today-schedule-content" key={event.id}>
+              <div className="calendar-event-heading">
+                <time className="today-schedule-time" dateTime={`${event.date}T${event.time}`}>{event.time}</time>
+                <button type="button" className="calendar-delete-button" aria-label={`${event.time} ${event.content} 삭제`} onClick={() => deleteSchedule(event.id)}>삭제</button>
+              </div>
+              <p className="today-schedule-text">{event.content}</p>
+              {event.location && <div className="today-schedule-place-box"><img src={todayPlaceIcon} alt="" className="schedule-place-icon" /><span className="today-schedule-place">{event.location}</span></div>}
+            </article>
+          ))}
         </div>
-      </div>
+      </aside>
     </div>
-  )
+  );
 }
 export default Calender;
