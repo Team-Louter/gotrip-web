@@ -83,4 +83,14 @@ p {
   border-radius: 20px;
   background-color: #EFEDED;
   border: none;
+  margin-top: 16px;
 }
+
+.password-rules ul { transition: color 120ms ease; }
+.password-rules .rule-idle { color: #536273; }
+.password-rules .rule-valid { color: #168542; }
+.password-rules .rule-invalid { color: #d93025; }
+.password-rules .rule-valid .check { filter: sepia(1) saturate(5) hue-rotate(75deg); }
+.password-rules .rule-invalid .check { filter: sepia(1) saturate(8) hue-rotate(320deg); }
+.signup-error { color: #d93025; margin: 8px 0 0; line-height: 1.5; }
+.password-mismatch { margin-top: 4px; }
