@@ -63,6 +63,19 @@
   border-radius: 20px;
 }
 
+.privacy-policy-text {
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 200px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.yes-login:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .lets-check2 {
   display: flex;
   align-items: center;   /* 늘어남 방지 */

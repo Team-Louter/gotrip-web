@@ -13,9 +13,7 @@ import SignUp from './files/signUp';
 import SignUp2 from './files/signUp2';
 import SignUpTerms from './files/signUpTerms';
 import './App.css';
-import Memo from './files/memoPage';
 
-// 로그인/회원가입처럼 사이드바가 필요 없는 페이지용 레이아웃
 function AuthLayout() {
   return (
     <div className="layout">
@@ -24,7 +22,6 @@ function AuthLayout() {
   );
 }
 
-// 사이드바가 있는 메인 서비스용 레이아웃
 function MainLayout() {
   return (
     <div className="layout">
@@ -37,7 +34,9 @@ function MainLayout() {
 function App() {
   return (
     <Routes>
-      {/* 사이드바 없는 페이지 */}
+      <Route path="/" element={<Navigate to="/islogin" replace />} />
+
+      {/* 로그인 → 회원가입 → step2 → 약관 → 다시 로그인 */}
       <Route element={<AuthLayout />}>
         <Route path="/islogin" element={<IsLogin />} />
         <Route path="/signup" element={<SignUp />} />
@@ -45,7 +44,6 @@ function App() {
         <Route path="/signup/terms" element={<SignUpTerms />} />
       </Route>
 
-      {/* 사이드바 있는 페이지 */}
       <Route element={<MainLayout />}>
         <Route path="/main" element={<MainPage />} />
         <Route path="/map" element={<Map />} />
@@ -58,8 +56,7 @@ function App() {
         <Route path="/pay" element={<PayForm />} />
       </Route>
 
-    
-      <Route path="*" element={<Navigate to="/signup" replace />} /> 
+      <Route path="*" element={<Navigate to="/islogin" replace />} />
     </Routes>
   );
 }
