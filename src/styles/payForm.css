@@ -1,12 +1,131 @@
 .lets-pay {
   display: flex;
-  align-items: center;   
+  align-items: center;
   gap: 4px;
-  line-height: 1;        
+  line-height: 1;
   margin: 0;
 }
 
-.gotrip-wallet{
+.pay-page {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 55px 24px 60px;
+}
+
+.pay-notice {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.pay-notice-success {
+  background: #dcf9c5;
+  color: #222;
+}
+
+.pay-notice-error {
+  background: #ffc5c2;
+  color: #222;
+}
+
+.pay-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.pay-modal {
+  width: min(265px, 100%);
+  padding: 18px 20px 14px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+}
+
+.pay-modal h3 {
+  margin: 0 0 14px;
+  font-size: 14px;
+}
+
+.pay-modal-label,
+.pay-delete-confirm {
+  display: block;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.pay-delete-confirm {
+  padding: 8px 0 28px;
+}
+
+.pay-modal-input {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 18px;
+  outline: none;
+  background: #f1f1f1;
+  font-size: 13px;
+}
+
+.pay-modal-input:focus {
+  box-shadow: 0 0 0 2px rgba(8, 133, 254, 0.28);
+}
+
+.pay-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pay-modal-actions button {
+  min-width: 48px;
+  padding: 5px 12px;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.pay-modal-actions .pay-modal-confirm {
+  border-color: #5b8df7;
+  background: #5b8df7;
+  color: #fff;
+}
+
+.pay-modal-actions .pay-modal-confirm.is-delete {
+  border-color: #ff6c6c;
+  background: #ff6c6c;
+  color: #fff;
+}
+
+.gotrip-wallet {
   width: 32px;
   height: 30px;
   vertical-align: middle;
@@ -14,27 +133,26 @@
 }
 
 .pay-card {
-  background: #FDFCF4;                       
-  border-radius: 40px;                        
+  background: #fdfcf4;
+  border-radius: 40px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: 40px;                              
-  width: 800px;                               
-  min-height: 550px;                      
-  margin: auto;
-  position: relative;
-  left: 175px;   
-  top: 20px;
+  padding: 40px;
+  width: 880px;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 550px;
+  margin: 0 auto;
 }
 
 .total-pay {
-  background-color: white;
+  background-color: #fff;
   border-radius: 30px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   min-height: 190px;
   margin-top: 30px;
-  padding: 20px 35px; 
+  padding: 20px 35px;
   box-sizing: border-box;
-  margin-bottom: 20px
+  margin-bottom: 20px;
 }
 
 #total-usepay {
@@ -47,7 +165,7 @@
   font-size: 28px;
   font-weight: bolder;
   margin-bottom: 8px;
-  color: #0885FE;
+  color: #0885fe;
 }
 
 #expec-pay {
@@ -66,17 +184,12 @@
 .pay-money {
   height: 50px;
   border: none;
-  border-radius: 15px;
+  border-radius: 30px;
   padding: 0 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
   outline: none;
-}
-
-.pay-input, 
-.pay-money {
-  background-color: white;
-  border-radius: 30px;
+  background-color: #fff;
 }
 
 .pay-input {
@@ -85,44 +198,49 @@
 
 .pay-money {
   flex: 1;
+  min-width: 0;
 }
 
 .pay-add,
 .pay-edit,
 .pay-delete {
-  flex-shrink: 0;          
+  flex-shrink: 0;
   width: 70px;
   height: 50px;
   border: none;
-  border-radius: 30px;    
+  border-radius: 30px;
   padding: 0;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-weight: bold;
   font-size: 14px;
-  white-space: nowrap;     
+  white-space: nowrap;
 }
 
 .pay-add,
 .pay-edit {
-  background: #FFE982;
+  background: #ffe982;
 }
 
 .pay-delete {
-  background: #FF8F82;
+  background: #ff8f82;
 }
 
 .pay-add:hover,
 .pay-edit:hover {
-  background: #f3d660;   
+  background: #f3d660;
 }
 
 .pay-delete:hover {
-  background: #e88a82;   
+  background: #e88a82;
 }
 
 .budget-pay {
   margin-top: 20px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 2px 8px 2px 2px;
+  scrollbar-gutter: stable;
 }
 
 .pay-item,
@@ -132,15 +250,21 @@
   height: 55px;
   padding: 0 20px;
   margin-bottom: 15px;
-  background-color: white;
+  background-color: #fff;
   border-radius: 23px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.pay-item:focus-visible {
+  outline: 2px solid #0885fe;
+  outline-offset: 2px;
 }
 
 .pay-name {
-  flex: 1;                 
+  flex: 1;
 }
 
 .pay-item-money {
@@ -150,7 +274,7 @@
 .pay-who {
   width: 120px;
   font-size: 14px;
-  font-weight: normal;     
+  font-weight: normal;
 }
 
 .pay-check {
@@ -158,12 +282,35 @@
 }
 
 .green-item {
-  background-color: #FAFAD6;
-
+  background-color: #fafad6;
 }
 
 .pay-check2 {
   font-size: 22px;
-  color: #5BC046;
+  color: #5bc046;
 }
-                            
+
+@media (max-width: 900px) {
+  .pay-page {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .pay-card {
+    padding: 28px;
+  }
+
+  .pay-row {
+    gap: 8px;
+  }
+
+  .pay-input {
+    width: 150px;
+  }
+
+  .pay-add,
+  .pay-edit,
+  .pay-delete {
+    width: 56px;
+  }
+}
