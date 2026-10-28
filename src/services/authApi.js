@@ -1,45 +1,30 @@
-// Keep signup/login pointed at the auth server even when the developer has not
-// created a local .env file from .env.example yet.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
+import { apiRequest } from '../api/client.js';
+import { saveToken } from '../api/session.js';
 
-async function readApiResponse(response, fallbackMessage) {
-  const raw = await response.text();
-  let body = {};
-  try { body = raw ? JSON.parse(raw) : {}; } catch { /* non-JSON server response */ }
-  if (!response.ok) {
-    throw new Error(body.message || body.error || `인증 서버 오류 (${response.status}). 백엔드 서버가 실행 중인지 확인해주세요.`);
-  }
-  if (!body.token) throw new Error(fallbackMessage);
-  return body;
-}
+const environment = import.meta.env ?? {};
+const AUTH_PREFIX = environment.VITE_AUTH_API_PREFIX || '/api/members';
 
-export async function signUp(payload) {
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
+export function createAuthApi({ request = apiRequest, prefix = AUTH_PREFIX, storeToken = saveToken } = {}) {
+  const base = prefix.replace(/\/+$/, '');
+
+  async function login({ loginId, password }) {
+    const result = await request(`${base}/login`, {
+      method: 'POST', auth: false, body: { loginId: loginId.trim(), password },
     });
-  } catch {
-    throw new Error('서버에 연결할 수 없습니다. 백엔드 실행 상태와 VITE_API_BASE_URL을 확인해주세요.');
+    if (typeof result?.token !== 'string' || !result.token.trim()) throw new Error('로그인 응답에 토큰이 없습니다.');
+    storeToken(result.token, loginId.trim());
+    return result;
   }
 
-  return readApiResponse(response, '회원가입 응답에 토큰이 없습니다. 백엔드 API 응답을 확인해주세요.');
+  async function signUp(payload) {
+    const { loginId, password, passwordConfirm, birthDate, email, nickname, termsAccepted, marketingAccepted } = payload;
+    const body = { loginId, password, passwordConfirm, birthDate, email, nickname };
+    // 저장소의 로컬 인증 서버는 약관 동의도 받고, 운영 서버는 Swagger의 회원 필드를 받습니다.
+    if (base === '/api/auth') Object.assign(body, { termsAccepted, marketingAccepted });
+    return request(`${base}/signup`, { method: 'POST', auth: false, body });
+  }
+
+  return { login, signUp, logIn: (loginId, password) => login({ loginId, password }) };
 }
 
-export async function logIn(loginId, password) {
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ loginId, password }),
-    });
-  } catch {
-    throw new Error('서버에 연결할 수 없습니다. 백엔드 실행 상태와 VITE_API_BASE_URL을 확인해주세요.');
-  }
-  return readApiResponse(response, '로그인 응답에 토큰이 없습니다. 백엔드 API 응답을 확인해주세요.');
-}
+export const { login, logIn, signUp } = createAuthApi();

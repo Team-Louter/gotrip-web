@@ -82,8 +82,8 @@
   margin-left: -10px;
 }
 
-.login-error { color: #d93025; margin: 0 0 8px -10px; line-height: 1.5; }
-.lets-login:disabled { opacity: 0.65; cursor: wait; }
+.login-error { max-width: 350px; color: #a14532; margin: 0 0 8px -10px; font-size: 13px; line-height: 1.5; }
+.lets-login:disabled { opacity: .5; cursor: default; }
 .login-left form .login-button { margin-top: 18px; }
 .login-success { color: #168542; margin: 0 0 8px -10px; line-height: 1.5; }
 

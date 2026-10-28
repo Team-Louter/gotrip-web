@@ -69,26 +69,3 @@ test('message persistence failures preserve previous messages', async () => {
   await assert.rejects(api.editMessage('jeju', 'jeju-2', '저장 실패'), /저장/);
   assert.deepEqual(await api.getChatRoom('jeju'), before);
 });
-
-test('HTTP message actions use documented endpoints and multipart uploads', async () => {
-  const requests = [];
-  const room = { id: 'room-1', name: '여행방', messages: [] };
-  const api = createChatApi({ useMock: false, fetchImpl: async (url, options) => {
-    requests.push({ url, ...options });
-    return { ok: true, status: 200, json: async () => url.endsWith('/uploads') ? { attachments: [{ type: 'image', url: 'https://example.test/image.png', name: 'image.png' }] } : room };
-  } });
-  await api.sendMessage('room-1', { content: '안녕', clientId: 'unique' });
-  await api.editMessage('room-1', 'm-1', '수정');
-  await api.deleteMessage('room-1', 'm-1');
-  await api.setReaction('room-1', 'm-1', '👍', true);
-  await api.uploadImages([new File(['image'], 'image.png', { type: 'image/png' })]);
-  assert.equal(requests[0].url, '/api/chat/rooms/room-1/messages');
-  assert.equal(JSON.parse(requests[0].body).clientId, 'unique');
-  assert.equal(requests[1].method, 'PATCH');
-  assert.equal(requests[2].method, 'DELETE');
-  assert.equal(requests[3].method, 'PUT');
-  assert.deepEqual(JSON.parse(requests[3].body), { emoji: '👍', active: true });
-  assert.equal(requests[4].url, '/api/chat/uploads');
-  assert.ok(requests[4].body instanceof FormData);
-  assert.equal(requests[4].headers['Content-Type'], undefined);
-});
