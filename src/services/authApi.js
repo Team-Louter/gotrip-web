@@ -1,6 +1,8 @@
-// Keep signup/login pointed at the auth server even when the developer has not
+// Keep signup pointed at the local auth server even when the developer has not
 // created a local .env file from .env.example yet.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
+
+const LOGIN_API_BASE_URL = (import.meta.env.VITE_LOGIN_API_BASE_URL || 'https://api-gotrip.prot.kr').replace(/\/$/, '');
 
 async function readApiResponse(response, fallbackMessage) {
   const raw = await response.text();
@@ -32,14 +34,13 @@ export async function signUp(payload) {
 export async function logIn(loginId, password) {
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    response = await fetch(`${LOGIN_API_BASE_URL}/api/members/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ loginId, password }),
     });
   } catch {
-    throw new Error('서버에 연결할 수 없습니다. 백엔드 실행 상태와 VITE_API_BASE_URL을 확인해주세요.');
+    throw new Error('서버에 연결할 수 없습니다. 백엔드 실행 상태와 VITE_LOGIN_API_BASE_URL을 확인해주세요.');
   }
   return readApiResponse(response, '로그인 응답에 토큰이 없습니다. 백엔드 API 응답을 확인해주세요.');
 }
