@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import gotrippro from '../images/gotrip-pro.jpg';
 import gotripsearch from '../icons/gotrip-search.png';
 import gotriplogo4 from '../images/gotrip-logo4.png';
@@ -27,8 +27,9 @@ function ChatRoom() {
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       setList((current) => ({ ...current, status: current.rooms.length ? 'ready' : 'loading', error: '' }));
-      chatApi.getChatRooms({ query, signal: controller.signal }).then((rooms) => {
-        if (!controller.signal.aborted) setList((current) => ({ rooms: rooms.map((room) => ({ ...room, lastMessage: room.lastMessage || current.rooms.find((item) => item.id === room.id)?.lastMessage || '' })), status: 'ready', error: '' }));
+      const request = chatApi.getRoomList ? chatApi.getRoomList({ query, signal: controller.signal }) : chatApi.getChatRooms({ query, signal: controller.signal }).then((rooms) => ({ rooms, serverError: null }));
+      request.then(({ rooms, serverError }) => {
+        if (!controller.signal.aborted) setList((current) => ({ rooms: rooms.map((room) => ({ ...room, lastMessage: room.lastMessage || current.rooms.find((item) => item.id === room.id)?.lastMessage || '' })), status: 'ready', error: '', serverError }));
       }).catch((reason) => {
         if (!controller.signal.aborted) setList({ rooms: [], status: 'error', error: reason.message });
       });
@@ -45,7 +46,7 @@ function ChatRoom() {
   }, []);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || roomId.startsWith('local-')) return;
     const controller = new AbortController();
     let timer;
     let latestMessageId;
@@ -77,7 +78,7 @@ function ChatRoom() {
         setSyncError('');
         setDetail((current) => ({ id: roomId, room: current.id === roomId && current.room ? { ...room, messages: mergeMessages(room.messages, current.room.messages) } : room, error: '' }));
         setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === roomId ? { ...item, lastMessage: room.lastMessage } : item) }));
-        if (!chatApi.useMock) timer = setTimeout(poll, 3000);
+        if (!chatApi.useMock && !chatApi.isLocalRoom?.(roomId)) timer = setTimeout(poll, 3000);
       }
     }).catch((reason) => {
       if (!controller.signal.aborted) setDetail({ id: roomId, room: null, error: reason.message });
@@ -88,7 +89,7 @@ function ChatRoom() {
   function roomCreated(room) {
     setCreating(false);
     setQuery('');
-    setList((current) => ({ rooms: [room, ...current.rooms.filter((item) => item.id !== room.id)], status: 'ready', error: '' }));
+    setList((current) => ({ ...current, rooms: [room, ...current.rooms.filter((item) => item.id !== room.id)], status: 'ready', error: '' }));
     setDetail({ id: room.id, room, error: '' });
     setRefresh((value) => value + 1);
     navigate(`/chat/${encodeURIComponent(room.id)}`);
@@ -103,6 +104,8 @@ function ChatRoom() {
   const activeRoom = roomId && detail.id === roomId ? detail.room : null;
   const detailError = detail.id === roomId ? detail.error : '';
 
+  if (roomId?.startsWith('local-')) return <Navigate to="/chat" replace />;
+
   return (
     <div className="chatroom-layout chat-rooms-page">
       <aside className="chat-left" aria-label="채팅방 목록">
@@ -114,19 +117,20 @@ function ChatRoom() {
           </form>
         </div>
         <div className="chat-list" aria-busy={list.status === 'loading'}>
+          {list.serverError && <div className="chat-server-notice" role="status"><p>{list.serverError.message}</p>{!getToken() && <Link to="/islogin" state={{ from: '/chat' }}>서버 채팅 로그인</Link>}<span>체험 채팅방은 + 버튼으로 만들 수 있어요.</span></div>}
           {list.status === 'error' ? <div className="chat-feedback" role="alert"><p>{list.error}</p>{!chatApi.useMock && !getToken() ? <Link className="chat-retry" to="/islogin" state={{ from: roomId ? `/chat/${roomId}` : '/chat' }}>로그인하기</Link> : <button type="button" className="chat-retry" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button>}</div> : <>
             {visibleRooms.map((room) => (
               <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`} key={room.id}
                 aria-label={`${room.name} 채팅방 열기`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/${encodeURIComponent(room.id)}`)}>
                 <img className="gotrip-pro" src={gotrippro} alt="" />
-                <span className="chat-item-text"><span className="chatroom-name">{room.name}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
+                <span className="chat-item-text"><span className="chatroom-name">{room.name}</span>{chatApi.supportsLocalRooms && <small className="chat-room-source">{room.source === 'local' ? '체험 · 이 브라우저에 저장' : '서버 채팅'}</small>}<span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
               </button>
             ))}
             {list.status === 'loading' && <p className="chat-feedback" role="status">채팅방을 불러오는 중이에요.</p>}
             {list.status === 'ready' && visibleRooms.length === 0 && <p className="chat-feedback chat-empty-message" role="status">{query.trim() ? '검색된 채팅방이 없어요.' : '아직 채팅방이 없어요'}</p>}
           </>}
         </div>
-        <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!chatApi.useMock && !getToken()} onClick={() => setCreating(true)}>+</button>
+        <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!chatApi.supportsLocalRooms && !chatApi.useMock && !getToken()} onClick={() => setCreating(true)}>+</button>
       </aside>
       {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : <main className="chat-right"><div className="chat-feedback" role={detailError ? 'alert' : 'status'}>{detailError || '채팅방을 불러오는 중이에요.'}{detailError && <button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button>}</div></main> : (
         <main className="chat-right">

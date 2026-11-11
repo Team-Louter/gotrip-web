@@ -1,9 +1,5 @@
-import { API_BASE_URL, createApiClient } from '../api/client.js';
+import { BACKEND_BASE_URL, createApiClient } from '../api/client.js';
 import { createMemoSummaryStore } from '../data/memoSummaryStore.js';
-
-const environment = import.meta.env ?? {};
-// /memo는 화면 주소와 겹치므로 개발에서는 별도 프록시 경로를 사용합니다.
-const MEMO_BASE_URL = environment.DEV ? '/backend' : (API_BASE_URL || '/backend');
 
 function memoId(value) {
   const id = String(value);
@@ -33,7 +29,7 @@ export function matchesMemo(memo, query) {
 
 export function createMemoApi(options = {}) {
   const { summaryStore = createMemoSummaryStore(), ...httpOptions } = options;
-  const request = createApiClient({ baseUrl: MEMO_BASE_URL, ...httpOptions });
+  const request = createApiClient({ baseUrl: BACKEND_BASE_URL, ...httpOptions });
   const withSummary = (value) => { const memo = normalizeMemo(value); return { ...memo, summary: summaryStore.read(memo.id) }; };
   return {
     async getMemos({ signal } = {}) {

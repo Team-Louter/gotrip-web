@@ -5,6 +5,10 @@ export const mockFriends = [
   { id: 'friend-yujin', name: '최유진' },
   { id: 'friend-hajun', name: '정하준' },
   { id: 'friend-daeun', name: '송다은' },
+  { id: 'friend-soobin', name: '한수빈' },
+  { id: 'friend-junseo', name: '오준서' },
+  { id: 'friend-chaewon', name: '윤채원' },
+  { id: 'friend-dohyun', name: '강도현' },
 ];
 
 const jejuMessages = [

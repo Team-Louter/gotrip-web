@@ -11,6 +11,8 @@ VITE_AUTH_API_PREFIX=/api/members
 
 회원가입 화면은 `/api/members/signup`에 `loginId`, `password`, `passwordConfirm`, `birthDate`, `email`, `nickname`을 전송합니다. 성공 응답은 문자열이며 토큰이 없어도 가입 성공으로 처리합니다. 가입 완료 안내 후 로그인 화면으로 이동하고, `/api/members/login`에서 받은 토큰은 채팅·메모와 공통으로 `sessionStorage(gotrip.auth.token)`에 저장합니다. 로그인 이전 주소가 채팅 또는 메모이면 해당 화면으로 돌아갑니다.
 
+회원가입 비밀번호는 대문자·소문자·숫자·특수문자 중 3종 이상을 포함하는 8~20자이며 같은 문자가 3번 연속될 수 없습니다. 마케팅 수신 동의는 선택입니다.
+
 ## 저장소에 포함된 로컬 인증 서버
 
 프로젝트의 기존 React/Vite 화면에 맞춘 실행 가능한 Node.js 인증 API입니다. 별도 패키지 설치 없이 Node 기본 모듈을 사용합니다.

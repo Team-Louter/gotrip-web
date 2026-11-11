@@ -16,7 +16,7 @@ test('default application uses real server; unsupported controls are unavailable
   assert.equal(chatApi.useMock, false);
   assert.equal(chatApi.maxMessageLength, 2000);
   assert.equal(chatApi.maxRoomNameLength, 100);
-  assert.deepEqual(Object.values(chatApi.capabilities), [false, false, false, false, false]);
+  assert.deepEqual(Object.values(chatApi.capabilities), [true, false, false, false, false]);
 });
 
 test('server room list uses Bearer auth, local search, and numeric member IDs on creation', async () => {
@@ -34,6 +34,16 @@ test('server room list uses Bearer auth, local search, and numeric member IDs on
   assert.equal(requests[0].signal, controller.signal);
   assert.equal(requests[0].headers.Authorization, 'Bearer test-token');
   assert.deepEqual(JSON.parse(requests[2].body), { name: '제주 여행', memberIds: [7, 8] });
+});
+
+test('room creation preserves server not-found reason without creating a local room', async () => {
+  const api = serverApi(async () => new Response('초대할 회원을 찾을 수 없습니다.', { status: 404 }));
+  await assert.rejects(api.createChatRoom({ name: '여행', memberIds: ['17'] }), error => error.status === 404 && error.message === '초대할 회원을 찾을 수 없습니다.');
+});
+
+test('generic Spring room 404 shows an actionable message instead of timestamp metadata', async () => {
+  const api = serverApi(async () => reply({ timestamp: '2026-11-09T11:23:45Z', status: 404, error: 'Not Found', path: '/api/chat/rooms' }, 404));
+  await assert.rejects(api.createChatRoom({ name: '여행', memberIds: ['17'] }), error => error.status === 404 && error.message.includes('초대 회원 ID') && !error.message.includes('timestamp'));
 });
 
 test('room detail joins room metadata and paginated messages without a nonexistent detail endpoint', async () => {

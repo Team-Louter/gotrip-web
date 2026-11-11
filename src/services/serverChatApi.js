@@ -1,5 +1,6 @@
 import { createApiClient } from '../api/client.js';
 import { getMemberId, rememberMemberId } from '../api/session.js';
+import { createMemberApi, matchesMember } from './memberApi.js';
 
 export const MESSAGE_PAGE_SIZE = 50;
 
@@ -26,11 +27,12 @@ export function parseMemberIds(value) {
 
 function normalizeRoom(room) {
   if (room?.id == null || typeof room.name !== 'string') throw new Error('채팅방 응답 형식을 확인해 주세요.');
-  return { ...room, id: String(room.id), members: [], membersKnown: false, messages: [], lastMessage: '' };
+  return { ...room, id: String(room.id), source: 'server', members: [], membersKnown: false, messages: [], lastMessage: '' };
 }
 
 export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId = getMemberId, onMemberIdentified = rememberMemberId } = {}) {
   const request = createApiClient({ baseUrl, fetchImpl, token, onUnauthorized });
+  const members = createMemberApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId });
   const rooms = new Map();
 
   function normalizeMessage(message, mine = false) {
@@ -49,7 +51,11 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
 
   const api = {
     useMock: false,
-    capabilities: { friends: false, attachments: false, replies: false, editing: false, reactions: false },
+    capabilities: { friends: true, attachments: false, replies: false, editing: false, reactions: false },
+    async getFriends({ query = '', ...options } = {}) {
+      const list = await members.getMembers({ ...options, excludeSelf: false });
+      return list.filter((member) => matchesMember(member, query));
+    },
     maxMessageLength: 2000,
     maxRoomNameLength: 100,
     async getChatRooms({ query = '', signal } = {}) {

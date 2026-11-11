@@ -6,3 +6,5 @@
 메모 목록·작성·수정·삭제와 프록시 설정은 [메모 API 문서](docs/memo-api.md)를 참고하세요.
 
 회원가입·로그인과 로컬 인증 서버 설정은 [회원가입 API 문서](docs/signup-api.md)를 참고하세요.
+
+친구 목록을 우선으로 연결한 전체 15개 API와 서버 명세의 제약은 [전체 API 연결 현황](docs/api-integration.md)을 참고하세요.

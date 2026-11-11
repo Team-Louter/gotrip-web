@@ -32,7 +32,8 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   const areaRef = useRef(null);
   const historyAnchor = useRef(null);
   const followLatest = useRef(true);
-  const capabilities = chatApi.capabilities;
+  const capabilities = room.capabilities ?? chatApi.capabilities;
+  const messageLimit = room.maxMessageLength ?? chatApi.maxMessageLength;
   const fileInputRef = useRef(null);
   const textInputRef = useRef(null);
   const endRef = useRef(null);
@@ -158,6 +159,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
         <img className="room-profile" src={gotrippro} alt="" />
         <div><p className="room-name">{room.name}</p><p className="room-status">{room.membersKnown === false ? '여행 대화' : `${room.members.length + 1}명 · ${[...room.members.map((member) => member.name), '나'].join(', ')}`}</p></div>
       </div>
+      {room.source === 'local' && <div className="chat-local-notice" role="note">체험 채팅 · 사진·답장·반응을 포함한 대화는 이 브라우저에만 저장됩니다. 실제 친구에게는 전송되지 않습니다.</div>}
       {syncError && <div className="chat-sync-error" role="alert">{syncError} {!getToken() ? <Link to="/islogin" state={{ from: `/chat/${room.id}` }}>다시 로그인</Link> : <button type="button" onClick={onRetrySync}>다시 시도</button>}</div>}
       <div ref={areaRef} className="message-area" aria-label="대화 내용" onScroll={(event) => { const area = event.currentTarget; followLatest.current = area.scrollHeight - area.scrollTop - area.clientHeight < 100; }}>
         {room.hasOlderMessages && <button type="button" className="chat-load-older" disabled={loadingOlder} onClick={loadOlder}>{loadingOlder ? '불러오는 중…' : '이전 대화 불러오기'}</button>}
@@ -219,7 +221,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
           <input ref={fileInputRef} type="file" aria-label="이미지 파일" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden onChange={attachImages} />
           {capabilities.attachments && <button type="button" className="composer-tool" title="이미지 첨부" aria-label="이미지 첨부" disabled={busy || uploading} onClick={() => fileInputRef.current?.click()}><img src={cameraIcon} alt="" /></button>}
           {capabilities.attachments && <button type="button" className="composer-tool" title="링크 첨부" aria-label="링크 첨부" aria-expanded={linkOpen} disabled={busy || uploading} onClick={() => setLinkOpen((value) => !value)}><img src={clipIcon} alt="" /></button>}
-          <textarea ref={textInputRef} className="message-input" aria-label="메시지 입력" placeholder="메시지 입력…" rows={1} maxLength={chatApi.maxMessageLength} value={content} disabled={busy} onChange={(e) => { setContent(e.target.value); clientIdRef.current = null; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.form.requestSubmit(); } }} />
+          <textarea ref={textInputRef} className="message-input" aria-label="메시지 입력" placeholder="메시지 입력…" rows={1} maxLength={messageLimit} value={content} disabled={busy} onChange={(e) => { setContent(e.target.value); clientIdRef.current = null; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.form.requestSubmit(); } }} />
           <button type="submit" className="chat-send-button" title="전송" aria-label="메시지 전송" disabled={busy || uploading || (!content.trim() && !attachments.length)}><img src={gotripplane} alt="" /></button>
         </div>
       </form>

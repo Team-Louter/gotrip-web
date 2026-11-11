@@ -25,7 +25,7 @@ function normalizeRoom(value) {
   };
 }
 
-export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImpl = globalThis.fetch, storage, ...serverOptions } = {}) {
+export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImpl = globalThis.fetch, storage, storageKey = CHAT_STORAGE_KEY, seedRooms = mockRooms, roomIdPrefix = '', ...serverOptions } = {}) {
   if (!useMock) return createServerChatApi({ baseUrl, fetchImpl, ...serverOptions });
   let localRooms;
   const browserStorage = () => storage ?? globalThis.localStorage;
@@ -34,15 +34,15 @@ export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImp
   function readRooms() {
     if (!localRooms) {
       try {
-        const saved = JSON.parse(browserStorage()?.getItem(CHAT_STORAGE_KEY) ?? 'null');
-        localRooms = Array.isArray(saved) ? saved.map(normalizeRoom) : copy(mockRooms);
-      } catch { localRooms = copy(mockRooms); }
+        const saved = JSON.parse(browserStorage()?.getItem(storageKey) ?? 'null');
+        localRooms = Array.isArray(saved) ? saved.map(normalizeRoom) : copy(seedRooms);
+      } catch { localRooms = copy(seedRooms); }
     }
     return localRooms;
   }
 
   function commitRooms(next) {
-    try { browserStorage()?.setItem(CHAT_STORAGE_KEY, JSON.stringify(next)); } catch {
+    try { browserStorage()?.setItem(storageKey, JSON.stringify(next)); } catch {
       throw new Error('변경 내용을 저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.');
     }
     localRooms = next;
@@ -138,15 +138,16 @@ export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImp
         return { ...message, reactions: [...reactions.filter((reaction) => reaction.emoji !== emoji), ...(count ? [{ emoji, count, mine: active }] : [])] };
       });
     },
-    async createChatRoom({ name, memberIds }, { signal } = {}) {
+    async createChatRoom({ name, memberIds, members: invitees }, { signal } = {}) {
       const title = name?.trim();
       const ids = [...new Set(memberIds ?? [])];
       if (!title || title.length > 50) throw new Error('방 이름은 1~50자로 입력해 주세요.');
       if (!ids.length) throw new Error('함께할 친구를 한 명 이상 선택해 주세요.');
       signal?.throwIfAborted();
-      const members = ids.map((id) => mockFriends.find((friend) => friend.id === id));
+      const availableFriends = Array.isArray(invitees) ? invitees : mockFriends;
+      const members = ids.map((id) => availableFriends.find((friend) => friend.id === id));
       if (members.some((member) => !member)) throw new Error('친구 목록을 다시 확인해 주세요.');
-      const room = { id: crypto.randomUUID(), name: title, members, lastMessage: '', messages: [], createdAt: new Date().toISOString() };
+      const room = { id: `${roomIdPrefix}${crypto.randomUUID()}`, name: title, members, lastMessage: '', messages: [], createdAt: new Date().toISOString() };
       const next = [room, ...readRooms()];
       commitRooms(next);
       return copy(room);
@@ -154,7 +155,4 @@ export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImp
   };
 }
 
-export const chatApi = createChatApi({
-  useMock: environment.VITE_CHAT_USE_MOCK === 'true',
-  baseUrl: API_BASE_URL,
-});
+export const chatApi = environment.VITE_CHAT_USE_MOCK === 'true' ? createChatApi() : createServerChatApi({ baseUrl: API_BASE_URL });

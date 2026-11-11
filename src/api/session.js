@@ -6,6 +6,10 @@ export function getToken() {
   return globalThis.sessionStorage?.getItem(TOKEN_KEY) ?? null;
 }
 
+export function getLoginId() {
+  return globalThis.sessionStorage?.getItem(ACCOUNT_KEY) ?? null;
+}
+
 export function clearSession() {
   globalThis.sessionStorage?.removeItem(TOKEN_KEY);
   globalThis.sessionStorage?.removeItem(MEMBER_KEY);

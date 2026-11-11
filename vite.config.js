@@ -6,7 +6,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      open: '/signup',
+      host: '127.0.0.1',
+      port: 5179,
+      strictPort: true,
+      open: '/islogin',
       proxy: {
         '/api': {
           target: env.VITE_API_BASE_URL || 'https://api-gotrip.prot.kr',
