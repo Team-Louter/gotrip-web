@@ -1,15 +1,25 @@
-import { apiRequest } from '../api/client.js';
+import { apiRequest, createApiClient } from '../api/client.js';
 import { saveToken } from '../api/session.js';
 import { isValidSignupPassword } from '../data/signupValidation.js';
 
 const environment = import.meta.env ?? {};
-const AUTH_PREFIX = environment.VITE_AUTH_API_PREFIX || '/api/members';
+const localAuthBaseUrl = 'http://localhost:8080';
+const usesLocalAuth = environment.VITE_API_BASE_URL?.replace(/\/+$/, '') === localAuthBaseUrl;
+const AUTH_PREFIX = environment.VITE_AUTH_API_PREFIX || (usesLocalAuth ? '/api/auth' : '/api/members');
 
-export function createAuthApi({ request = apiRequest, prefix = AUTH_PREFIX, storeToken = saveToken } = {}) {
-  const base = prefix.replace(/\/+$/, '');
+export function createAuthApi({ request = apiRequest, prefix, storeToken = saveToken } = {}) {
+  const authPrefix = prefix ?? AUTH_PREFIX;
+  const base = authPrefix.replace(/\/+$/, '');
+  const splitLocalSignupLogin = prefix == null && !environment.VITE_AUTH_API_PREFIX && usesLocalAuth;
+  const loginBaseUrl = environment.VITE_LOGIN_API_BASE_URL
+    || (splitLocalSignupLogin ? 'https://api-gotrip.prot.kr' : '');
+  const loginRequest = loginBaseUrl && request === apiRequest
+    ? createApiClient({ baseUrl: loginBaseUrl.replace(/\/+$/, '') })
+    : request;
+  const loginPath = loginBaseUrl ? '/api/members/login' : `${base}/login`;
 
   async function login({ loginId, password }) {
-    const result = await request(`${base}/login`, {
+    const result = await loginRequest(loginPath, {
       method: 'POST', auth: false, body: { loginId: loginId.trim(), password },
     });
     if (typeof result?.token !== 'string' || !result.token.trim()) throw new Error('로그인 응답에 토큰이 없습니다.');
@@ -29,7 +39,7 @@ export function createAuthApi({ request = apiRequest, prefix = AUTH_PREFIX, stor
     if (password !== passwordConfirm) throw new Error('비밀번호가 동일하지 않습니다. 회원 정보를 다시 확인해주세요.');
     if (!/^\d{8}$/.test(body.birthDate || '')) throw new Error('생년월일을 YYYYMMDD 형식으로 입력해주세요.');
     if (!/^\S+@\S+\.\S+$/.test(body.email || '')) throw new Error('올바른 이메일 주소를 입력해주세요.');
-    // 저장소의 로컬 인증 서버는 약관 동의도 받고, 운영 서버는 Swagger의 회원 필드를 받습니다.
+    // 로컬 인증 서버는 약관 동의 필드를 받고, 운영 Swagger는 회원 필드만 받습니다.
     if (base === '/api/auth') Object.assign(body, { termsAccepted, marketingAccepted });
     return request(`${base}/signup`, { method: 'POST', auth: false, body });
   }
