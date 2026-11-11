@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import '../styles/payForm.css';
 import gotripwallet from '../icons/wallet.png';
 
 const initialExpenses = [
-  { id: 1, name: '항공권', amount: 320000, payer: '커리 도둑' },
-  { id: 2, name: '라멘 식사', amount: 56000, payer: '나' },
-  { id: 3, name: '숙소 예약금', amount: 210000, payer: '곤니치와~' },
+  { id: 1, name: '항공권', amount: 320000 },
+  { id: 2, name: '라멘 식사', amount: 56000 },
+  { id: 3, name: '숙소 예약금', amount: 210000 },
 ];
 
 function PayForm() {
@@ -13,10 +13,19 @@ function PayForm() {
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
   const [notice, setNotice] = useState(null);
-  const [selectedExpenseIds, setSelectedExpenseIds] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [editName, setEditName] = useState('');
   const [editAmount, setEditAmount] = useState('');
+
+  const listRef = useRef(null);
+  const scrollToNewExpense = useRef(false);
+
+  useLayoutEffect(() => {
+    if (scrollToNewExpense.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+      scrollToNewExpense.current = false;
+    }
+  }, [expenses.length]);
 
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
@@ -34,33 +43,23 @@ function PayForm() {
       return;
     }
 
+    scrollToNewExpense.current = true;
     setExpenses((current) => [
       ...current,
-      { id: Date.now(), name: itemName.trim(), amount, payer: '나' },
+      { id: Date.now(), name: itemName.trim(), amount },
     ]);
     setItemName('');
     setItemAmount('');
     showNotice('success', '추가 되었습니다!');
   };
 
-  const toggleExpense = (id) => {
-    setSelectedExpenseIds((current) => (
-      current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id]
-    ));
+  const openEditDialog = (expense) => {
+    setEditName(expense.name);
+    setEditAmount(String(expense.amount));
+    setDialog({ type: 'edit', id: expense.id });
   };
 
-  const openEditDialog = () => {
-    if (selectedExpenseIds.length === 0) {
-      showNotice('error', '수정할 항목을 선택해주세요.');
-      return;
-    }
-    const firstSelected = expenses.find((expense) => expense.id === selectedExpenseIds[0]);
-    setEditName(firstSelected?.name ?? '');
-    setEditAmount(String(firstSelected?.amount ?? ''));
-    setDialog({ type: 'edit' });
-  };
-
-  const confirmEditExpenses = () => {
+  const confirmEditExpense = () => {
     const amount = Number(editAmount);
     if (!editName.trim() || !Number.isFinite(amount) || amount <= 0) {
       setDialog(null);
@@ -69,7 +68,7 @@ function PayForm() {
     }
 
     setExpenses((current) => current.map((expense) => (
-      selectedExpenseIds.includes(expense.id)
+      expense.id === dialog.id
         ? { ...expense, name: editName.trim(), amount }
         : expense
     )));
@@ -77,17 +76,8 @@ function PayForm() {
     showNotice('success', '수정되었습니다.');
   };
 
-  const openDeleteDialog = () => {
-    if (selectedExpenseIds.length === 0) {
-      showNotice('error', '삭제할 항목을 선택해주세요.');
-      return;
-    }
-    setDialog({ type: 'delete' });
-  };
-
-  const confirmDeleteExpenses = () => {
-    setExpenses((current) => current.filter((expense) => !selectedExpenseIds.includes(expense.id)));
-    setSelectedExpenseIds([]);
+  const confirmDeleteExpense = () => {
+    setExpenses((current) => current.filter((expense) => expense.id !== dialog.id));
     setDialog(null);
     showNotice('success', '삭제되었습니다.');
   };
@@ -116,6 +106,7 @@ function PayForm() {
             className="pay-input"
             type="text"
             placeholder="품목"
+            aria-label="품목"
             value={itemName}
             onChange={(event) => setItemName(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && addExpense()}
@@ -125,41 +116,26 @@ function PayForm() {
             type="number"
             min="1"
             placeholder="금액"
+            aria-label="금액"
             value={itemAmount}
             onChange={(event) => setItemAmount(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && addExpense()}
           />
           <button className="pay-add" type="button" onClick={addExpense}>추가</button>
-          <button className="pay-edit" type="button" onClick={openEditDialog}>수정</button>
-          <button className="pay-delete" type="button" onClick={openDeleteDialog}>삭제</button>
         </div>
 
-        <div className="budget-pay">
-          {expenses.map((expense) => {
-            const isSelected = selectedExpenseIds.includes(expense.id);
-            return (
-              <div
-                className={`pay-item${isSelected ? ' green-item' : ''}`}
-                key={expense.id}
-                role="button"
-                tabIndex={0}
-                aria-pressed={isSelected}
-                onClick={() => toggleExpense(expense.id)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    toggleExpense(expense.id);
-                  }
-                }}
-              >
-                <span className="pay-name">{expense.name}</span>
-                <span className="pay-item-money">{formatWon(expense.amount)}</span>
-                <span className="pay-who">{expense.payer}</span>
-                <span className={isSelected ? 'pay-check2' : 'pay-check'}>✓</span>
+        <ul className="budget-pay" ref={listRef} tabIndex={0} aria-label="품목 목록">
+          {expenses.map((expense) => (
+            <li className="pay-item" key={expense.id}>
+              <span className="pay-name">{expense.name}</span>
+              <span className="pay-item-money">{formatWon(expense.amount)}</span>
+              <div className="pay-item-actions">
+                <button className="pay-edit" type="button" aria-label={expense.name + ' 수정'} onClick={() => openEditDialog(expense)}>수정</button>
+                <button className="pay-delete" type="button" aria-label={expense.name + ' 삭제'} onClick={() => setDialog({ type: 'delete', id: expense.id, name: expense.name })}>삭제</button>
               </div>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {dialog && (
@@ -193,14 +169,14 @@ function PayForm() {
                 />
               </>
             ) : (
-              <p className="pay-delete-confirm">선택한 {selectedExpenseIds.length}개 항목을 삭제하시겠습니까?</p>
+              <p className="pay-delete-confirm">‘{dialog.name}’ 항목을 삭제하시겠습니까?</p>
             )}
             <div className="pay-modal-actions">
               <button type="button" className="pay-modal-cancel" onClick={() => setDialog(null)}>취소</button>
               <button
                 type="button"
                 className={`pay-modal-confirm${dialog.type === 'delete' ? ' is-delete' : ''}`}
-                onClick={dialog.type === 'edit' ? confirmEditExpenses : confirmDeleteExpenses}
+                onClick={dialog.type === 'edit' ? confirmEditExpense : confirmDeleteExpense}
               >
                 확인
               </button>

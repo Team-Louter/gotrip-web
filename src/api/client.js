@@ -17,17 +17,18 @@ export function createApiClient({ baseUrl = API_BASE_URL, fetchImpl = globalThis
   return async function request(path, { auth = true, body, headers, ...options } = {}) {
     const accessToken = auth ? token() : null;
     if (auth && !accessToken) throw new ApiError('로그인 후 이용해 주세요.', 401);
+    const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
     let response;
     try {
       response = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
         ...options,
         headers: {
           Accept: 'application/json',
-          ...(body != null ? { 'Content-Type': 'application/json' } : {}),
+          ...(body != null && !multipart ? { 'Content-Type': 'application/json' } : {}),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           ...headers,
         },
-        ...(body != null ? { body: typeof body === 'string' ? body : JSON.stringify(body) } : {}),
+        ...(body != null ? { body: multipart || typeof body === 'string' ? body : JSON.stringify(body) } : {}),
       });
     } catch (error) {
       if (error.name === 'AbortError' || options.signal?.aborted) throw error;

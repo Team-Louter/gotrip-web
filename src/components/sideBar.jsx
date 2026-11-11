@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { profileImageSource } from '../services/profileApi';
 import profileImg from '../images/profile.jpg';
 import homeIcon from '../icons/homeIcon.png';
 import chatIcon from '../icons/chatIcon.png';
@@ -11,7 +12,7 @@ import { getLoginId, getToken } from '../api/session.js';
 import { memberApi } from '../services/memberApi.js';
 import '../styles/sideBar.css';
 
-function SideBar() {
+function SideBar({ profile }) {
   const { pathname } = useLocation();
   const loginId = getLoginId();
   const [displayName, setDisplayName] = useState(loginId || '사용자');
@@ -33,8 +34,8 @@ function SideBar() {
   return (
     <div className="sidebar-container">
       <div className="profile-container">
-        <img src={profileImg} alt="프로필 사진" className="profile-img" />
-        <span className="user-name">{displayName}</span>
+        <img src={profileImageSource(profile?.profileImageUrl) || profileImg} alt="프로필 사진" className="profile-img" />
+        <span className="user-name">{profile?.nickname || displayName}</span>
       </div>
       <nav className="menu-container" aria-label="사이드 메뉴">
         <Link to="/main" className="sidebar-link" aria-current={isCurrent('/main') ? 'page' : undefined}>
@@ -89,6 +90,12 @@ function SideBar() {
               className="sidebar-icon"
             />
             영수증
+          </div>
+        </Link>
+        <Link to="/settings" className="sidebar-link" aria-current={isCurrent('/settings') ? 'page' : undefined}>
+          <div className="sidebar-item">
+            <span className="sidebar-icon sidebar-settings-icon" aria-hidden="true">⚙</span>
+            설정
           </div>
         </Link>
       </nav>
