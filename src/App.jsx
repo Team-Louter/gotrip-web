@@ -11,6 +11,7 @@ import ChatHomeAPI from './files/chatHomeAPI';
 import ChatRoom from './files/chatRoom';
 import IsLogin from './files/isLogin';
 import MemoPage from './files/memoPage';
+import FriendsPage from './files/friendsPage';
 import PayForm from './files/payForm';
 import SettingsPage from './files/settingsPage';
 import SignUp from './files/signUp';
@@ -62,7 +63,7 @@ function App() {
 
       <Route element={<MainLayout />}>
         <Route path="/main" element={<MainPage />} />
-        <Route path="/friends" element={<Navigate to="/chat" replace />} />
+        <Route path="/friends" element={<FriendsPage />} />
         <Route path="/map" element={<Map />} />
         <Route path="/map-api" element={<MapAPI />} />
         <Route path="/calendar" element={<Calender />} />

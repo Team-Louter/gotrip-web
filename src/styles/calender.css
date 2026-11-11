@@ -26,8 +26,9 @@
 .calender-title { margin: 0; font-size: 28px; font-weight: 750; line-height: 1.4; }
 .today-period { color: #777; font-size: 12px; }
 .calendar-month-nav { display: flex; align-items: center; gap: 6px; }
-.calendar-month-nav span { min-width: 92px; text-align: center; font-size: 13px; font-weight: 600; color: #6c6c62; }
-.calendar-month-nav button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; background: #fff8d9; color: #655d37; border-radius: 50%; font: inherit; font-size: 23px; line-height: 1; }
+.calendar-month-nav > span { min-width: 92px; text-align: center; font-size: 13px; font-weight: 600; color: #6c6c62; }
+.calendar-month-nav button { box-sizing: border-box; display: inline-flex; flex: 0 0 30px; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; background: #fff8d9; color: #655d37; border-radius: 50%; font: inherit; font-size: 23px; line-height: 1; text-align: center; }
+.calendar-month-nav-symbol { display: block; line-height: 1; transform: translateY(-3px); }
 .calendar-month-nav button:hover { background: #ffed9f; }
 .calendar-month-nav button:disabled { opacity: .35; cursor: default; }
 .calender { width: 100%; table-layout: fixed; user-select: none; border-collapse: collapse; margin-top: 26px; }
