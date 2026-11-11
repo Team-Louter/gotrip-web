@@ -1,4 +1,4 @@
-import { apiRequest, createApiClient } from '../api/client.js';
+import { apiRequest } from '../api/client.js';
 import { saveToken } from '../api/session.js';
 import { isValidSignupPassword } from '../data/signupValidation.js';
 
@@ -10,16 +10,9 @@ const AUTH_PREFIX = environment.VITE_AUTH_API_PREFIX || (usesLocalAuth ? '/api/a
 export function createAuthApi({ request = apiRequest, prefix, storeToken = saveToken } = {}) {
   const authPrefix = prefix ?? AUTH_PREFIX;
   const base = authPrefix.replace(/\/+$/, '');
-  const splitLocalSignupLogin = prefix == null && !environment.VITE_AUTH_API_PREFIX && usesLocalAuth;
-  const loginBaseUrl = environment.VITE_LOGIN_API_BASE_URL
-    || (splitLocalSignupLogin ? 'https://api-gotrip.prot.kr' : '');
-  const loginRequest = loginBaseUrl && request === apiRequest
-    ? createApiClient({ baseUrl: loginBaseUrl.replace(/\/+$/, '') })
-    : request;
-  const loginPath = loginBaseUrl ? '/api/members/login' : `${base}/login`;
 
   async function login({ loginId, password }) {
-    const result = await loginRequest(loginPath, {
+    const result = await request(`${base}/login`, {
       method: 'POST', auth: false, body: { loginId: loginId.trim(), password },
     });
     if (typeof result?.token !== 'string' || !result.token.trim()) throw new Error('로그인 응답에 토큰이 없습니다.');
