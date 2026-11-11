@@ -33,10 +33,10 @@ function Calender() {
             <p className="today-period">{formatDate(startDate, { month: 'long', day: 'numeric', weekday: 'long' })}부터 {formatDate(travelEnd, { month: 'long', day: 'numeric', weekday: 'long' })}까지</p>
           </div>
           <nav className="calendar-month-nav" aria-label="캘린더 월 이동">
-            <button type="button" className="calendar-add-schedule" aria-label="일정 추가" onClick={() => setAdding(true)}>+</button>
-            <button type="button" aria-label="이전 달" disabled={month === '0001-01'} onClick={() => changeMonth(-1)}>‹</button>
+            <button type="button" className="calendar-add-schedule" aria-label="일정 추가" onClick={() => setAdding(true)}><span className="calendar-month-nav-symbol" aria-hidden="true">+</span></button>
+            <button type="button" aria-label="이전 달" disabled={month === '0001-01'} onClick={() => changeMonth(-1)}><span className="calendar-month-nav-symbol" aria-hidden="true">‹</span></button>
             <span aria-live="polite">{formatDate(`${month}-01`, { year: 'numeric', month: 'long' })}</span>
-            <button type="button" aria-label="다음 달" disabled={month === '9999-12'} onClick={() => changeMonth(1)}>›</button>
+            <button type="button" aria-label="다음 달" disabled={month === '9999-12'} onClick={() => changeMonth(1)}><span className="calendar-month-nav-symbol" aria-hidden="true">›</span></button>
           </nav>
         </div>
         <table className="calender" aria-label={formatDate(`${month}-01`, { year: 'numeric', month: 'long' })}>
@@ -70,10 +70,9 @@ function Calender() {
             <article className="today-schedule-content" key={event.id}>
               <div className="calendar-event-heading">
                 <time className="today-schedule-time" dateTime={`${event.date}T${event.time}`}>{event.time}</time>
-                <button type="button" className="calendar-delete-button" aria-label={`${event.time} ${event.content} ${event.serverSynced ? '목록에서 숨기기' : '삭제'}`} onClick={() => deleteSchedule(event.id)}>{event.serverSynced ? '숨기기' : '삭제'}</button>
+                <button type="button" className="calendar-delete-button" aria-label={`${event.time} ${event.content} 삭제`} onClick={() => deleteSchedule(event.id)}>삭제</button>
               </div>
               <p className="today-schedule-text">{event.content}</p>
-              <small className="trip-notice">{event.localChanges ? '이 브라우저에서 수정됨' : event.serverSynced ? '서버에 등록됨 · 날짜는 이 브라우저에 저장' : '이 브라우저의 일정'}</small>
               {event.location && <div className="today-schedule-place-box"><img src={todayPlaceIcon} alt="" className="schedule-place-icon" /><span className="today-schedule-place">{event.location}</span></div>}
             </article>
           ))}
