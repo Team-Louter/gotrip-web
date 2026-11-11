@@ -110,7 +110,7 @@ function ChatRoom() {
     <div className="chatroom-layout chat-rooms-page">
       <aside className="chat-left" aria-label="채팅방 목록">
         <div className="chat-header">
-          <h2 className="chat-h">chats</h2>
+          <h2 className="chat-h">채팅</h2>
           <form className="search-box" role="search" onSubmit={(e) => { e.preventDefault(); setRefresh((value) => value + 1); }}>
             <input className="chattext-input" type="search" aria-label="채팅방 검색" placeholder="채팅방 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
             <button type="submit" className="chat-search-button" aria-label="검색"><img src={gotripsearch} alt="" /></button>
