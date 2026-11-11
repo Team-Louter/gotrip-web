@@ -3,6 +3,7 @@ import gotriplogotext from '../images/gotrip-logotext.png';
 import gotripbackground from '../images/gotrip-join.jpeg';
 import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getStartPage } from '../data/settings';
 import { login } from '../services/authApi';
 import '../styles/isLogin.css';
 
@@ -27,7 +28,7 @@ function IsLogin() {
     try {
       await login({ loginId: enteredLoginId, password: enteredPassword });
       const destination = location.state?.from;
-      navigate(typeof destination === 'string' && (/^\/chat(?:\/|$)/.test(destination) || ['/memo', '/friends', '/calendar', '/map', '/map-api'].includes(destination)) ? destination : '/main', { replace: true });
+      navigate(typeof destination === 'string' && (/^\/chat(?:\/|$)/.test(destination) || ['/memo', '/friends', '/calendar', '/map', '/map-api'].includes(destination)) ? destination : getStartPage(), { replace: true });
     } catch (reason) { setError(reason.message || '로그인하지 못했어요. 다시 시도해 주세요.'); }
     finally { submitting.current = false; setBusy(false); }
   }

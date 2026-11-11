@@ -72,3 +72,52 @@ a {
 }
 .sidebar-link[aria-current="page"] .sidebar-item { background: #ffed9b; color: #213547; font-weight: 700; }
 .sidebar-link:focus-visible { outline: 2px solid #b19529; outline-offset: 3px; }
+
+.user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-settings-icon {
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+}
+
+
+
+.layout:has(> .pay-page, > .settings-page) > .sidebar-container {
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  .layout:has(> .pay-page, > .settings-page) > .sidebar-container {
+    box-sizing: border-box;
+    flex: 0 0 78px;
+    width: 78px;
+    padding: 10px 6px;
+    gap: 24px;
+  }
+
+  .layout:has(> .pay-page, > .settings-page) .profile-container,
+  .layout:has(> .pay-page, > .settings-page) .sidebar-item {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .layout:has(> .pay-page, > .settings-page) .user-name {
+    width: 100%;
+  }
+
+  .layout:has(> .pay-page, > .settings-page) .profile-img {
+    width: 40px;
+    height: 40px;
+  }
+
+}

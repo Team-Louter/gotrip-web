@@ -1,0 +1,243 @@
+.layout:has(> .settings-page) {
+  min-height: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.settings-page {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: clamp(16px, 3vw, 42px);
+  writing-mode: horizontal-tb;
+  word-break: keep-all;
+  color: #342e23;
+}
+
+.settings-card {
+  max-width: 880px;
+}
+
+.settings-heading h2 {
+  font-size: clamp(24px, 3vw, 32px);
+}
+
+.settings-heading p,
+.settings-description {
+  margin-top: 6px;
+  color: #6f6558;
+}
+
+.settings-section {
+  margin-top: 18px;
+  padding: clamp(12px, 2.5vw, 26px);
+  border: 1px solid #e5ddcb;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.settings-section h3 {
+  font-size: 20px;
+}
+
+.settings-profile,
+.settings-actions {
+  border: 0;
+  min-width: 0;
+}
+
+.settings-photo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.settings-profile-image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.settings-field {
+  display: grid;
+  gap: 8px;
+  max-width: 430px;
+  margin: 18px 0 14px;
+  font-weight: 600;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eae3d4;
+}
+
+.settings-section button,
+.settings-section select,
+.settings-field input {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 14px;
+  border: 1px solid #ded3be;
+  border-radius: 10px;
+  background: #fffdf7;
+  color: inherit;
+  font: inherit;
+  box-shadow: none;
+}
+
+.settings-section button,
+.settings-section select {
+  width: auto;
+  height: auto;
+  min-height: 40px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.settings-section button.settings-save {
+  border-color: #efd572;
+  background: #ffe982;
+  font-weight: 600;
+}
+
+.settings-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #c79924;
+}
+
+.settings-account-id {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+.settings-section button.settings-withdraw {
+  border-color: #bf2535;
+  background: #bf2535;
+  color: #fff;
+}
+
+.settings-section button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.settings-card {
+  margin-inline: auto;
+}
+
+.settings-section button.settings-save {
+  min-height: 34px;
+  padding: 5px 11px;
+  font-size: 14px;
+}
+
+.settings-section button.settings-avatar-button {
+  position: relative;
+  display: inline-grid;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.settings-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 48%);
+  opacity: 0;
+}
+
+.settings-avatar-overlay img {
+  width: 22px;
+  height: 22px;
+  filter: invert(1);
+}
+
+.settings-avatar-button:hover .settings-avatar-overlay,
+.settings-avatar-button:focus-visible .settings-avatar-overlay {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .settings-avatar-overlay {
+    opacity: 1;
+  }
+}
+
+.settings-account-details {
+  margin-top: 12px;
+}
+
+.settings-account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+}
+
+.settings-account-row + .settings-account-row {
+  border-top: 1px solid #eae3d4;
+}
+
+.settings-account-row dt {
+  font-weight: 600;
+}
+
+.settings-account-row dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 0 0 auto;
+  overflow-wrap: anywhere;
+}
+
+.settings-actions {
+  margin-top: 20px;
+  border-top: 1px solid #eae3d4;
+}
+
+.settings-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 14px 0;
+}
+
+.settings-action-row + .settings-action-row {
+  border-top: 1px solid #eae3d4;
+}
+
+.settings-action-row h4 {
+  margin: 0 0 4px;
+}
+
+.settings-action-row p {
+  margin: 0;
+  color: #6f6558;
+  font-size: 14px;
+}
+
+.settings-action-row button {
+  margin-inline-start: auto;
+}

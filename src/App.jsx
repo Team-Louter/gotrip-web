@@ -1,3 +1,6 @@
+import { getToken } from './api/session';
+import { fetchProfile } from './services/profileApi';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import SideBar from './components/sideBar';
 import MainPage from './files/mainPage';
@@ -9,6 +12,7 @@ import ChatRoom from './files/chatRoom';
 import IsLogin from './files/isLogin';
 import MemoPage from './files/memoPage';
 import PayForm from './files/payForm';
+import SettingsPage from './files/settingsPage';
 import SignUp from './files/signUp';
 import SignUp2 from './files/signUp2';
 import SignUpTerms from './files/signUpTerms';
@@ -23,10 +27,22 @@ function AuthLayout() {
 }
 
 function MainLayout() {
+
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (!getToken()) return;
+    const controller = new AbortController();
+    fetchProfile(controller.signal).then((data) => {
+      if (!controller.signal.aborted) setProfile((current) => current ?? data);
+    }).catch(() => {});
+    return () => controller.abort();
+  }, []);
+
   return (
     <div className="layout">
-      <SideBar />
-      <Outlet />
+      <SideBar profile={profile} />
+      <Outlet context={{ profile, setProfile }} />
     </div>
   );
 }
@@ -55,6 +71,7 @@ function App() {
         <Route path="/chat/:roomId" element={<ChatRoom />} />
         <Route path="/memo" element={<MemoPage />} />
         <Route path="/pay" element={<PayForm />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/islogin" replace />} />

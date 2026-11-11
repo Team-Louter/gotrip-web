@@ -230,10 +230,12 @@ function Memo() {
         <div className="memo-detail">
           <div className="memo-detail-top"><label className="memo-badge" htmlFor="memo-summary">한줄 요약</label></div>
           <textarea id="memo-summary" className="memo-textarea" value={current?.summaryDraft ?? ''} disabled={!editable} onChange={(event) => updateSummary(event.target.value)}
-            placeholder="한줄 요약을 직접 입력하세요" aria-describedby="memo-save-help" onKeyDown={(event) => {
+            placeholder="한줄 요약을 직접 입력하세요" aria-describedby={current?.isNew ? 'memo-save-help' : undefined} onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); handleSaveSummary() }
             }} />
-          <p id="memo-save-help" className="memo-save-help">{current?.isNew ? '메모를 먼저 저장한 후 한줄 요약을 저장해 주세요.' : '한줄 요약은 현재 브라우저에 별도로 저장됩니다.'}</p>
+          {current?.isNew && (
+            <p id="memo-save-help" className="memo-save-help">메모를 먼저 저장한 후 한줄 요약을 저장해 주세요.</p>
+          )}
           <span className="memo-summary-status" role="status">{saved === 'summary' ? '한줄 요약이 저장되었습니다.' : ''}</span>
           <button type="button" className="memo-save memo-summary-save" onClick={handleSaveSummary} disabled={!editable || current?.isNew || !current?.summaryDirty}>{saved === 'summary' ? '저장됨' : '저장'}</button>
         </div>

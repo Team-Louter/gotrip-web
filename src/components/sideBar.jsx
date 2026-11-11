@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
+import { profileImageSource } from '../services/profileApi';
+import { getLoginId } from '../api/session';
 import profileImg from '../images/profile.jpg';
 import homeIcon from '../icons/homeIcon.png';
 import chatIcon from '../icons/chatIcon.png';
@@ -8,14 +10,14 @@ import calenderIcon from '../icons/calenderIcon.png';
 import recieptIcon from '../icons/recieptIcon.png';
 import '../styles/sideBar.css';
 
-function SideBar() {
+function SideBar({ profile }) {
   const { pathname } = useLocation();
   const isCurrent = (...paths) => paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   return (
     <div className="sidebar-container">
       <div className="profile-container">
-        <img src={profileImg} alt="profile-img" className="profile-img" />
-        <span className="user-name">사용자 이름</span>
+        <img src={profileImageSource(profile?.profileImageUrl) || profileImg} alt="profile-img" className="profile-img" />
+        <span className="user-name">{profile?.nickname || getLoginId() || '사용자'}</span>
       </div>
       <nav className="menu-container" aria-label="사이드 메뉴">
         <Link to="/main" className="sidebar-link" aria-current={isCurrent('/main') ? 'page' : undefined}>
@@ -60,6 +62,12 @@ function SideBar() {
               className="sidebar-icon"
             />
             Reciept
+          </div>
+        </Link>
+        <Link to="/settings" className="sidebar-link" aria-current={isCurrent('/settings') ? 'page' : undefined}>
+          <div className="sidebar-item">
+            <span className="sidebar-icon sidebar-settings-icon" aria-hidden="true">⚙</span>
+            설정
           </div>
         </Link>
       </nav>
