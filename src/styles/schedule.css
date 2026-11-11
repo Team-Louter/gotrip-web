@@ -20,7 +20,9 @@
 .trip-start-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; color: #7b8079; font-size: 12px; }
 .trip-start-label > span { flex-shrink: 0; line-height: 1.5; }
 .trip-start-label input { min-width: 0; padding: 5px 10px; color: #45524e; background: #fff; border: 1px solid #e6e2d5; border-radius: 9px; font: inherit; }
-.trip-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; flex-shrink: 0; margin-bottom: 16px; }
+.trip-days { --day-gap: 5px; display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 4 * var(--day-gap)) / 5); gap: var(--day-gap); flex-shrink: 0; margin-bottom: 16px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.trip-days:focus-visible { outline: 2px solid #806515; outline-offset: 3px; }
+.trip-days .trip-day { scroll-snap-align: start; }
 .trip-day { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 10px 0; border-radius: 13px; background: #f5f3e9; color: #7c8073; font: inherit; font-size: 12px; }
 .trip-day small { font-size: 10px; opacity: .8; }
 .trip-day:hover { background: #fff0ac; }
@@ -32,6 +34,10 @@
 .trip-event time { flex-shrink: 0; padding-top: 4px; font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; color: #263b4b; }
 .trip-event p { flex: 1; min-width: 0; margin: 0; padding-top: 4px; font-size: 20px; line-height: 1.6; font-weight: 750; overflow-wrap: anywhere; white-space: pre-wrap; }
 .trip-event-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.trip-event-body { min-width: 0; flex: 1; }
+.trip-event-body small { display: block; margin-top: 2px; color: #8b8a7f; font-size: 10px; }
+.trip-editor-fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
+.trip-editor button:disabled { opacity: .5; cursor: default; }
 .trip-icon-button { display: grid; place-items: center; width: 30px; height: 32px; padding: 6px; border-radius: 9px; background: transparent; }
 .trip-icon-button:hover { background: #ffe982; }
 .trip-icon-button img { width: 18px; height: 18px; object-fit: contain; }
@@ -47,7 +53,7 @@
 .trip-editor-fields { margin-top: 24px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; margin-bottom: 20px; }
 .trip-editor label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 650; }
 .trip-editor input, .trip-editor textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: 13px 14px; background: #fff8da; color: #263b4b; border: 1px solid #ece3bb; border-radius: 12px; font: inherit; font-size: 14px; }
-.trip-editor textarea { resize: vertical; min-height: 100px; max-height: 220px; line-height: 1.6; }
+.trip-editor textarea { resize: none; min-height: 100px; overflow-y: hidden; line-height: 1.6; }
 .trip-editor textarea::placeholder { color: #aaa68d; font-weight: 400; }
 .trip-editor input:focus, .trip-editor textarea:focus { outline: 2px solid #e6bf38; outline-offset: 2px; background: #fffdf3; }
 .trip-field-error { min-height: 20px; margin-top: 8px; color: #b35a3f; font-size: 12px; }
@@ -73,7 +79,7 @@
   .map-container { padding: 12px; }
   .trip-panel { padding: 20px 16px; border-radius: 22px; }
   .trip-panel-heading h1 { font-size: 26px; }
-  .trip-days { gap: 3px; }
+  .trip-days { --day-gap: 3px; }
   .trip-day { font-size: 11px; }
   .trip-event { flex-wrap: wrap; gap: 8px; }
   .trip-event p { font-size: 14px; }

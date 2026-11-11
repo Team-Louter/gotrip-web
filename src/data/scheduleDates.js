@@ -1,5 +1,15 @@
 export const TRIP_DURATION = 5;
 
+export function tripDayCount(startDate, endDate) {
+  if (!isDateKey(startDate) || !isDateKey(endDate) || endDate < startDate) return 0;
+  return Math.round((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000) + 1;
+}
+
+export function defaultTripEnd(startDate) {
+  const end = addDays(startDate, TRIP_DURATION - 1);
+  return isDateKey(end) ? end : '9999-12-31';
+}
+
 export function dateKey(date = new Date()) {
   return `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

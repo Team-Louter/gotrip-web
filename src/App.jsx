@@ -46,6 +46,7 @@ function App() {
 
       <Route element={<MainLayout />}>
         <Route path="/main" element={<MainPage />} />
+        <Route path="/friends" element={<Navigate to="/chat" replace />} />
         <Route path="/map" element={<Map />} />
         <Route path="/map-api" element={<MapAPI />} />
         <Route path="/calendar" element={<Calender />} />

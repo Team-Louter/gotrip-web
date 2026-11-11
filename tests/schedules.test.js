@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TRIP_DURATION, addDays, isDateKey, schedulesOn } from '../src/data/scheduleDates.js';
+import { TRIP_DURATION, addDays, defaultTripEnd, isDateKey, schedulesOn, tripDayCount } from '../src/data/scheduleDates.js';
 
 let saved = new Map();
 let failWrites = false;
@@ -28,6 +28,28 @@ test('five travel days cross month, year, and leap-day boundaries', () => {
   assert.equal(addDays('2028-02-28', 1), '2028-02-29');
   assert.equal(isDateKey('2026-02-29'), false);
   assert.equal(isDateKey('2026-13-01'), false);
+});
+
+test('custom travel period includes both endpoints and survives reload without changing events', () => {
+  reset();
+  assert.equal(store.getScheduleSnapshot().endDate, '2026-10-31');
+  store.saveSchedule({ date: '2026-10-28', time: '09:00', content: '공항 도착' });
+  store.setTripEnd('2026-11-05');
+  assert.equal(tripDayCount('2026-10-27', store.getScheduleSnapshot().endDate), 10);
+  storageListener({ key: store.SCHEDULE_STORAGE_KEY });
+  assert.equal(store.getScheduleSnapshot().endDate, '2026-11-05');
+  store.selectScheduleDate('2026-11-05');
+  store.setTripEnd('2026-10-29');
+  assert.equal(store.getScheduleSnapshot().selectedDate, '2026-10-29');
+  store.setTripEnd('2026-10-26');
+  store.setTripEnd('2026-02-30');
+  assert.equal(store.getScheduleSnapshot().endDate, '2026-10-29');
+  store.setTripStart('2026-12-30');
+  assert.equal(store.getScheduleSnapshot().endDate, '2026-12-30');
+  assert.equal(store.getScheduleSnapshot().events[0].date, '2026-10-28');
+  assert.equal(tripDayCount('2028-02-28', '2028-03-01'), 3);
+  assert.equal(tripDayCount('2026-12-30', '2026-12-30'), 1);
+  assert.equal(defaultTripEnd('9999-12-31'), '9999-12-31');
 });
 
 test('add, independently edit time/content, move date, and delete share one saved event', () => {
@@ -89,8 +111,7 @@ test('reload and storage events restore saved schedules and tolerate malformed d
   assert.equal(store.getScheduleSnapshot().events[0].content, '체크인');
   saved.set(store.SCHEDULE_STORAGE_KEY, '{broken JSON');
   storageListener({ key: store.SCHEDULE_STORAGE_KEY });
-  assert.equal(store.getScheduleSnapshot().events.length, 7);
-  assert.equal(store.getScheduleSnapshot().events[0].content, '공항 도착');
+  assert.equal(store.getScheduleSnapshot().events.length, 0);
 });
 
 test('unavailable browser storage keeps current edits and exposes a warning', () => {
@@ -99,4 +120,15 @@ test('unavailable browser storage keeps current edits and exposes a warning', ()
   store.saveSchedule({ date: '2026-10-28', time: '12:00', content: '점심' });
   assert.equal(store.getScheduleSnapshot().events[0].content, '점심');
   assert.equal(store.getScheduleSnapshot().storageError, true);
+});
+
+test('local edits preserve server registration metadata and explicitly mark browser-only changes', () => {
+  reset();
+  store.saveSchedule({ date: '2026-10-28', time: '12:00', content: '서버에 등록한 일정', serverId: '7', serverSynced: true, localChanges: false });
+  const event = store.getScheduleSnapshot().events[0];
+  store.saveSchedule({ id: event.id, date: event.date, time: '13:00', content: event.content });
+  const changed = store.getScheduleSnapshot().events[0];
+  assert.equal(changed.serverId, '7');
+  assert.equal(changed.serverSynced, true);
+  assert.equal(changed.localChanges, true);
 });

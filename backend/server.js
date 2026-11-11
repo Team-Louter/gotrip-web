@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual, createHmac } from 'node:crypto';
+import { isValidSignupPassword } from '../src/data/signupValidation.js';
 
 const scrypt = promisify(scryptCallback);
 const PORT = Number(process.env.PORT || 8080);
@@ -95,7 +96,7 @@ const server = createServer(async (req, res) => {
       return json(res, 400, { message: '모든 필수 정보를 입력해주세요.' });
     }
     if (!termsAccepted) return json(res, 400, { message: '필수 약관 동의가 필요합니다.' });
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,20}$/.test(password) || /(.)\1\1/i.test(password)) return json(res, 400, { message: '비밀번호 형식이 올바르지 않습니다.' });
+    if (!isValidSignupPassword(password)) return json(res, 400, { message: '비밀번호 형식이 올바르지 않습니다.' });
     if (password !== passwordConfirm) return json(res, 400, { message: '비밀번호가 일치하지 않습니다.' });
     if (!/^\d{8}$/.test(birthDate) || !/^\S+@\S+\.\S+$/.test(email)) return json(res, 400, { message: '생년월일 또는 이메일 형식이 올바르지 않습니다.' });
     const birthYear = Number(birthDate.slice(0, 4));

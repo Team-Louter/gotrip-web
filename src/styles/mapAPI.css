@@ -1,4 +1,7 @@
 .mini-map-background {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
   width: 100%;
   height: 100vh;
   background-image: url('../images/mapAPIimg.jpg');
@@ -81,6 +84,14 @@
 
 .mappin {
   width: 30px;
-  margin-top: 100px;
-  margin-left: 1200px;
+  position: absolute;
+  top: 65%;
+  left: 70%;
 }
+
+.map-api-schedule { position: absolute; top: 20px; left: 20px; width: min(390px, calc(100% - 64px)); z-index: 1; }
+.map-api-schedule.is-collapsed { width: 0; }
+.map-api-schedule .trip-panel-compact { width: 100%; height: min(650px, calc(100dvh - 40px)); margin: 0; }
+.map-schedule-toggle { position: absolute; left: 100%; top: 24px; display: grid; place-items: center; width: 32px; height: 64px; padding: 0; border: 1px solid #e2dfd3; border-left: 0; border-radius: 0 12px 12px 0; background: #fffef7; color: #263b4b; box-shadow: 3px 2px 8px #0001; font-size: 30px; cursor: pointer; }
+.map-schedule-toggle:hover { background: #fff0ac; }
+.map-schedule-toggle:focus-visible { outline: 2px solid #806515; outline-offset: 2px; }

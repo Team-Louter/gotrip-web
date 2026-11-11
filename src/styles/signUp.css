@@ -87,6 +87,8 @@ p {
 }
 
 .password-rules ul { transition: color 120ms ease; }
+.password-rules { display: flex; flex-direction: column; gap: 0; margin: 8px 0 20px; }
+.card-from label[for="signup-password"] { margin-top: 16px; }
 .password-rules .rule-idle { color: #536273; }
 .password-rules .rule-valid { color: #168542; }
 .password-rules .rule-invalid { color: #d93025; }

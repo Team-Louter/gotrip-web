@@ -55,7 +55,8 @@ function SignUpTerms() {
   const allAccepted = privacyAccepted && marketingAccepted;
 
   async function submit() {
-    if (!allAccepted) return setError('전체 동의 후 가입할 수 있습니다.');
+    if (submitting) return;
+    if (!privacyAccepted) return setError('필수 약관에 동의해 주세요.');
     const draft = readSignupDraft();
     if (!draft.loginId || !draft.password || !draft.birthDate || !draft.email || !draft.nickname) {
       return setError('가입 정보가 부족합니다. 회원 정보를 다시 입력해주세요.');
@@ -120,10 +121,10 @@ function SignUpTerms() {
                   <h4>마케팅 정보 수신 동의 <span>(선택)</span></h4>
                 </div>
               </div>
-              {error && <p role="alert" className="signup-error">{error}</p>}
               <div className='login-button2'>
-                <button className='yes-login' onClick={submit} disabled={submitting || !allAccepted}>{submitting ? '가입 중...' : '동의하고 가입하기'}</button>
+                <button className='yes-login' onClick={submit} disabled={submitting || !privacyAccepted}>{submitting ? '가입 중...' : '동의하고 가입하기'}</button>
               </div>
+              {error && <p role="alert" className="signup-error signup-terms-error">{error}</p>}
               <div className='ifyou-not2'>
                 <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')} style={{ cursor: 'pointer' }}>로그인</span></p>
               </div>
