@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getLoginId, getToken } from '../api/session.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
+import { SkeletonList } from '../components/Skeleton';
 import '../styles/friendsPage.css';
 
 function decorateRelationship(relationship, membersById) {
@@ -137,6 +138,8 @@ function FriendsPage() {
         {actionError && <p className="friends-action-error" role="alert">{actionError}</p>}
 
         <div className="friends-list-region" aria-busy={status === 'loading'}>
+          {status === 'loading' && <SkeletonList label="친구 정보를 불러오는 중이에요." />}
+          {status === 'ready' && <>
           <section className="friends-list-section" aria-labelledby="my-friends-title">
             <div className="friends-count-row">
               <h2 id="my-friends-title">내 친구</h2>
@@ -184,7 +187,7 @@ function FriendsPage() {
             </section>
           )}
 
-          {status === 'loading' && <p className="friends-feedback" role="status">친구 정보를 불러오는 중이에요.</p>}
+          </>}
           {status === 'error' && (
             <div className="friends-feedback" role="alert">
               <p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>
@@ -196,7 +199,7 @@ function FriendsPage() {
         </div>
       </section>
 
-      <aside className="friends-card friends-requests" aria-labelledby="friend-requests-title">
+      <aside className="friends-card friends-requests" aria-labelledby="friend-requests-title" aria-busy={status === 'loading'}>
         <header className="friends-requests-header">
           <h2 id="friend-requests-title">친구 요청</h2>
           <p>받은 요청을 확인하고 보낸 요청을 살펴보세요.</p>
@@ -205,9 +208,9 @@ function FriendsPage() {
         <section className="friends-request-section" aria-labelledby="incoming-requests-title">
           <div className="friends-request-heading">
             <h3 id="incoming-requests-title">받은 요청</h3>
-            <span>{incomingRequests.length}</span>
+            {status === 'ready' && <span>{incomingRequests.length}</span>}
           </div>
-          {incomingRequests.length === 0 ? <p className="friends-request-empty">받은 친구 요청이 없어요.</p> : (
+          {status === 'loading' ? <SkeletonList count={2} variant="compact" label="받은 친구 요청을 불러오는 중이에요." /> : status === 'ready' && (incomingRequests.length === 0 ? <p className="friends-request-empty">받은 친구 요청이 없어요.</p> : (
             <ul className="friends-request-list" aria-label="받은 친구 요청">
               {incomingRequests.map((request) => (
                 <li className="friends-request-row" key={request.friendshipId ?? request.id}>
@@ -223,15 +226,15 @@ function FriendsPage() {
                 </li>
               ))}
             </ul>
-          )}
+          ))}
         </section>
 
         <section className="friends-request-section friends-sent-section" aria-labelledby="sent-requests-title">
           <div className="friends-request-heading">
             <h3 id="sent-requests-title">보낸 요청</h3>
-            <span>{sentRequests.length}</span>
+            {status === 'ready' && <span>{sentRequests.length}</span>}
           </div>
-          {sentRequests.length === 0 ? <p className="friends-request-empty">보낸 친구 요청이 없어요.</p> : (
+          {status === 'loading' ? <SkeletonList count={2} variant="compact" label="보낸 친구 요청을 불러오는 중이에요." /> : status === 'ready' && (sentRequests.length === 0 ? <p className="friends-request-empty">보낸 친구 요청이 없어요.</p> : (
             <ul className="friends-request-list" aria-label="보낸 친구 요청">
               {sentRequests.map((request) => (
                 <li className="friends-request-row" key={request.friendshipId ?? request.id}>
@@ -244,7 +247,7 @@ function FriendsPage() {
                 </li>
               ))}
             </ul>
-          )}
+          ))}
         </section>
       </aside>
     </main>

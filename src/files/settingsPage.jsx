@@ -4,11 +4,12 @@ import { clearSession, getLoginId, getToken } from '../api/session';
 import penIcon from '../icons/gotrip-pen.png';
 import { deleteAccount, fetchAccountDetails, profileImageSource, updateNickname, updateProfileImage } from '../services/profileApi';
 import defaultProfile from '../images/profile.jpg';
+import { Skeleton, SkeletonImage, SkeletonProfile, SkeletonRegion } from '../components/Skeleton';
 import '../styles/settingsPage.css';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { profile, setProfile } = useOutletContext();
+  const { profile, setProfile, profileLoading } = useOutletContext();
   const [email, setEmail] = useState(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState(false);
@@ -98,12 +99,12 @@ export default function SettingsPage() {
         <section className="settings-section">
           <h3>프로필</h3>
           <p className="settings-description">사이드바에 표시되는 닉네임과 사진을 변경하세요.</p>
-          {signedIn ? (
+          {signedIn ? profileLoading ? <SkeletonProfile /> : (
             <form onSubmit={saveProfile}>
               <fieldset className="settings-profile" disabled={busy}>
                 <div className="settings-photo-row">
                   <button className="settings-avatar-button" type="button" aria-label="프로필 사진 바꾸기" onClick={() => photoInput.current.click()}>
-                    <img className="settings-profile-image" src={(photo && preview) || profileImageSource(profile?.profileImageUrl) || defaultProfile} alt="" />
+                    <SkeletonImage className="settings-profile-image" src={(photo && preview) || profileImageSource(profile?.profileImageUrl) || defaultProfile} alt="" />
                     <span className="settings-avatar-overlay"><img src={penIcon} alt="" /></span>
                   </button>
                   <input ref={photoInput} type="file" accept="image/*" hidden onChange={(event) => setPhoto(event.target.files[0] ?? null)} />
@@ -130,8 +131,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="settings-account-row">
                   <dt>이메일</dt>
-                  <dd>
-                    <span aria-live="polite">{email || '••••••••'}</span>
+                  <dd aria-busy={emailLoading}>
+                    {emailLoading ? <SkeletonRegion label="이메일을 불러오는 중이에요." className="skeleton-email"><Skeleton className="skeleton-line" /></SkeletonRegion> : <span aria-live="polite">{email || '••••••••'}</span>}
                     <button type="button" onClick={toggleEmail} disabled={busy || emailLoading}>
                       {emailLoading ? '조회 중…' : email ? '숨기기' : '보기'}
                     </button>

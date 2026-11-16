@@ -2,6 +2,7 @@ import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
 import gotripbackground from '../images/gotrip-join.jpeg';
 import gotripbackgroundUpscaled from '../images/gotrip-join-upscaled.jpeg';
+import { SkeletonImage } from '../components/Skeleton';
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getStartPage } from '../data/settings';
@@ -63,7 +64,7 @@ function Login() {
        </div>
 
        <div className="login-right">
-         <img src={gotripbackground} srcSet={`${gotripbackground} 3024w, ${gotripbackgroundUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 66vw" alt="" className='gotrip-background' decoding="async" />
+         <SkeletonImage src={gotripbackground} srcSet={`${gotripbackground} 3024w, ${gotripbackgroundUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 66vw" alt="" className='gotrip-background' decoding="async" />
        </div>
 
       <Toast key={error || notice} message={error || notice} onClose={error ? setError : setNotice} tone={error ? 'error' : 'success'} />

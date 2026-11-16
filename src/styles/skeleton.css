@@ -1,0 +1,156 @@
+:root {
+  --skeleton-base: #e9e5d7;
+  --skeleton-highlight: #fffef7;
+  --skeleton-surface: #fff;
+  --skeleton-border: #cbcbcb;
+  --skeleton-gap: 12px;
+  --skeleton-radius: 10px;
+}
+
+.skeleton-block {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--skeleton-radius);
+  background: var(--skeleton-base);
+}
+
+.skeleton-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skeleton-highlight), transparent);
+  opacity: .6;
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skeleton-region, .skeleton-lines { min-width: 0; }
+.skeleton-list { container-type: inline-size; }
+.skeleton-lines { display: grid; flex: 1; gap: var(--skeleton-gap); }
+.skeleton-line { width: 100%; height: 14px; }
+.skeleton-line--short { width: 60%; }
+.skeleton-title { width: 55%; height: 26px; }
+.skeleton-input { width: 100%; height: 48px; }
+.skeleton-action { width: 60px; height: 32px; border-radius: 18px; }
+.skeleton-avatar { width: 44px; height: 44px; border-radius: 50%; }
+.skeleton-row { display: flex; align-items: center; gap: var(--skeleton-gap); padding: 18px 0; }
+.skeleton-list--chat .skeleton-row { min-height: 106px; box-sizing: border-box; padding: 18px 15px; }
+.skeleton-list--chat .skeleton-avatar { width: 50px; height: 50px; }
+.skeleton-list--memo .skeleton-row { margin-bottom: 15px; padding: 18px 15px; border-radius: 15px; background: var(--skeleton-surface); }
+.skeleton-list--compact .skeleton-row { padding: 12px 10px; }
+.skeleton-list--compact .skeleton-avatar { width: 32px; height: 32px; }
+.skeleton-editor { display: flex; flex: 1; flex-direction: column; gap: 26px; padding-top: 8px; }
+.skeleton-editor .skeleton-title { margin-bottom: 14px; }
+.skeleton-summary { width: 100%; height: 160px; }
+.skeleton-profile { display: grid; gap: 18px; max-width: 430px; padding-top: 18px; }
+.skeleton-profile > .skeleton-avatar { width: 72px; height: 72px; }
+.skeleton-sidebar-name { flex-shrink: 1; width: 90px; height: 18px; }
+.skeleton-email { width: 160px; }
+.skeleton-email .skeleton-line { height: 20px; }
+
+.skeleton-conversation { display: flex; flex: 1; flex-direction: column; min-width: 0; height: 100%; background: var(--skeleton-surface); }
+.skeleton-room-header { min-height: 100px; box-sizing: border-box; padding: 20px 30px; }
+.skeleton-messages { display: grid; gap: 24px; padding: 24px; }
+.skeleton-conversation > .skeleton-messages { flex: 1; align-content: start; overflow: hidden; }
+.skeleton-message { display: flex; align-items: flex-start; gap: var(--skeleton-gap); }
+.skeleton-message--mine { justify-content: flex-end; }
+.skeleton-bubble { width: 55%; height: 64px; border-radius: 20px; }
+.skeleton-message--mine .skeleton-bubble { width: 42%; }
+.skeleton-composer { width: auto; margin: 20px 24px; }
+.message-area > .skeleton-messages { padding: 0 0 20px; }
+.skeleton-attachment { width: 80px; height: 80px; }
+
+.skeleton-map { position: relative; min-height: 200px; height: 100%; overflow: hidden; border-radius: inherit; }
+.skeleton-map > .skeleton-block { position: absolute; inset: 0; border-radius: inherit; }
+.map-preview-map > .skeleton-map, .map-api-page > .skeleton-map { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.skeleton-nearby { flex: 0 0 72px; padding-inline: 8px; }
+.skeleton-address { padding-block: 3px; }
+.skeleton-image { position: relative; display: block; min-width: 0; overflow: hidden; }
+.skeleton-image > .skeleton-block { position: absolute; inset: 0; border-radius: inherit; }
+.skeleton-image-content { display: block; width: 100%; height: 100%; object-fit: inherit; object-position: inherit; }
+.skeleton-image[data-loading="true"] > .skeleton-image-content { opacity: 0; }
+
+.skeleton-page { box-sizing: border-box; flex: 1; min-width: 0; min-height: 100dvh; }
+.skeleton-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; gap: 24px; padding: 20px 40px; }
+.skeleton-panel { display: flex; flex-direction: column; gap: 24px; min-width: 0; padding: 24px; border: 1px solid var(--skeleton-border); border-radius: 20px; background: var(--skeleton-surface); }
+.skeleton-friends-page { grid-template-columns: minmax(0, 1fr) minmax(270px, 320px); }
+.skeleton-map-column { display: grid; gap: 20px; }
+.skeleton-map-column > .skeleton-map { height: 280px; border-radius: 30px; }
+.skeleton-map-page > .skeleton-panel { min-height: 650px; }
+.skeleton-places-page { position: relative; }
+.skeleton-places-page > .skeleton-panel { position: relative; z-index: 2; width: min(370px, calc(100% - 64px)); margin: 18px 20px; box-sizing: border-box; }
+.skeleton-calendar-page { grid-template-columns: minmax(0, 1fr) 250px; }
+.skeleton-calendar-page > .skeleton-panel { min-height: 652px; }
+.skeleton-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.skeleton-calendar-grid > .skeleton-block { height: 80px; }
+.skeleton-chat-page { display: flex; height: 100dvh; overflow: hidden; }
+.skeleton-chat-list { flex: 0 0 260px; min-width: 0; padding-top: 24px; overflow: hidden; }
+.skeleton-chat-list > .skeleton-block { width: calc(100% - 30px); margin: 0 15px 18px; }
+.skeleton-memo-page { display: flex; gap: 30px; padding: 40px; }
+.skeleton-memo-page > .skeleton-editor { flex: 2.7; }
+.skeleton-memo-page > .skeleton-panel { flex: 1.3; }
+.skeleton-settings-page { display: flex; flex-direction: column; gap: 18px; }
+.skeleton-settings-page > .skeleton-panel { width: 100%; max-width: 880px; margin-inline: auto; box-sizing: border-box; }
+.skeleton-payment-page > .skeleton-panel { width: min(640px, 100%); }
+.skeleton-total { align-self: center; width: 60%; height: 120px; margin-block: 18px; }
+.skeleton-home-page { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 25px; padding: 24px; }
+.skeleton-home-page > .skeleton-title { width: min(500px, 80%); height: 36px; }
+.skeleton-home-page > .skeleton-input { width: min(260px, 60%); }
+.skeleton-auth { display: flex; width: 100%; }
+.skeleton-auth-form { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 24px; min-width: 0; padding: 48px clamp(24px, 5vw, 80px); }
+.skeleton-auth-form > .skeleton-block { width: 100%; max-width: 350px; margin-inline: auto; }
+.skeleton-auth-image { flex: 2; border-radius: 0; }
+.skeleton-auth--registration { align-self: center; min-height: 600px; max-width: 900px; margin: 32px auto; overflow: hidden; border-radius: 45px; }
+.skeleton-auth--registration > .skeleton-auth-image { order: -1; flex: 1.25; }
+.skeleton-auth--terms { align-self: stretch; max-width: none; min-height: 100dvh; margin: 0; border-radius: 0; }
+.skeleton-auth--terms > .skeleton-auth-image { order: 0; flex: 2; }
+.page-load-error { display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 18px; min-width: 0; min-height: 100dvh; padding: 24px; box-sizing: border-box; }
+.page-load-error button { width: auto; min-height: 44px; padding: 10px 24px; }
+.page-load-error button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+@container (max-width: 240px) {
+  .skeleton-row > .skeleton-action { display: none; }
+  .skeleton-row > .skeleton-avatar { width: 32px; height: 32px; }
+}
+
+@keyframes skeleton-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block::after { animation: none; opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .skeleton-columns { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 20px; }
+  .skeleton-calendar-page > .skeleton-panel, .skeleton-map-page > .skeleton-panel { min-height: 0; }
+  .skeleton-memo-page { flex-direction: column; padding: 20px; }
+  .skeleton-chat-list { flex-basis: 235px; }
+}
+
+@media (max-width: 700px) {
+  .skeleton-chat-page { flex-direction: column; height: auto; }
+  .skeleton-chat-list { flex: 0 0 480px; }
+  .skeleton-chat-page > .skeleton-conversation { min-height: 540px; }
+  .skeleton-auth-image { display: none; }
+  .skeleton-auth--registration { width: calc(100% - 48px); min-height: 600px; }
+  .skeleton-places-page > .skeleton-panel { margin-top: 130px; }
+  .layout:has(> .pay-page, > .settings-page) .skeleton-sidebar-name { width: 100%; }
+}

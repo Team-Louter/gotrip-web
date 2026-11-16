@@ -9,9 +9,17 @@ html, body {
 
 .memo-page {
   display: flex;
+  min-width: 0;
   height: 100vh;
   width: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .memo-page { flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; }
+  .memo-page .memo-board { flex: none; min-height: 480px; padding: 24px; }
+  .memo-page .memo-board-input { min-height: 320px; }
+  .memo-page .memo-side { flex: none; width: 100%; min-width: 0; height: 720px; }
 }
 
 /* 왼쪽 격자 메모판 */
