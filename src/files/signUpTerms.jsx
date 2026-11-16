@@ -3,6 +3,7 @@ import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
 import gotripbackground from '../images/gotrip-join.jpeg';
 import gotripbackgroundUpscaled from '../images/gotrip-join-upscaled.jpeg';
+import { SkeletonImage } from '../components/Skeleton';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import '../styles/signUpTerms.css';
 import { signUp } from '../services/authApi';
@@ -142,7 +143,7 @@ function SignUpTerms() {
         </div>
       </div>
       <div className="login-right2">
-        <img src={gotripbackground} srcSet={`${gotripbackground} 3024w, ${gotripbackgroundUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 66vw" alt="" className='gotrip-background2' decoding="async" />
+        <SkeletonImage src={gotripbackground} srcSet={`${gotripbackground} 3024w, ${gotripbackgroundUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 66vw" alt="" className='gotrip-background2' decoding="async" />
       </div>
       <Toast key={error} message={error} onClose={setError} />
     </div>

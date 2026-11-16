@@ -2,6 +2,7 @@ import { useState } from 'react';
 import gotriplogo from '../images/gotrip-logo.png';
 import gotripjoin from '../images/gotrip-join.jpeg';
 import gotripjoinUpscaled from '../images/gotrip-join-upscaled.jpeg';
+import { SkeletonImage } from '../components/Skeleton';
 import gotripcheck from '../images/gotrip-check.png';
 import { useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
@@ -41,7 +42,7 @@ function SignUp() {
     <div className='join-cont'>
       <h1>회원 정보를 입력해주세요.</h1>
       <div className='card-wap'>
-        <img className='gotrip-join' src={gotripjoin} srcSet={`${gotripjoin} 3024w, ${gotripjoinUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 500px" alt="" decoding="async" />
+        <SkeletonImage className='gotrip-join' src={gotripjoin} srcSet={`${gotripjoin} 3024w, ${gotripjoinUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 500px" alt="" decoding="async" />
         <form className='card-from' onSubmit={next}>
           <img className='gotrip-logo' src={gotriplogo} alt="gotrip-logo" />
           <label htmlFor="signup-id">아이디</label>

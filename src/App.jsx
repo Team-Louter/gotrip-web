@@ -1,28 +1,47 @@
 import { getToken } from './api/session';
 import { fetchProfile } from './services/profileApi';
-import { useEffect, useState } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { Routes, Route, Outlet, Navigate, useParams } from 'react-router-dom';
 import SideBar from './components/sideBar';
-import MainPage from './files/mainPage';
-import Map from './files/map';
-import MapAPI from './files/mapAPI';
-import Calender from './files/calender';
-import ChatRoom from './files/chatRoom';
-import Login from './files/login';
-import MemoPage from './files/memoPage';
-import FriendsPage from './files/friendsPage';
-import PayForm from './files/payForm';
-import SettingsPage from './files/settingsPage';
-import SignUp from './files/signUp';
-import SignUp2 from './files/signUp2';
-import SignUpTerms from './files/signUpTerms';
+import PageContent from './components/PageContent';
+// 기존 전역 스타일의 적용 순서를 페이지 로딩 순서와 무관하게 유지합니다.
+import './styles/mainPage.css';
+import './styles/map.css';
+import './styles/schedule.css';
+import './styles/mapAPI.css';
+import './styles/calender.css';
+import './styles/chatMessages.css';
+import './styles/chatHome.css';
+import './styles/chatRoom.css';
+import './styles/chatRooms.css';
+import './styles/login.css';
+import './styles/memoPage.css';
+import './styles/friendsPage.css';
+import './styles/payForm.css';
+import './styles/settingsPage.css';
+import './styles/signUp.css';
+import './styles/signUpTerms.css';
 import './App.css';
 import './styles/auth.css';
+
+const MainPage = lazy(() => import('./files/mainPage'));
+const Map = lazy(() => import('./files/map'));
+const MapAPI = lazy(() => import('./files/mapAPI'));
+const Calender = lazy(() => import('./files/calender'));
+const ChatRoom = lazy(() => import('./files/chatRoom'));
+const Login = lazy(() => import('./files/login'));
+const MemoPage = lazy(() => import('./files/memoPage'));
+const FriendsPage = lazy(() => import('./files/friendsPage'));
+const PayForm = lazy(() => import('./files/payForm'));
+const SettingsPage = lazy(() => import('./files/settingsPage'));
+const SignUp = lazy(() => import('./files/signUp'));
+const SignUp2 = lazy(() => import('./files/signUp2'));
+const SignUpTerms = lazy(() => import('./files/signUpTerms'));
 
 function AuthLayout() {
   return (
     <div className="layout auth-layout">
-      <Outlet />
+      <PageContent><Outlet /></PageContent>
     </div>
   );
 }
@@ -34,22 +53,26 @@ function LegacyChatRoomRedirect() {
 }
 
 function MainLayout() {
-
   const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(() => Boolean(getToken()));
 
   useEffect(() => {
     if (!getToken()) return;
     const controller = new AbortController();
     fetchProfile(controller.signal).then((data) => {
       if (!controller.signal.aborted) setProfile((current) => current ?? data);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => {
+      if (!controller.signal.aborted) setProfileLoading(false);
+    });
     return () => controller.abort();
   }, []);
 
   return (
     <div className="layout">
-      <SideBar profile={profile} />
-      <Outlet context={{ profile, setProfile }} />
+      <SideBar profile={profile} profileLoading={profileLoading} />
+      <PageContent>
+        <Outlet context={{ profile, setProfile, profileLoading }} />
+      </PageContent>
     </div>
   );
 }

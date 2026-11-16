@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { loadKakaoMaps } from '../services/kakaoMapSdk.js';
 import mappin from '../icons/mappin.png';
+import { SkeletonMap } from './Skeleton';
 
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -65,9 +66,10 @@ export default function KakaoMapPreview() {
   return (
     <section className="map-preview-map" aria-label="현재 위치 주변 지도">
       <div ref={containerRef} className="map-preview-canvas" />
-      {mapStatus !== 'ready' && (
-        <p className="map-preview-message" role={mapStatus === 'loading' ? 'status' : 'alert'}>
-          {mapStatus === 'loading' ? '지도를 불러오고 있어요.' : '지도를 불러오지 못했어요.'}
+      {mapStatus === 'loading' && <SkeletonMap />}
+      {mapStatus === 'error' && (
+        <p className="map-preview-message" role="alert">
+          지도를 불러오지 못했어요.
         </p>
       )}
       {mapStatus === 'ready' && locationError && <p className="map-preview-location-note" role="status">위치를 확인할 수 없어요.</p>}

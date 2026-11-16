@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
 import { matchesMemo, memoApi } from '../services/memoApi'
+import { Skeleton, SkeletonEditor, SkeletonList, SkeletonRegion } from '../components/Skeleton'
 import '../styles/memoPage.css'
 
 function Memo() {
@@ -24,6 +25,7 @@ function Memo() {
   const current = memos.find((memo) => memo.id === selectedId)
   const filteredMemos = memos.filter((memo) => matchesMemo(memo, query))
   const loadingDetail = current && !current.isNew && detail.id !== selectedId
+  const contentLoading = list.status === 'loading' || Boolean(loadingDetail)
   const detailError = detail.id === selectedId ? detail.error : null
   const problem = actionError || detailError || list.error
   const editable = Boolean(current && !loadingDetail && !detailError && !busy)
@@ -164,12 +166,12 @@ function Memo() {
 
   return (
     <div className="memo-page">
-      <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
+      <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집" aria-busy={contentLoading}>
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
           {!getToken() ? <Link to="/login" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
         </div>}
-        <input
+        {contentLoading ? <SkeletonEditor /> : <><input
           ref={titleRef}
           className="memo-title-input"
           type="text"
@@ -192,9 +194,9 @@ function Memo() {
           }}
           placeholder="여기에 자유롭게 메모하세요 (5자 이상)"
           disabled={!editable}
-        />
+        /></>}
         <div className="memo-board-actions">
-          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : saved === 'memo' ? '메모가 저장되었습니다.' : ''}</span>
+          <span role="status">{saved === 'memo' ? '메모가 저장되었습니다.' : ''}</span>
           <button type="submit" className="memo-save" disabled={!editable || (!current?.dirty && !current?.isNew)}>메모 저장</button>
         </div>
       </form>
@@ -206,10 +208,10 @@ function Memo() {
         <div className="memo-list-box">
           <input className="memo-search" type="search" aria-label="메모 검색" placeholder="메모 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
           <div className="memo-list" ref={listRef} aria-label="메모 목록" aria-busy={list.status === 'loading'}>
-            {list.status === 'loading' && <p className="memo-empty">메모를 불러오는 중이에요.</p>}
+            {list.status === 'loading' && <SkeletonList variant="memo" label="메모 목록을 불러오는 중이에요." />}
             {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">메모가 없어요. + 버튼으로 새 메모를 추가해 보세요.</p>}
             {list.status === 'ready' && memos.length > 0 && filteredMemos.length === 0 && <p className="memo-empty">검색 결과가 없어요.</p>}
-            {filteredMemos.map((memo) => (
+            {list.status === 'ready' && filteredMemos.map((memo) => (
               <div key={memo.id} className={`memo-item${memo.id === selectedId ? ' selected' : ''}`}
                 role="button" aria-label={`${memo.title || '제목 없음'} 메모 열기`} aria-pressed={memo.id === selectedId} aria-disabled={busy} tabIndex={busy ? -1 : 0}
                 onClick={() => handleSelect(memo)}
@@ -229,10 +231,10 @@ function Memo() {
         </div>
         <div className="memo-detail">
           <div className="memo-detail-top"><label className="memo-badge" htmlFor="memo-summary">한줄 요약</label></div>
-          <textarea id="memo-summary" className="memo-textarea" value={current?.summaryDraft ?? ''} disabled={!editable} onChange={(event) => updateSummary(event.target.value)}
+          {contentLoading ? <SkeletonRegion label="한줄 요약을 불러오는 중이에요."><Skeleton className="skeleton-summary" /></SkeletonRegion> : <textarea id="memo-summary" className="memo-textarea" value={current?.summaryDraft ?? ''} disabled={!editable} onChange={(event) => updateSummary(event.target.value)}
             placeholder="한줄 요약을 직접 입력하세요" aria-describedby={current?.isNew ? 'memo-save-help' : undefined} onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); handleSaveSummary() }
-            }} />
+            }} />}
           {current?.isNew && (
             <p id="memo-save-help" className="memo-save-help">메모를 먼저 저장한 후 한줄 요약을 저장해 주세요.</p>
           )}

@@ -10,33 +10,40 @@ import calenderIcon from '../icons/calenderIcon.png';
 import recieptIcon from '../icons/recieptIcon.png';
 import { getLoginId, getToken } from '../api/session.js';
 import { memberApi } from '../services/memberApi.js';
+import { Skeleton, SkeletonImage, SkeletonRegion } from './Skeleton';
 import '../styles/sideBar.css';
 
-function SideBar({ profile }) {
+function SideBar({ profile, profileLoading }) {
   const { pathname } = useLocation();
   const loginId = getLoginId();
   const [displayName, setDisplayName] = useState(loginId || '사용자');
+  const [nameLoading, setNameLoading] = useState(() => Boolean(getToken() && loginId));
   const isCurrent = (...paths) => paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
     setDisplayName(loginId || '사용자');
+    setNameLoading(Boolean(getToken() && loginId));
     if (!getToken() || !loginId) return undefined;
 
     const controller = new AbortController();
     memberApi.getMembers({ excludeSelf: false, signal: controller.signal }).then((members) => {
       const currentMember = members.find((member) => member.loginId === loginId);
       if (!controller.signal.aborted && currentMember?.name) setDisplayName(currentMember.name);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => {
+      if (!controller.signal.aborted) setNameLoading(false);
+    });
 
     return () => controller.abort();
   }, [loginId]);
 
   return (
     <div className="sidebar-container">
-      <div className="profile-container">
-        <img src={profileImageSource(profile?.profileImageUrl) || profileImg} alt="프로필 사진" className="profile-img" />
+      {profileLoading || (nameLoading && !profile?.nickname) ? <SkeletonRegion className="profile-container" label="프로필을 불러오는 중이에요.">
+        <Skeleton className="profile-img" /><Skeleton className="skeleton-sidebar-name user-name" />
+      </SkeletonRegion> : <div className="profile-container">
+        <SkeletonImage src={profileImageSource(profile?.profileImageUrl) || profileImg} alt="프로필 사진" className="profile-img" />
         <span className="user-name">{profile?.nickname || displayName}</span>
-      </div>
+      </div>}
       <nav className="menu-container" aria-label="사이드 메뉴">
         <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined}>
           <div className="sidebar-item">

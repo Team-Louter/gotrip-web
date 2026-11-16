@@ -6,6 +6,7 @@ import { formatDate } from '../data/scheduleDates.js';
 import { placeStore } from '../data/placeStore.js';
 import { loadKakaoMaps } from '../services/kakaoMapSdk.js';
 import mappin from '../icons/mappin.png';
+import { Skeleton, SkeletonMap, SkeletonRegion } from '../components/Skeleton';
 
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -40,7 +41,7 @@ function MapAPI() {
   const openLocationDetails = useCallback((position) => {
     const lat = position.getLat();
     const lng = position.getLng();
-    setSelectedPlace({ key: 'current-location', kind: 'current', title: '내 위치', address: '주소를 확인하고 있어요.', lat, lng });
+    setSelectedPlace({ key: 'current-location', kind: 'current', title: '내 위치', address: null, lat, lng });
     geocoderRef.current?.coord2Address(lng, lat, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK && result?.[0]) {
         const address = result[0].road_address?.address_name || result[0].address?.address_name || '주소 정보를 찾지 못했어요.';
@@ -246,10 +247,10 @@ function MapAPI() {
       <div ref={mapContainerRef} className="kakao-map-canvas" aria-label="현재 위치 주변 카카오 지도" />
       <p className="map-api-sr-only" role="status">{locationStatus}</p>
 
-      {mapStatus !== 'ready' && (
-        <div className={`map-api-loading${mapStatus === 'error' || mapStatus === 'missing-key' ? ' is-error' : ''}`} role={mapStatus === 'loading' ? 'status' : 'alert'}>
-          {mapStatus === 'loading' && '카카오 지도를 불러오고 있어요.'}
-          {mapStatus === 'missing-key' && '카카오 지도 키가 설정되지 않았어요. .env.local의 VITE_KAKAO_MAP_APP_KEY를 확인해 주세요.'}
+      {mapStatus === 'loading' && <SkeletonMap />}
+      {(mapStatus === 'error' || mapStatus === 'missing-key') && (
+        <div className="map-api-loading is-error" role="alert">
+          {mapStatus === 'missing-key' && '지도를 표시할 수 없어요. 카카오맵에서 확인해 주세요.'}
           {mapStatus === 'error' && '카카오 지도를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'}
         </div>
       )}
@@ -266,8 +267,9 @@ function MapAPI() {
         {NEARBY_CATEGORIES.map((category) => (
           <button key={category.key} type="button" aria-pressed={nearbyCategory === category.key}
             className={nearbyCategory === category.key ? 'is-selected' : ''}
-            onClick={() => setNearbyCategory(category.key)}>{category.label}</button>
+            disabled={mapStatus !== 'ready'} onClick={() => setNearbyCategory(category.key)}>{category.label}</button>
         ))}
+        {mapStatus === 'ready' && nearbyStatus === 'loading' && <SkeletonRegion label="주변 장소를 불러오는 중이에요." className="skeleton-nearby"><Skeleton className="skeleton-line" /></SkeletonRegion>}
         {nearbyStatus === 'empty' && <small role="status">이 주변에는 장소가 없어요.</small>}
         {nearbyStatus === 'error' && <small role="status">주변 장소를 불러오지 못했어요.</small>}
       </div>
@@ -280,7 +282,7 @@ function MapAPI() {
           </div>
           <h2 id="map-api-place-title">{selectedPlace.title}</h2>
           <dl>
-            <div><dt>주소</dt><dd>{selectedPlace.address}</dd></div>
+            <div><dt>주소</dt><dd>{selectedPlace.address === null ? <SkeletonRegion label="주소를 불러오는 중이에요." className="skeleton-address"><Skeleton className="skeleton-line" /></SkeletonRegion> : selectedPlace.address}</dd></div>
             {selectedPlace.phone && <div><dt>전화</dt><dd><a href={`tel:${selectedPlace.phone.replace(/[^\d+]/g, '')}`}>{selectedPlace.phone}</a></dd></div>}
           </dl>
           <a className="map-api-place-link" href={selectedPlace.placeUrl || `https://map.kakao.com/link/map/${encodeURIComponent(selectedPlace.title)},${selectedPlace.lat},${selectedPlace.lng}`}
