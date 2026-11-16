@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import gotrippro from '../images/gotrip-pro.jpg';
 import gotripplane from '../icons/gotrip-plane.png';
 import dotsIcon from '../icons/gotrip-dots.png';
 import cameraIcon from '../icons/gotrip-camera.png';
@@ -8,6 +7,7 @@ import clipIcon from '../icons/gotrip-clip.png';
 import { chatApi } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
+import { chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
 import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
 import '../styles/chatMessages.css';
 
@@ -197,7 +197,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   return (
     <main className="chat-main" aria-label={`${room.name} 대화`}>
       <div className="room-header">
-        <img className="room-profile" src={gotrippro} alt="" />
+        <img className="room-profile" src={chatCounterpartProfileImage(room)} alt="" />
         <div><p className="room-name">{room.name}</p><p className="room-status">{room.membersKnown === false ? '여행 대화' : `${room.members.length + 1}명 · ${[...room.members.map((member) => member.name), '나'].join(', ')}`}</p></div>
       </div>
       {syncError && <div className="chat-sync-error" role="alert">{syncError} {!getToken() ? <Link to="/login" state={{ from: `/chat/rooms/${room.id}` }}>다시 로그인</Link> : <button type="button" onClick={onRetrySync}>다시 시도</button>}</div>}
@@ -211,7 +211,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
           return (
             <article className={`${message.mine ? 'me-row' : 'msg-row'} chat-message-row`} key={message.id} aria-label={`메시지 ${message.id}`} tabIndex={-1}
               ref={(element) => { if (element) messageRefs.current.set(message.id, element); else messageRefs.current.delete(message.id); }}>
-              {!message.mine && <img className="msg-profile" src={gotrippro} alt="" />}
+              {!message.mine && <img className="msg-profile" src={profileImageSource(message.senderProfileImageUrl || message.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="" />}
               <div className="chat-message-content">
                 {!message.mine && <p className="chat-sender-name">{message.senderName}</p>}
                 {!message.deleted && <>

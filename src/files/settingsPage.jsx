@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import { clearSession, getLoginId, getToken } from '../api/session';
 import penIcon from '../icons/gotrip-pen.png';
-import { deleteAccount, fetchAccountDetails, profileImageSource, updateNickname, updateProfileImage } from '../services/profileApi';
-import defaultProfile from '../images/profile.jpg';
+import { DEFAULT_PROFILE_IMAGE, deleteAccount, fetchAccountDetails, profileImageSource, updateNickname, updateProfileImage } from '../services/profileApi';
 import '../styles/settingsPage.css';
 
 export default function SettingsPage() {
@@ -11,7 +11,6 @@ export default function SettingsPage() {
   const { profile, setProfile } = useOutletContext();
   const [email, setEmail] = useState(null);
   const [emailLoading, setEmailLoading] = useState(false);
-  const [emailError, setEmailError] = useState(false);
   const [nickname, setNickname] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -29,14 +28,18 @@ export default function SettingsPage() {
   const signedIn = Boolean(getToken());
   const loginId = getLoginId();
 
-  async function submitAccountChange(action, success) {
+  async function submitAccountChange(action, success, { useToast = false } = {}) {
     setBusy(true);
     setMessage(null);
     try {
       await action();
-      if (success) setMessage({ text: success });
+      if (success) {
+        if (useToast) showSuccessToast(success);
+        else setMessage({ text: success });
+      }
     } catch (error) {
-      setMessage({ text: error.message, error: true, account: !success });
+      if (useToast) showErrorToast(error.message || '프로필을 저장하지 못했습니다.');
+      else setMessage({ text: error.message, error: true, account: !success });
     } finally {
       setBusy(false);
     }
@@ -57,7 +60,7 @@ export default function SettingsPage() {
         setPhoto(null);
         photoInput.current.value = '';
       }
-    }, '프로필을 저장했습니다.');
+    }, '프로필을 저장했습니다.', { useToast: true });
   }
 
   function withdraw() {
@@ -75,13 +78,13 @@ export default function SettingsPage() {
     }
 
     setEmailLoading(true);
-    setEmailError(false);
     try {
       const details = await fetchAccountDetails();
-      if (details?.email) setEmail(details.email);
-      else setEmailError(true);
+      if (!details?.email) throw new Error('이메일 정보가 없습니다.');
+      setEmail(details.email);
+      showSuccessToast('이메일 조회에 성공했습니다.');
     } catch {
-      setEmailError(true);
+      showErrorToast('이메일을 불러오지 못했습니다.');
     } finally {
       setEmailLoading(false);
     }
@@ -103,7 +106,7 @@ export default function SettingsPage() {
               <fieldset className="settings-profile" disabled={busy}>
                 <div className="settings-photo-row">
                   <button className="settings-avatar-button" type="button" aria-label="프로필 사진 바꾸기" onClick={() => photoInput.current.click()}>
-                    <img className="settings-profile-image" src={(photo && preview) || profileImageSource(profile?.profileImageUrl) || defaultProfile} alt="" />
+                    <img className="settings-profile-image" src={(photo && preview) || profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="" />
                     <span className="settings-avatar-overlay"><img src={penIcon} alt="" /></span>
                   </button>
                   <input ref={photoInput} type="file" accept="image/*" hidden onChange={(event) => setPhoto(event.target.files[0] ?? null)} />
@@ -138,7 +141,6 @@ export default function SettingsPage() {
                   </dd>
                 </div>
               </dl>
-              {emailError && <p className="settings-description" role="status">이메일을 불러오지 못했습니다.</p>}
               <fieldset className="settings-actions" disabled={busy}>
                 <div className="settings-action-row">
                   <div>

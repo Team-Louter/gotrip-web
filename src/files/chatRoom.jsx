@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import gotrippro from '../images/gotrip-pro.jpg';
 import gotripsearch from '../icons/gotrip-search.png';
 import gotriplogo4 from '../images/gotrip-logo4.png';
 import ChatHome from './chatHome';
@@ -9,6 +8,7 @@ import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
+import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
 import '../styles/chatHome.css';
 import '../styles/chatRoom.css';
 import '../styles/chatRooms.css';
@@ -57,7 +57,17 @@ function ChatRoom() {
           const messages = typeof chatApi.getNewMessages === 'function'
             ? await chatApi.getNewMessages(room.id, { after: current[room.id]?.cursorMessageId, signal: controller.signal })
             : (await chatApi.getChatRoom(room.id, { signal: controller.signal })).messages;
-          if (!disposed) chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
+          if (!disposed) {
+            chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
+            const counterpartProfileImageUrl = chatCounterpartProfileImageSource({ ...room, messages });
+            if (counterpartProfileImageUrl) setList((latest) => {
+              if (latest.rooms.find((item) => item.id === room.id)?.counterpartProfileImageUrl === counterpartProfileImageUrl) return latest;
+              return {
+                ...latest,
+                rooms: latest.rooms.map((item) => item.id === room.id ? { ...item, counterpartProfileImageUrl } : item),
+              };
+            });
+          }
         } catch { /* 목록 표시는 유지하고 다음 새로고침에서 읽음 수를 다시 확인합니다. */ }
       }));
       if (!disposed) setUnreadByRoom(chatReadStore.read());
@@ -166,7 +176,7 @@ function ChatRoom() {
             {visibleRooms.map((room) => (
               <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`} key={room.id}
                 aria-label={`${room.name} 채팅방 열기${unreadByRoom[room.id]?.unreadCount ? `, 안 읽은 메시지 ${unreadByRoom[room.id].unreadCount}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
-                <img className="gotrip-pro" src={gotrippro} alt="" />
+                <img className="gotrip-pro" src={chatCounterpartProfileImage(room)} alt="" />
                 <span className="chat-item-text"><span className="chatroom-name">{room.name}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
                 {unreadByRoom[room.id]?.unreadCount > 0 && <span className="chat-unread-badge" aria-hidden="true">{unreadByRoom[room.id].unreadCount > 99 ? '99+' : unreadByRoom[room.id].unreadCount}</span>}
               </button>

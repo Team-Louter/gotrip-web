@@ -2,6 +2,7 @@ import { getToken } from './api/session';
 import { fetchProfile } from './services/profileApi';
 import { useEffect, useState } from 'react';
 import { Routes, Route, Outlet, Navigate, useParams } from 'react-router-dom';
+import AppToasts from './components/AppToasts';
 import SideBar from './components/sideBar';
 import MainPage from './files/mainPage';
 import Map from './files/map';
@@ -55,40 +56,43 @@ function MainLayout() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/registration" element={<SignUp />} />
-        <Route path="/registration/password" element={<SignUp2 />} />
-        <Route path="/registration/terms" element={<SignUpTerms />} />
-        <Route path="/islogin" element={<Navigate to="/login" replace />} />
-        <Route path="/signup" element={<Navigate to="/registration" replace />} />
-        <Route path="/signup/step2" element={<Navigate to="/registration/password" replace />} />
-        <Route path="/signup/terms" element={<Navigate to="/registration/terms" replace />} />
-      </Route>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/registration" element={<SignUp />} />
+          <Route path="/registration/password" element={<SignUp2 />} />
+          <Route path="/registration/terms" element={<SignUpTerms />} />
+          <Route path="/islogin" element={<Navigate to="/login" replace />} />
+          <Route path="/signup" element={<Navigate to="/registration" replace />} />
+          <Route path="/signup/step2" element={<Navigate to="/registration/password" replace />} />
+          <Route path="/signup/terms" element={<Navigate to="/registration/terms" replace />} />
+        </Route>
 
-      <Route element={<MainLayout />}>
-        <Route path="/home" element={<MainPage />} />
-        <Route path="/friends" element={<FriendsPage />} />
-        <Route path="/map" element={<Map />} />
-        <Route path="/places" element={<MapAPI />} />
-        <Route path="/calendar" element={<Calender />} />
-        <Route path="/chat" element={<ChatRoom />} />
-        <Route path="/chat/rooms/:roomId" element={<ChatRoom />} />
-        <Route path="/memo" element={<MemoPage />} />
-        <Route path="/payment" element={<PayForm />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/main" element={<Navigate to="/home" replace />} />
-        <Route path="/map-api" element={<Navigate to="/places" replace />} />
-        <Route path="/chat-api" element={<Navigate to="/chat" replace />} />
-        <Route path="/chat/:roomId" element={<LegacyChatRoomRedirect />} />
-        <Route path="/pay" element={<Navigate to="/payment" replace />} />
-      </Route>
+        <Route element={<MainLayout />}>
+          <Route path="/home" element={<MainPage />} />
+          <Route path="/friends" element={<FriendsPage />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/places" element={<MapAPI />} />
+          <Route path="/calendar" element={<Calender />} />
+          <Route path="/chat" element={<ChatRoom />} />
+          <Route path="/chat/rooms/:roomId" element={<ChatRoom />} />
+          <Route path="/memo" element={<MemoPage />} />
+          <Route path="/payment" element={<PayForm />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/main" element={<Navigate to="/home" replace />} />
+          <Route path="/map-api" element={<Navigate to="/places" replace />} />
+          <Route path="/chat-api" element={<Navigate to="/chat" replace />} />
+          <Route path="/chat/:roomId" element={<LegacyChatRoomRedirect />} />
+          <Route path="/pay" element={<Navigate to="/payment" replace />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+      <AppToasts />
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { createApiClient } from '../api/client.js';
 import { getLoginId, getMemberId, rememberMemberId } from '../api/session.js';
 import { createMemberApi, matchesMember } from './memberApi.js';
+import { createFriendshipApi } from './friendshipApi.js';
 import { parseReplyContent } from '../data/chatMessages.js';
 
 export const MESSAGE_PAGE_SIZE = 50;
@@ -40,6 +41,7 @@ function normalizeRoom(room) {
 export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId = getMemberId, onMemberIdentified = rememberMemberId } = {}) {
   const request = createApiClient({ baseUrl, fetchImpl, token, onUnauthorized });
   const members = createMemberApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId });
+  const friendships = createFriendshipApi({ baseUrl, fetchImpl, token, onUnauthorized });
   const rooms = new Map();
   let memberIdentityPromise;
   let memberIdentityChecked = false;
@@ -89,9 +91,15 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
   const api = {
     useMock: false,
     capabilities: { friends: true, attachments: false, replies: false, deletion: true, reactions: true },
-    async getFriends({ query = '', ...options } = {}) {
-      const list = await members.getMembers({ ...options, excludeSelf: false });
-      return list.filter((member) => matchesMember(member, query));
+    async getFriends({ query = '', signal } = {}) {
+      const list = await friendships.getFriends({ signal });
+      return list.map((friend) => ({
+        id: friend.memberId,
+        friendshipId: friend.friendshipId,
+        name: friend.nickname || `회원 ${friend.memberId}`,
+        nickname: friend.nickname,
+        loginId: '',
+      })).filter((friend) => matchesMember(friend, query));
     },
     maxMessageLength: 2000,
     maxRoomNameLength: 100,
