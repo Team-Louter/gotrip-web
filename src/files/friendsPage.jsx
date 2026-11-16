@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLoginId, getToken } from '../api/session.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
+import { showSuccessToast } from '../components/AppToasts';
 import '../styles/friendsPage.css';
 
 function decorateRelationship(relationship, membersById) {
@@ -21,16 +22,8 @@ function FriendsPage() {
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState('');
-  const [notice, setNotice] = useState(null);
-  const noticeSequence = useRef(0);
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
-
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timeoutId = window.setTimeout(() => setNotice(null), 2000);
-    return () => window.clearTimeout(timeoutId);
-  }, [notice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,18 +66,12 @@ function FriendsPage() {
       && !sentRequests.some((request) => request.loginId === member.loginId))
     : [];
 
-  function showNotice(message) {
-    noticeSequence.current += 1;
-    setNotice({ id: noticeSequence.current, message });
-  }
-
   async function performServerAction(action, successMessage) {
     setBusy(true);
     setActionError('');
-    setNotice(null);
     try {
       await action();
-      showNotice(successMessage);
+      showSuccessToast(successMessage);
       setRetry((value) => value + 1);
     } catch (reason) {
       setActionError(reason.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.');
@@ -115,7 +102,6 @@ function FriendsPage() {
 
   return (
     <main className="friends-page">
-      {notice && <div className="friends-toast" key={notice.id} role="status" aria-live="polite">{notice.message}</div>}
       <section className="friends-card friends-directory" aria-labelledby="friends-title">
         <header className="friends-header">
           <div>

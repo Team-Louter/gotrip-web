@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import '../styles/payForm.css';
 import gotripwallet from '../icons/wallet.png';
 
@@ -6,13 +7,14 @@ function PayForm() {
   const [expenses, setExpenses] = useState([]);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
-  const [notice, setNotice] = useState(null);
+  const [participantCount, setParticipantCount] = useState('2');
   const [dialog, setDialog] = useState(null);
   const [editName, setEditName] = useState('');
   const [editAmount, setEditAmount] = useState('');
 
   const listRef = useRef(null);
   const scrollToNewExpense = useRef(false);
+  const invalidCountToastShown = useRef(false);
 
   useLayoutEffect(() => {
     if (scrollToNewExpense.current) {
@@ -23,17 +25,46 @@ function PayForm() {
 
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
+  const numericParticipantCount = Number(participantCount);
+  const validParticipantCount = Number.isInteger(numericParticipantCount)
+    && numericParticipantCount >= 1
+    && numericParticipantCount <= 10000;
 
-  const showNotice = (type, text) => {
-    setNotice({ type, text });
-    window.setTimeout(() => setNotice(null), 2500);
+  const showInvalidCountToast = () => {
+    if (invalidCountToastShown.current) return;
+    showErrorToast('정산 인원은 1명부터 10,000명까지 설정할 수 있습니다.');
+    invalidCountToastShown.current = true;
+  };
+
+  const updateParticipantCount = (event) => {
+    const value = event.target.value;
+    if (value === '') {
+      setParticipantCount('');
+      return;
+    }
+
+    const count = Number(value);
+    if (!Number.isInteger(count) || count > 10000) {
+      showInvalidCountToast();
+      return;
+    }
+
+    invalidCountToastShown.current = false;
+    setParticipantCount(value);
+  };
+
+  const validateParticipantCount = () => {
+    if (validParticipantCount) return;
+    setParticipantCount('2');
+    showInvalidCountToast();
+    invalidCountToastShown.current = false;
   };
 
   // API 연동 시 각 핸들러에서 서버 요청을 보낸 뒤 성공 응답으로 목록을 갱신합니다.
   const addExpense = () => {
     const amount = Number(itemAmount);
     if (!itemName.trim() || !Number.isFinite(amount) || amount <= 0) {
-      showNotice('error', '추가에 실패했습니다.');
+      showErrorToast('추가에 실패했습니다.');
       return;
     }
 
@@ -44,7 +75,7 @@ function PayForm() {
     ]);
     setItemName('');
     setItemAmount('');
-    showNotice('success', '추가 되었습니다!');
+    showSuccessToast('추가 되었습니다!');
   };
 
   const openEditDialog = (expense) => {
@@ -57,7 +88,7 @@ function PayForm() {
     const amount = Number(editAmount);
     if (!editName.trim() || !Number.isFinite(amount) || amount <= 0) {
       setDialog(null);
-      showNotice('error', '수정에 실패했습니다.');
+      showErrorToast('수정에 실패했습니다.');
       return;
     }
 
@@ -67,23 +98,17 @@ function PayForm() {
         : expense
     )));
     setDialog(null);
-    showNotice('success', '수정되었습니다.');
+    showSuccessToast('수정되었습니다.');
   };
 
   const confirmDeleteExpense = () => {
     setExpenses((current) => current.filter((expense) => expense.id !== dialog.id));
     setDialog(null);
-    showNotice('success', '삭제되었습니다.');
+    showSuccessToast('삭제되었습니다.');
   };
 
   return (
     <div className="pay-page">
-      {notice && (
-        <div className={`pay-notice pay-notice-${notice.type}`} role="status">
-          {notice.text}
-        </div>
-      )}
-
       <div className="pay-card">
         <h2 className="lets-pay">
           <img className="gotrip-wallet" src={gotripwallet} alt="" /> 정산
@@ -92,7 +117,27 @@ function PayForm() {
         <div className="total-pay">
           <p id="total-usepay">총 사용액</p>
           <p id="total-money">{formatWon(total)}</p>
-          <p id="expec-pay">1인 예상 부담액: {formatWon(Math.round(total / 2))}</p>
+          <div className="pay-split-control">
+            <label htmlFor="pay-participant-count">정산 인원</label>
+            <div className="pay-split-input-wrap">
+              <input
+                id="pay-participant-count"
+                className="pay-participant-count"
+                type="number"
+                min="1"
+                max="10000"
+                step="1"
+                inputMode="numeric"
+                value={participantCount}
+                onChange={updateParticipantCount}
+                onBlur={validateParticipantCount}
+                aria-describedby="pay-participant-limit"
+              />
+              <span>명</span>
+            </div>
+            <span id="pay-participant-limit" className="pay-participant-limit">최대 10,000명</span>
+          </div>
+          <p id="expec-pay">1인 예상 부담액: {validParticipantCount ? formatWon(Math.round(total / numericParticipantCount)) : '인원을 입력해 주세요'}</p>
         </div>
 
         <div className="pay-row">

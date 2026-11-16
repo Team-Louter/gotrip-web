@@ -6,6 +6,7 @@ import cameraIcon from '../icons/gotrip-camera.png';
 import clipIcon from '../icons/gotrip-clip.png';
 import { chatApi } from '../services/chatApi';
 import { getToken } from '../api/session';
+import { showSuccessToast } from '../components/AppToasts';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
 import { chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
 import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
@@ -53,7 +54,6 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [loadingOlder, setLoadingOlder] = useState(false);
   const historyBusy = useRef(false);
   const historyController = useRef(null);
@@ -71,7 +71,6 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   const uploadBusy = useRef(false);
   const clientIdRef = useRef(null);
   const messageRefs = useRef(new Map());
-  const noticeTimerRef = useRef(null);
 
   useLayoutEffect(() => {
     const area = areaRef.current;
@@ -81,7 +80,6 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
     } else if (followLatest.current) endRef.current?.scrollIntoView({ block: 'end' });
   }, [room.messages.length, room.hasOlderMessages]);
   useLayoutEffect(() => resizeComposerTextarea(textInputRef.current), [content]);
-  useEffect(() => () => clearTimeout(noticeTimerRef.current), []);
   useEffect(() => () => historyController.current?.abort(), []);
 
   async function loadOlder() {
@@ -113,7 +111,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
 
   async function mutate(operation) {
     if (mutationBusy.current) return false;
-    mutationBusy.current = true; setBusy(true); setError(''); setNotice('');
+    mutationBusy.current = true; setBusy(true); setError('');
     try { onRoomUpdated(await operation()); return true; }
     catch (reason) { setError(reason.message || '변경 내용을 저장하지 못했어요.'); return false; }
     finally { mutationBusy.current = false; setBusy(false); }
@@ -179,9 +177,8 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
     try {
       if (!navigator.clipboard) throw new Error();
       await navigator.clipboard.writeText([message.content, ...(message.attachments ?? []).map((item) => item.type === 'link' ? item.url : item.name)].filter(Boolean).join('\n'));
-      clearTimeout(noticeTimerRef.current);
-      setNotice('복사되었습니다'); setError('');
-      noticeTimerRef.current = setTimeout(() => setNotice(''), 2000);
+      setError('');
+      showSuccessToast('복사되었습니다.');
     } catch { setError('복사하지 못했어요. 메시지를 선택해서 복사해 주세요.'); }
     setMenu(null);
   }
@@ -254,7 +251,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
         {attachments.length > 0 && <div className="composer-attachments" aria-label="전송할 첨부">{attachments.map((item) => <div className="composer-attachment" key={item.id}>{item.type === 'image' ? <img src={item.url} alt={item.name} /> : <span className="composer-link-preview">↗ {item.url}</span>}<button type="button" aria-label={`${item.name || item.url} 첨부 취소`} disabled={busy || uploading} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); clientIdRef.current = null; }}>×</button></div>)}</div>}
         {linkOpen && <div className="composer-link-panel"><label htmlFor="chat-link-input">링크 첨부</label><div><input id="chat-link-input" type="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} disabled={busy || uploading} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); addLink(); } }} /><button type="button" onClick={addLink} disabled={busy || uploading}>추가</button><button type="button" aria-label="링크 첨부 닫기" onClick={() => setLinkOpen(false)}>×</button></div></div>}
         <p className="chat-message-error" role="alert">{error}{error && !getToken() && <> <Link to="/login" state={{ from: `/chat/rooms/${room.id}` }}>로그인하기</Link></>}</p>
-        <p className="chat-message-notice" role="status">{uploading ? '이미지를 준비하고 있어요.' : notice}</p>
+        <p className="chat-message-notice" role="status">{uploading ? '이미지를 준비하고 있어요.' : ''}</p>
         <div className="input-area">
           <input ref={fileInputRef} type="file" aria-label="이미지 파일" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden onChange={attachImages} />
           {capabilities.attachments && <button type="button" className="composer-tool" title="이미지 첨부" aria-label="이미지 첨부" disabled={busy || uploading} onClick={() => fileInputRef.current?.click()}><img src={cameraIcon} alt="" /></button>}

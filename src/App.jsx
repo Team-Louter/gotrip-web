@@ -3,6 +3,7 @@ import { fetchProfile } from './services/profileApi';
 import { useEffect, useState } from 'react';
 import { Routes, Route, Outlet, Navigate, useParams } from 'react-router-dom';
 import AppToasts from './components/AppToasts';
+import LoginRequiredPage from './components/LoginRequiredPage';
 import SideBar from './components/sideBar';
 import MainPage from './files/mainPage';
 import Map from './files/map';
@@ -18,6 +19,7 @@ import SignUp from './files/signUp';
 import SignUp2 from './files/signUp2';
 import SignUpTerms from './files/signUpTerms';
 import './App.css';
+import './styles/focusModality.css';
 
 function AuthLayout() {
   return (
@@ -49,12 +51,30 @@ function MainLayout() {
   return (
     <div className="layout">
       <SideBar profile={profile} />
-      <Outlet context={{ profile, setProfile }} />
+      {getToken() ? <Outlet context={{ profile, setProfile }} /> : <LoginRequiredPage />}
     </div>
   );
 }
 
 function App() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const handlePointerDown = () => { root.dataset.inputMode = 'pointer'; };
+    const handleKeyDown = (event) => {
+      if (['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' '].includes(event.key)) {
+        root.dataset.inputMode = 'keyboard';
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      delete root.dataset.inputMode;
+    };
+  }, []);
+
   return (
     <>
       <Routes>

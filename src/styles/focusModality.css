@@ -1,0 +1,3 @@
+html[data-input-mode='pointer'] :focus {
+  outline: none !important;
+}
