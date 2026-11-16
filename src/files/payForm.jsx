@@ -2,14 +2,8 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import '../styles/payForm.css';
 import gotripwallet from '../icons/wallet.png';
 
-const initialExpenses = [
-  { id: 1, name: '항공권', amount: 320000 },
-  { id: 2, name: '라멘 식사', amount: 56000 },
-  { id: 3, name: '숙소 예약금', amount: 210000 },
-];
-
 function PayForm() {
-  const [expenses, setExpenses] = useState(initialExpenses);
+  const [expenses, setExpenses] = useState([]);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
   const [notice, setNotice] = useState(null);

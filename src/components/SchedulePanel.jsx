@@ -66,7 +66,7 @@ export function ScheduleEditor({ event, selectedDate, onClose }) {
           <label>시간<input type="time" required name="time" defaultValue={event?.time ?? '09:00'} /></label>
         </div>
         <label>일정 내용<textarea ref={contentRef} autoFocus required minLength={event ? 1 : 5} maxLength={200} rows={3} placeholder="어떤 여행을 계획하고 있나요?" name="content" defaultValue={event?.content ?? ''} onChange={(e) => { resizeScheduleContent(e.currentTarget); setError(''); }} /></label></fieldset>
-        <p className="trip-field-error" role="alert">{error}{error && !getToken() && <> <Link to="/islogin" state={{ from: location.pathname }}>로그인하기</Link></>}</p>
+        <p className="trip-field-error" role="alert">{error}{error && !getToken() && <> <Link to="/login" state={{ from: location.pathname }}>로그인하기</Link></>}</p>
         <div className="trip-editor-actions">
           <button type="button" className="trip-secondary" disabled={saving} onClick={onClose}>취소</button>
           <button type="submit" className="trip-primary" disabled={saving}>{saving ? '등록 중…' : event ? '변경 저장' : '일정 추가'}</button>
@@ -113,15 +113,15 @@ export default function SchedulePanel({ compact = false }) {
         ) : selectedEvents.map((event) => (
           <article className="trip-event" key={event.id}>
             <time dateTime={`${event.date}T${event.time}`}>{event.time.replace(':', ' : ')}</time>
-            <div className="trip-event-body"><p>{event.content}</p><small>{event.localChanges ? '이 브라우저에서 수정됨' : event.serverSynced ? '서버에 등록됨' : '이 브라우저의 일정'}</small></div>
+            <div className="trip-event-body"><p>{event.content}</p></div>
             <div className="trip-event-actions">
-              <button className="trip-icon-button" aria-label={`${event.content} 수정`} title="이 브라우저에서 수정" onClick={() => setEditor({ event })}><img src={editIcon} alt="" /></button>
-              <button className="trip-icon-button" aria-label={`${event.content} ${event.serverSynced ? '목록에서 숨기기' : '삭제'}`} title={event.serverSynced ? '이 브라우저 목록에서 숨기기' : '삭제'} onClick={() => deleteSchedule(event.id)}><img src={deleteIcon} alt="" /></button>
+              <button className="trip-icon-button" aria-label={`${event.content} 수정`} title="수정" onClick={() => setEditor({ event })}><img src={editIcon} alt="" /></button>
+              <button className="trip-icon-button" aria-label={`${event.content} 삭제`} title="삭제" onClick={() => deleteSchedule(event.id)}><img src={deleteIcon} alt="" /></button>
             </div>
           </article>
         ))}
       </div>
-      {storageError && <p className="trip-notice" role="status">브라우저에 저장할 수 없어 새로고침하면 변경 내용이 사라질 수 있어요.</p>}
+      {storageError && <p className="trip-notice" role="status">일정을 저장하지 못했어요. 다시 시도해 주세요.</p>}
       {editor && <ScheduleEditor event={editor.event} selectedDate={selectedDate} onClose={() => setEditor(null)} />}
     </section>
   );

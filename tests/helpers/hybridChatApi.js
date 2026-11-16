@@ -1,4 +1,4 @@
-import { getAccountId } from '../api/session.js';
+import { getAccountId } from '../../src/api/session.js';
 
 // 체험 참여자와 미디어가 실제 서버 API로 전송되지 않도록 저장 위치를 구분합니다.
 export function createHybridChatApi({ serverApi, createLocalApi, account = getAccountId }) {

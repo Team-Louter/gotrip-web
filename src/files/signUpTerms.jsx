@@ -75,7 +75,7 @@ function SignUpTerms() {
         marketingAccepted,
       });
       clearSignupDraft();
-      navigate('/islogin', { replace: true, state: { signupComplete: true } });
+      navigate('/login', { replace: true, state: { signupComplete: true } });
     } catch (requestError) {
       setError(requestError.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
     } finally {
@@ -126,7 +126,7 @@ function SignUpTerms() {
               </div>
               {error && <p role="alert" className="signup-error signup-terms-error">{error}</p>}
               <div className='ifyou-not2'>
-                <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')} style={{ cursor: 'pointer' }}>로그인</span></p>
+                <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/login')} style={{ cursor: 'pointer' }}>로그인</span></p>
               </div>
             </div>
           </div>

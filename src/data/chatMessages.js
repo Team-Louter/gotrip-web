@@ -33,3 +33,18 @@ export function messagePreview(message) {
   if (!message || message.deleted) return '삭제된 메시지입니다.';
   return message.content || (message.attachments?.some((item) => item.type === 'image') ? '사진' : '링크');
 }
+
+export function formatReplyContent(message, content) {
+  const senderName = String(message.senderName || '메시지').replace(/[:\n]/g, ' ');
+  const preview = messagePreview(message).replace(/\s+/g, ' ').trim();
+  return `↪ ${senderName}: ${preview}\n\n${content.trim()}`;
+}
+
+export function parseReplyContent(content) {
+  const match = /^↪ ([^:\n]{1,100}): ([\s\S]*?)\n\n([\s\S]*)$/u.exec(content);
+  if (!match) return { content, replyPreview: null };
+  return {
+    content: match[3],
+    replyPreview: { senderName: match[1], content: match[2] },
+  };
+}

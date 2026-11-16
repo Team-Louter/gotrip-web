@@ -35,7 +35,6 @@
 .trip-event p { flex: 1; min-width: 0; margin: 0; padding-top: 4px; font-size: 20px; line-height: 1.6; font-weight: 750; overflow-wrap: anywhere; white-space: pre-wrap; }
 .trip-event-actions { display: flex; gap: 2px; flex-shrink: 0; }
 .trip-event-body { min-width: 0; flex: 1; }
-.trip-event-body small { display: block; margin-top: 2px; color: #8b8a7f; font-size: 10px; }
 .trip-editor-fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
 .trip-editor button:disabled { opacity: .5; cursor: default; }
 .trip-icon-button { display: grid; place-items: center; width: 30px; height: 32px; padding: 6px; border-radius: 9px; background: transparent; }
@@ -66,7 +65,6 @@
 /* 지도와 일정이 좁은 창에서도 나란히 겹치지 않도록 배치 */
 .map-container { box-sizing: border-box; flex: 1; min-width: 0; padding: 40px; justify-content: center; color: #263b4b; background: #fff; color-scheme: light; }
 .map-box { min-width: 0; flex: 1; max-width: 540px; }
-.map-image { width: 100%; object-fit: cover; }
 .map-contents-box { box-sizing: border-box; width: 100%; }
 .map-container > .trip-panel { flex: 1; max-width: 510px; }
 @media (max-width: 1200px) {

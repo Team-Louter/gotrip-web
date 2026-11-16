@@ -5,10 +5,10 @@ import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStartPage } from '../data/settings';
 import { login } from '../services/authApi';
-import '../styles/isLogin.css';
+import '../styles/login.css';
 
 
-function IsLogin() {
+function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loginId, setLoginId] = useState('');
@@ -28,7 +28,7 @@ function IsLogin() {
     try {
       await login({ loginId: enteredLoginId, password: enteredPassword });
       const destination = location.state?.from;
-      navigate(typeof destination === 'string' && (/^\/chat(?:\/|$)/.test(destination) || ['/memo', '/friends', '/calendar', '/map', '/map-api'].includes(destination)) ? destination : getStartPage(), { replace: true });
+      navigate(typeof destination === 'string' && (/^\/chat(?:\/|$)/.test(destination) || ['/home', '/friends', '/map', '/places', '/calendar', '/memo', '/payment', '/settings'].includes(destination)) ? destination : getStartPage(), { replace: true });
     } catch (reason) { setError(reason.message || '로그인하지 못했어요. 다시 시도해 주세요.'); }
     finally { submitting.current = false; setBusy(false); }
   }
@@ -55,7 +55,7 @@ function IsLogin() {
         </form>
 
         <div className='ifyou-not'>
-          <p>계정이 없으시다면? <span className='lets-signup' onClick={() => navigate('/signup')} style={{ cursor: 'pointer' }}>회원가입 하러가기</span>
+          <p>계정이 없으시다면? <span className='lets-signup' onClick={() => navigate('/registration')} style={{ cursor: 'pointer' }}>회원가입 하러가기</span>
           </p>
         </div>
 
@@ -69,4 +69,4 @@ function IsLogin() {
   )
 }
 
-export default IsLogin
+export default Login
