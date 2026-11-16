@@ -1,8 +1,15 @@
 import { createApiClient } from '../api/client.js';
-import { getMemberId, rememberMemberId } from '../api/session.js';
+import { getLoginId, getMemberId, rememberMemberId } from '../api/session.js';
 import { createMemberApi, matchesMember } from './memberApi.js';
+import { parseReplyContent } from '../data/chatMessages.js';
 
 export const MESSAGE_PAGE_SIZE = 50;
+
+function normalizeReactions(reactions, myReaction = null) {
+  if (!Array.isArray(reactions)) return [];
+  return reactions.filter((reaction) => typeof reaction?.emoji === 'string' && Number(reaction.count) > 0)
+    .map((reaction) => ({ emoji: reaction.emoji, count: Number(reaction.count), mine: reaction.emoji === myReaction }));
+}
 
 export function mergeMessages(previous, incoming) {
   const messages = new Map(previous.map((message) => [message.id, message]));
@@ -34,24 +41,54 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
   const request = createApiClient({ baseUrl, fetchImpl, token, onUnauthorized });
   const members = createMemberApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId });
   const rooms = new Map();
+  let memberIdentityPromise;
+  let memberIdentityChecked = false;
+
+  async function identifyCurrentMember() {
+    const existingId = currentMemberId();
+    if (existingId != null) return String(existingId);
+    const loginId = getLoginId();
+    if (!loginId || memberIdentityChecked) return null;
+    if (!memberIdentityPromise) {
+      memberIdentityPromise = members.getMembers({ excludeSelf: false })
+        .then((list) => {
+          memberIdentityChecked = true;
+          const self = list.find((member) => member.loginId === loginId);
+          if (self?.id != null) {
+            rememberMemberId(self.id);
+            return String(self.id);
+          }
+          return null;
+        })
+        .catch(() => {
+          memberIdentityChecked = true;
+          return null;
+        })
+        .finally(() => { memberIdentityPromise = null; });
+    }
+    return memberIdentityPromise;
+  }
 
   function normalizeMessage(message, mine = false) {
     if (message?.id == null || message.senderId == null || typeof message.content !== 'string') throw new Error('메시지 응답 형식을 확인해 주세요.');
     const date = new Date(message.createdAt);
     const memberId = currentMemberId();
+    const reply = parseReplyContent(message.content);
     return {
       ...message,
+      content: reply.content,
+      replyPreview: reply.replyPreview,
       id: String(message.id), roomId: String(message.roomId), senderId: String(message.senderId),
       senderName: message.senderNickname || `회원 ${message.senderId}`,
       mine: mine || (memberId != null && String(message.senderId) === String(memberId)),
       time: Number.isNaN(date.valueOf()) ? '' : new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date),
-      attachments: [], reactions: [],
+      attachments: [], reactions: normalizeReactions(message.reactions, message.myReaction ?? null),
     };
   }
 
   const api = {
     useMock: false,
-    capabilities: { friends: true, attachments: false, replies: false, editing: false, reactions: false },
+    capabilities: { friends: true, attachments: false, replies: false, deletion: true, reactions: true },
     async getFriends({ query = '', ...options } = {}) {
       const list = await members.getMembers({ ...options, excludeSelf: false });
       return list.filter((member) => matchesMember(member, query));
@@ -67,6 +104,7 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       return list.filter((room) => room.name.normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '').includes(search));
     },
     async getMessages(roomId, { before, size = MESSAGE_PAGE_SIZE, signal } = {}) {
+      await identifyCurrentMember();
       const params = new URLSearchParams({ size: String(size) });
       if (before != null) params.set('before', String(before));
       const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages?${params}`, { signal });
@@ -90,7 +128,9 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       const room = rooms.get(String(id));
       if (!room) throw new Error('채팅방을 찾을 수 없습니다.');
       const messages = await api.getMessages(id, { signal });
-      return { ...room, messages, lastMessage: messages.at(-1)?.content ?? '', hasOlderMessages: messages.length === MESSAGE_PAGE_SIZE };
+      const updatedRoom = { ...room, messages, lastMessage: messages.at(-1)?.content ?? '', hasOlderMessages: messages.length === MESSAGE_PAGE_SIZE };
+      rooms.set(String(id), updatedRoom);
+      return updatedRoom;
     },
     async createChatRoom({ name, memberIds }, { signal } = {}) {
       const title = name?.trim();
@@ -107,7 +147,40 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages`, { method: 'POST', body: { content: text }, signal });
       const message = normalizeMessage(result, true);
       onMemberIdentified(result.senderId);
-      return { ...(rooms.get(String(roomId)) ?? { id: String(roomId), name: '채팅방', members: [], membersKnown: false }), messages: [message], lastMessage: message.content };
+      const currentRoom = rooms.get(String(roomId)) ?? { id: String(roomId), name: '채팅방', members: [], membersKnown: false, messages: [] };
+      const updatedRoom = { ...currentRoom, messages: mergeMessages(currentRoom.messages ?? [], [message]), lastMessage: message.content };
+      rooms.set(String(roomId), updatedRoom);
+      return updatedRoom;
+    },
+    async setReaction(roomId, messageId, emoji, active, { signal } = {}) {
+      if (typeof emoji !== 'string' || !emoji.trim() || emoji.length > 32 || /[\s\p{Cc}]/u.test(emoji)) {
+        throw new Error('이모티콘을 다시 선택해 주세요.');
+      }
+      const path = `/api/chat/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}/reaction`;
+      const response = await request(path, active
+        ? { method: 'PUT', body: { emoji }, signal }
+        : { method: 'DELETE', signal });
+      let room = rooms.get(String(roomId));
+      if (!room?.messages?.some((message) => message.id === String(messageId))) room = await api.getChatRoom(roomId, { signal });
+      if (!Array.isArray(response?.reactions)) return api.getChatRoom(roomId, { signal });
+
+      const myReaction = response.emoji ?? (active ? emoji : null);
+      const updatedRoom = {
+        ...room,
+        messages: room.messages.map((message) => message.id === String(messageId)
+          ? { ...message, reactions: normalizeReactions(response.reactions, myReaction) }
+          : message),
+      };
+      rooms.set(String(roomId), updatedRoom);
+      return updatedRoom;
+    },
+    async deleteMessage(roomId, messageId, { signal } = {}) {
+      await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}`, { method: 'DELETE', signal });
+      const room = rooms.get(String(roomId)) ?? { id: String(roomId), name: '채팅방', members: [], membersKnown: false };
+      const messages = await api.getMessages(roomId, { signal });
+      const updatedRoom = { ...room, messages, lastMessage: messages.at(-1)?.content ?? '', hasOlderMessages: messages.length === MESSAGE_PAGE_SIZE };
+      rooms.set(String(roomId), updatedRoom);
+      return { ...updatedRoom, deletedMessageId: String(messageId) };
     },
   };
   return api;

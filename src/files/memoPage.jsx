@@ -167,7 +167,7 @@ function Memo() {
       <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
-          {!getToken() ? <Link to="/islogin" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
+          {!getToken() ? <Link to="/login" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
         </div>}
         <input
           ref={titleRef}

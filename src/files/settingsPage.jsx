@@ -89,7 +89,7 @@ export default function SettingsPage() {
 
   function logOut() {
     clearSession();
-    navigate('/islogin', { replace: true });
+    navigate('/login', { replace: true });
   }
 
   return (
@@ -143,7 +143,6 @@ export default function SettingsPage() {
                 <div className="settings-action-row">
                   <div>
                     <h4>로그아웃</h4>
-                    <p>이 브라우저에서 로그아웃합니다.</p>
                   </div>
                   <button type="button" onClick={logOut}>로그아웃</button>
                 </div>

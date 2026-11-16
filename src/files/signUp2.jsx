@@ -34,7 +34,7 @@ function SignUp2() {
       return setError('실제 날짜를 YYYYMMDD 형식으로 입력해주세요.');
     }
     updateSignupDraft({ birthDate: normalizedBirthDate, email: email.trim(), nickname: nickname.trim() });
-    navigate('/signup/terms');
+    navigate('/registration/terms');
   }
 
   return (

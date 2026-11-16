@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLoginId, getToken } from '../api/session.js';
-import { createFriendsMockStore, getFriendsMockStorageKey, mockFriendCandidates } from '../data/friendsMockStore.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
 import '../styles/friendsPage.css';
@@ -13,14 +12,10 @@ function decorateRelationship(relationship, membersById) {
     id: relationship.friendshipId,
     loginId: member?.loginId ?? `member${relationship.memberId}`,
     name: relationship.nickname || member?.name || `회원 ${relationship.memberId}`,
-    isMock: false,
   };
 }
 
 function FriendsPage() {
-  const storageKey = getFriendsMockStorageKey();
-  const mockStore = useMemo(() => createFriendsMockStore({ storageKey }), [storageKey]);
-  const [mockState, setMockState] = useState(() => mockStore.read());
   const [serverData, setServerData] = useState({ members: [], friends: [], incomingRequests: [], sentRequests: [] });
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('loading');
@@ -30,8 +25,6 @@ function FriendsPage() {
   const noticeSequence = useRef(0);
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
-
-  useEffect(() => setMockState(mockStore.read()), [mockStore]);
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -68,19 +61,11 @@ function FriendsPage() {
     return () => controller.abort();
   }, [retry]);
 
-  const serverLoginIds = new Set(serverData.friends.map((friend) => friend.loginId));
-  const friends = [
-    ...serverData.friends,
-    ...mockState.friends.filter((friend) => !serverLoginIds.has(friend.loginId)),
-  ];
+  const friends = serverData.friends;
   const visibleFriends = friends.filter((friend) => matchesMember(friend, query));
-  const incomingRequests = [...serverData.incomingRequests, ...mockState.incomingRequests];
-  const sentRequests = [...serverData.sentRequests, ...mockState.sentRequests];
-  const serverMembersByLoginId = new Map(serverData.members.map((member) => [member.loginId, member]));
-  const candidates = [
-    ...serverData.members.filter((member) => member.loginId !== getLoginId()),
-    ...mockFriendCandidates.filter((candidate) => !serverMembersByLoginId.has(candidate.loginId)),
-  ];
+  const incomingRequests = serverData.incomingRequests;
+  const sentRequests = serverData.sentRequests;
+  const candidates = serverData.members.filter((member) => member.loginId !== getLoginId());
   const visibleCandidates = query.trim()
     ? candidates.filter((member) => matchesMember(member, query)
       && !friends.some((friend) => friend.loginId === member.loginId)
@@ -109,47 +94,22 @@ function FriendsPage() {
   }
 
   function deleteFriend(friend) {
-    if (friend.isMock) {
-      setMockState(mockStore.removeFriend(friend.loginId));
-      showNotice(`${friend.name}을(를) 친구 목록에서 삭제했어요.`);
-      return;
-    }
     performServerAction(() => friendshipApi.deleteFriend(friend.friendshipId), `${friend.name}을(를) 친구 목록에서 삭제했어요.`);
   }
 
   function sendRequest(member) {
-    if (member.isMock) {
-      setMockState(mockStore.sendRequest(member));
-      showNotice('친구 요청을 보냈어요!');
-      return;
-    }
     performServerAction(() => friendshipApi.sendFriendRequest(member.id), '친구 요청을 보냈어요!');
   }
 
   function acceptRequest(request) {
-    if (request.isMock) {
-      setMockState(mockStore.acceptRequest(request.id));
-      showNotice(`${request.name}의 친구 요청을 수락했어요.`);
-      return;
-    }
     performServerAction(() => friendshipApi.acceptFriendRequest(request.friendshipId), `${request.name}의 친구 요청을 수락했어요.`);
   }
 
   function rejectRequest(request) {
-    if (request.isMock) {
-      setMockState(mockStore.rejectRequest(request.id));
-      showNotice(`${request.name}의 친구 요청을 거절했어요.`);
-      return;
-    }
     performServerAction(() => friendshipApi.rejectFriendRequest(request.friendshipId), `${request.name}의 친구 요청을 거절했어요.`);
   }
 
   function cancelRequest(request) {
-    if (request.isMock) {
-      setMockState(mockStore.cancelSentRequest(request.id));
-      showNotice(`${request.name}에게 보낸 친구 요청을 취소했어요.`);
-      return;
-    }
     performServerAction(() => friendshipApi.cancelFriendRequest(request.friendshipId), `${request.name}에게 보낸 친구 요청을 취소했어요.`);
   }
 
@@ -191,7 +151,7 @@ function FriendsPage() {
                     <span className="friend-avatar" aria-hidden="true">{friend.name.slice(0, 1)}</span>
                     <div className="friend-identity">
                       <strong>{friend.name}</strong>
-                      <span>@{friend.loginId}{friend.isMock && <small className="friend-mock-badge">임시</small>}</span>
+                      <span>@{friend.loginId}</span>
                     </div>
                     <button className="friend-delete-button" type="button" disabled={busy}
                       aria-label={`${friend.name} 친구 삭제`} onClick={() => deleteFriend(friend)}>친구 삭제</button>
@@ -213,7 +173,7 @@ function FriendsPage() {
                       <span className="friend-avatar" aria-hidden="true">{member.name.slice(0, 1)}</span>
                       <div className="friend-identity">
                         <strong>{member.name}</strong>
-                        <span>@{member.loginId}{member.isMock && <small className="friend-mock-badge">임시</small>}</span>
+                        <span>@{member.loginId}</span>
                       </div>
                       <button className="friend-add-button" type="button" disabled={busy || member.id == null}
                         onClick={() => sendRequest(member)}>친구 추가</button>
@@ -229,7 +189,7 @@ function FriendsPage() {
             <div className="friends-feedback" role="alert">
               <p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>
               {!getToken()
-                ? <Link to="/islogin" state={{ from: '/friends' }}>로그인하기</Link>
+                ? <Link to="/login" state={{ from: '/friends' }}>로그인하기</Link>
                 : <button type="button" disabled={busy} onClick={() => setRetry((value) => value + 1)}>다시 시도</button>}
             </div>
           )}
@@ -254,7 +214,7 @@ function FriendsPage() {
                   <span className="friend-avatar" aria-hidden="true">{request.name.slice(0, 1)}</span>
                   <div className="friend-identity">
                     <strong>{request.name}</strong>
-                    <span>@{request.loginId}{request.isMock && <small className="friend-mock-badge">임시</small>}</span>
+                    <span>@{request.loginId}</span>
                   </div>
                   <div className="friends-request-actions">
                     <button type="button" disabled={busy} className="friend-accept-button" onClick={() => acceptRequest(request)}>수락</button>

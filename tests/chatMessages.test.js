@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createChatApi } from '../src/services/chatApi.js';
+import { createChatApi } from './helpers/mockChatApi.js';
 import { httpUrl, normalizeAttachment, validateImages } from '../src/data/chatMessages.js';
 
 function memoryStorage() {

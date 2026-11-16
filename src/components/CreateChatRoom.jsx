@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { getToken } from '../api/session';
 import { chatApi } from '../services/chatApi';
 import { matchesMember } from '../services/memberApi';
@@ -8,7 +7,6 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
   const dialogRef = useRef(null);
   const submitted = useRef(false);
   const [name, setName] = useState('');
-  const source = 'server';
   const supportsFriends = chatApi.capabilities.friends;
   const [query, setQuery] = useState('');
   const [friends, setFriends] = useState([]);
@@ -30,7 +28,7 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
   useEffect(() => {
     if (!supportsFriends) return;
     const controller = new AbortController();
-    chatApi.getFriends({ source, signal: controller.signal }).then((items) => {
+    chatApi.getFriends({ signal: controller.signal }).then((items) => {
       if (controller.signal.aborted) return;
       setFriends(items); setFriendsStatus('ready'); setFriendError('');
       setSelectedIds(items.filter((friend) => friend.id != null).map((friend) => friend.id));
@@ -39,7 +37,7 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
       setFriendsStatus('error'); setFriendError(reason.message);
     });
     return () => controller.abort();
-  }, [retry, supportsFriends, source]);
+  }, [retry, supportsFriends]);
 
   function toggleFriend(id) {
     setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
@@ -54,7 +52,7 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
     submitted.current = true;
     setSaving(true); setError('');
     try {
-      const room = await chatApi.createChatRoom({ name, memberIds: selectedIds, source });
+      const room = await chatApi.createChatRoom({ name, memberIds: selectedIds });
       onCreated(room);
     } catch (reason) { setError(reason.message); }
     finally { submitted.current = false; setSaving(false); }
@@ -69,9 +67,8 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
       <form className="chat-create-form" onSubmit={createRoom}>
         <h2 id="chat-create-title">채팅방 만들기</h2>
         <fieldset disabled={saving}>
-          {!chatApi.useMock && <p className="chat-mode-note">서버 채팅{!getToken() && <> · <Link to="/islogin" state={{ from: '/chat' }}>로그인하기</Link></>}</p>}
           <label className="chat-create-label" htmlFor="chat-create-name">방 이름</label>
-          <input id="chat-create-name" className="chat-create-input" autoFocus maxLength={chatApi.roomNameLimit?.(source) ?? chatApi.maxRoomNameLength} placeholder="방 이름 입력" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
+          <input id="chat-create-name" className="chat-create-input" autoFocus maxLength={chatApi.maxRoomNameLength} placeholder="방 이름 입력" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
           {supportsFriends ? <>
           <div className="chat-friend-heading"><label className="chat-create-label" htmlFor="chat-friend-search">받는 사람 · 전체 사용자{friendsStatus === 'ready' ? ` ${friends.length}명` : ''}</label><div className="chat-recipient-actions"><button type="button" disabled={friendsStatus !== 'ready' || !friends.some((friend) => friend.id != null)} onClick={() => { const ids = friends.filter((friend) => friend.id != null).map((friend) => friend.id); setSelectedIds(ids.every((id) => selectedIds.includes(id)) ? [] : ids); }}>{friends.some((friend) => friend.id != null) && friends.filter((friend) => friend.id != null).every((friend) => selectedIds.includes(friend.id)) ? '선택 해제' : '전체 선택'}</button><span>{selectedIds.length}명 선택</span></div></div>
           <input id="chat-friend-search" className="chat-create-input" type="search" placeholder="닉네임 또는 아이디 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -90,7 +87,7 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
         <p className="chat-create-error" role="alert">{error}</p>
         <div className="chat-create-actions">
           <button type="button" className="chat-create-cancel" disabled={saving} onClick={onClose}>취소</button>
-          <button type="submit" className="chat-create-confirm" disabled={saving || friendsStatus !== 'ready' || !selectedIds.length || (!chatApi.useMock && !getToken())}>{saving ? '생성 중…' : '생성'}</button>
+          <button type="submit" className="chat-create-confirm" disabled={saving || friendsStatus !== 'ready' || !selectedIds.length || !getToken()}>{saving ? '생성 중…' : '생성'}</button>
         </div>
       </form>
     </dialog>

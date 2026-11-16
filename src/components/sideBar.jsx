@@ -38,19 +38,19 @@ function SideBar({ profile }) {
         <span className="user-name">{profile?.nickname || displayName}</span>
       </div>
       <nav className="menu-container" aria-label="사이드 메뉴">
-        <Link to="/main" className="sidebar-link" aria-current={isCurrent('/main') ? 'page' : undefined}>
+        <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={homeIcon} alt="홈" className="sidebar-icon" />
             홈
           </div>
         </Link>
-        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/map-api') ? 'page' : undefined}>
+        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/places') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={mapIcon} alt="지도" className="sidebar-icon" />
             지도
           </div>
         </Link>
-        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat', '/chat-api') ? 'page' : undefined}>
+        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={chatIcon} alt="채팅" className="sidebar-icon" />
             채팅
@@ -82,7 +82,7 @@ function SideBar({ profile }) {
             캘린더
           </div>
         </Link>
-        <Link to="/pay" className="sidebar-link" aria-current={isCurrent('/pay') ? 'page' : undefined}>
+        <Link to="/payment" className="sidebar-link" aria-current={isCurrent('/payment') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img
               src={recieptIcon}

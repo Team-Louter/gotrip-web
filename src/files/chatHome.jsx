@@ -2,24 +2,52 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gotrippro from '../images/gotrip-pro.jpg';
 import gotripplane from '../icons/gotrip-plane.png';
-import replyIcon from '../icons/gotrip-reply.png';
-import smileIcon from '../icons/gotrip-smile.png';
 import dotsIcon from '../icons/gotrip-dots.png';
 import cameraIcon from '../icons/gotrip-camera.png';
 import clipIcon from '../icons/gotrip-clip.png';
 import { chatApi } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
-import { REACTION_EMOJIS, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
+import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
 import '../styles/chatMessages.css';
+
+function resizeComposerTextarea(textarea) {
+  if (!textarea) return;
+  textarea.style.height = 'auto';
+  const styles = window.getComputedStyle(textarea);
+  const lineHeight = Number.parseFloat(styles.lineHeight) || 20;
+  const verticalPadding = Number.parseFloat(styles.paddingTop) + Number.parseFloat(styles.paddingBottom);
+  const maxHeight = lineHeight * 4 + verticalPadding;
+  textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+function formatChatTime(value) {
+  if (!value) return '';
+  const time = String(value).trim();
+  if (/^(오전|오후)\s/.test(time)) return time;
+
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+  if (match) {
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (hour <= 23 && minute <= 59) {
+      return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}:${String(minute).padStart(2, '0')}`;
+    }
+    return time;
+  }
+
+  const date = new Date(time);
+  return Number.isNaN(date.valueOf())
+    ? time
+    : new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true }).format(date);
+}
 
 function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [replyToId, setReplyToId] = useState(null);
   const [menu, setMenu] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editText, setEditText] = useState('');
   const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState('');
   const [busy, setBusy] = useState(false);
@@ -52,6 +80,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
       historyAnchor.current = null;
     } else if (followLatest.current) endRef.current?.scrollIntoView({ block: 'end' });
   }, [room.messages.length, room.hasOlderMessages]);
+  useLayoutEffect(() => resizeComposerTextarea(textInputRef.current), [content]);
   useEffect(() => () => clearTimeout(noticeTimerRef.current), []);
   useEffect(() => () => historyController.current?.abort(), []);
 
@@ -103,8 +132,20 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
   async function send(e) {
     e.preventDefault();
     if (mutationBusy.current || uploadBusy.current || (!content.trim() && !attachments.length)) return;
+    const quotedReply = replyToId && !capabilities.replies && replyMessage
+      ? formatReplyContent(replyMessage, content)
+      : content;
+    if (quotedReply.trim().length > messageLimit) {
+      setError(`답장 인용을 포함해 ${messageLimit.toLocaleString()}자 이내로 입력해 주세요.`);
+      return;
+    }
     clientIdRef.current ||= crypto.randomUUID();
-    const saved = await mutate(() => chatApi.sendMessage(room.id, { content, attachments, replyToId, clientId: clientIdRef.current }));
+    const saved = await mutate(() => chatApi.sendMessage(room.id, {
+      content: quotedReply,
+      attachments,
+      replyToId: capabilities.replies ? replyToId : null,
+      clientId: clientIdRef.current,
+    }));
     if (saved) { followLatest.current = true; endRef.current?.scrollIntoView({ block: 'end' }); setContent(''); setAttachments([]); setReplyToId(null); setLinkOpen(false); setLink(''); clientIdRef.current = null; textInputRef.current?.focus(); }
   }
 
@@ -159,12 +200,13 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
         <img className="room-profile" src={gotrippro} alt="" />
         <div><p className="room-name">{room.name}</p><p className="room-status">{room.membersKnown === false ? '여행 대화' : `${room.members.length + 1}명 · ${[...room.members.map((member) => member.name), '나'].join(', ')}`}</p></div>
       </div>
-      {room.source === 'local' && <div className="chat-local-notice" role="note">체험 채팅 · 사진·답장·반응을 포함한 대화는 이 브라우저에만 저장됩니다. 실제 친구에게는 전송되지 않습니다.</div>}
-      {syncError && <div className="chat-sync-error" role="alert">{syncError} {!getToken() ? <Link to="/islogin" state={{ from: `/chat/${room.id}` }}>다시 로그인</Link> : <button type="button" onClick={onRetrySync}>다시 시도</button>}</div>}
+      {syncError && <div className="chat-sync-error" role="alert">{syncError} {!getToken() ? <Link to="/login" state={{ from: `/chat/rooms/${room.id}` }}>다시 로그인</Link> : <button type="button" onClick={onRetrySync}>다시 시도</button>}</div>}
       <div ref={areaRef} className="message-area" aria-label="대화 내용" onScroll={(event) => { const area = event.currentTarget; followLatest.current = area.scrollHeight - area.scrollTop - area.clientHeight < 100; }}>
         {room.hasOlderMessages && <button type="button" className="chat-load-older" disabled={loadingOlder} onClick={loadOlder}>{loadingOlder ? '불러오는 중…' : '이전 대화 불러오기'}</button>}
         {room.messages.length === 0 ? <p className="chat-conversation-empty">아직 메시지가 없습니다.</p> : room.messages.map((message) => {
           const original = room.messages.find((item) => item.id === message.replyToId);
+          const replyPreview = message.replyPreview ?? (original ? { senderName: original.senderName, content: messagePreview(original) } : null);
+          const isReply = Boolean(replyPreview && !message.deleted);
           const openMenu = menu?.id === message.id;
           return (
             <article className={`${message.mine ? 'me-row' : 'msg-row'} chat-message-row`} key={message.id} aria-label={`메시지 ${message.id}`} tabIndex={-1}
@@ -173,37 +215,33 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
               <div className="chat-message-content">
                 {!message.mine && <p className="chat-sender-name">{message.senderName}</p>}
                 {!message.deleted && <>
-                  <div className={`message-toolbar${openMenu ? ' is-open' : ''}`} role="toolbar" aria-label="메시지 작업">
-                    {capabilities.replies && <button type="button" title="답장" aria-label="답장" disabled={busy} onClick={() => startReply(message)}><img src={replyIcon} alt="" /></button>}
-                    {capabilities.reactions && <button type="button" title="이모지 달기" aria-label="이모지 달기" aria-expanded={openMenu && menu.type === 'emoji'} disabled={busy} onClick={(e) => toggleMenu(message, 'emoji', e.currentTarget)}><img src={smileIcon} alt="" /></button>}
-                    <button type="button" title="더보기" aria-label="더보기" aria-expanded={openMenu && menu.type === 'more'} disabled={busy} onClick={(e) => toggleMenu(message, 'more', e.currentTarget)}><img src={dotsIcon} alt="" /></button>
+                  <div className={`message-toolbar${openMenu ? ' is-open' : ''}`}>
+                    <button type="button" title="메시지 작업" aria-label="메시지 작업" aria-haspopup="true" aria-expanded={openMenu} disabled={busy} onClick={(e) => toggleMenu(message, 'actions', e.currentTarget)}><img src={dotsIcon} alt="" /></button>
                   </div>
-                  {openMenu && <div ref={popoverRef} className={`message-popover ${menu.type === 'emoji' ? 'emoji-picker' : 'message-more-menu'}`} aria-label={menu.type === 'emoji' ? '이모지 선택' : '메시지 더보기'}>
-                    {menu.type === 'emoji' ? REACTION_EMOJIS.map((emoji) => <button type="button" key={emoji} aria-label={`${emoji} 반응`} aria-pressed={Boolean(message.reactions?.find((item) => item.emoji === emoji)?.mine)} onClick={() => toggleReaction(message, emoji)}>{emoji}</button>) : <>
+                  {openMenu && <div ref={popoverRef} className={`message-popover ${menu.type === 'emoji' ? 'emoji-picker' : 'message-actions-menu'}`} aria-label={menu.type === 'emoji' ? '이모티콘 선택' : '메시지 작업'}>
+                    {menu.type === 'emoji' ? REACTION_EMOJIS.map((emoji) => <button type="button" key={emoji} aria-label={`${emoji} 이모티콘`} aria-pressed={Boolean(message.reactions?.find((item) => item.emoji === emoji)?.mine)} onClick={() => toggleReaction(message, emoji)}>{emoji}</button>) : <>
+                      <button type="button" onClick={() => startReply(message)}>답장</button>
+                      <button type="button" disabled={!capabilities.reactions} title={!capabilities.reactions ? '서버에서 이모티콘 반응을 지원하지 않아요.' : undefined} onClick={() => setMenu({ id: message.id, type: 'emoji' })}>이모티콘</button>
                       <button type="button" onClick={() => copyMessage(message)}>복사</button>
-                      {message.mine && capabilities.editing && <>
-                        {message.content && <button type="button" onClick={() => { setEditingId(message.id); setEditText(message.content); setMenu(null); }}>수정</button>}
-                        <button type="button" className="message-delete" onClick={async () => { setMenu(null); if (await mutate(() => chatApi.deleteMessage(room.id, message.id))) { if (replyToId === message.id) setReplyToId(null); if (editingId === message.id) setEditingId(null); } }}>삭제</button>
-                      </>}
+                      {message.mine && capabilities.deletion && <button type="button" className="message-delete" onClick={async () => { setMenu(null); if (await mutate(() => chatApi.deleteMessage(room.id, message.id)) && replyToId === message.id) setReplyToId(null); }}>삭제</button>}
                     </>}
                   </div>}
                 </>}
-                {message.replyToId && !message.deleted && <button type="button" className="message-original" aria-label="원본 메시지 보기" title={messagePreview(original)} onClick={() => { const element = messageRefs.current.get(message.replyToId); element?.scrollIntoView({ block: 'center', behavior: 'smooth' }); element?.focus({ preventScroll: true }); }}>
-                  <strong>{original?.senderName || '원본 메시지'}</strong><span>{messagePreview(original)}</span>
-                </button>}
-                <div className={message.replyToId && !message.deleted ? 'message-reply-body' : undefined}>
-                  {message.replyToId && !message.deleted && <svg className="message-reply-arrow" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M5 3v10a7 7 0 0 0 7 7h12m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                {editingId === message.id ? <form className="message-edit-form" onSubmit={async (e) => { e.preventDefault(); if (await mutate(() => chatApi.editMessage(room.id, message.id, editText))) setEditingId(null); }}>
-                  <textarea autoFocus aria-label="메시지 수정" value={editText} maxLength={4000} onChange={(e) => setEditText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setEditingId(null); }} />
-                  <div><button type="button" disabled={busy} onClick={() => setEditingId(null)}>취소</button><button type="submit" disabled={busy || !editText.trim()}>저장</button></div>
-                </form> : <div className={`${message.mine ? 'right-bubble' : 'left-bubble'} message-surface${message.deleted ? ' message-deleted' : ''}`}>
+                {isReply && (message.replyToId ? <button type="button" className="message-original" aria-label="원본 메시지 보기" title={replyPreview.content} onClick={() => { const element = messageRefs.current.get(message.replyToId); element?.scrollIntoView({ block: 'center', behavior: 'smooth' }); element?.focus({ preventScroll: true }); }}>
+                  <strong>{replyPreview.senderName || '원본 메시지'}</strong><span>{replyPreview.content}</span>
+                </button> : <div className="message-original is-static" aria-label="답장한 원본 메시지">
+                  <strong>{replyPreview.senderName || '원본 메시지'}</strong><span>{replyPreview.content}</span>
+                </div>)}
+                <div className={isReply ? 'message-reply-body' : undefined}>
+                  {isReply && <svg className="message-reply-arrow" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M5 3v10a7 7 0 0 0 7 7h12m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                <div className={`${message.mine ? 'right-bubble' : 'left-bubble'} message-surface${message.deleted ? ' message-deleted' : ''}`}>
                   {message.deleted ? <p>삭제된 메시지입니다.</p> : <>
                     {message.content && <p className="message-text">{message.content}</p>}
                     {(message.attachments ?? []).map((attachment) => attachment.type === 'image' ? <img className="message-image" key={attachment.id} src={attachment.url} alt={attachment.name} /> : <a key={attachment.id} className="message-link" href={attachment.url} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span><span>{attachment.url}</span></a>)}
                   </>}
-                </div>}
                 </div>
-                <div className="message-meta"><span>{message.time}</span>{message.edited && !message.deleted && <span>수정됨</span>}</div>
+                </div>
+                <div className="message-meta"><span>{formatChatTime(message.time)}</span></div>
                 {!message.deleted && (message.reactions ?? []).length > 0 && <div className="message-reactions" aria-label="메시지 반응">{message.reactions.map((reaction) => <button type="button" key={reaction.emoji} className={reaction.mine ? 'is-mine' : ''} aria-label={`${reaction.emoji} 반응 ${reaction.count}개`} aria-pressed={reaction.mine} disabled={busy} onClick={() => toggleReaction(message, reaction.emoji)}>{reaction.emoji} <span>{reaction.count}</span></button>)}</div>}
               </div>
             </article>
@@ -215,7 +253,7 @@ function ChatHome({ room, onRoomUpdated, syncError = '', onRetrySync }) {
         {replyToId && <div className="composer-reply"><svg className="composer-reply-arrow" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M5 3v10a7 7 0 0 0 7 7h12m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg><div><strong>{replyMessage?.senderName || '메시지'}에게 답장</strong><span>{messagePreview(replyMessage)}</span></div><button type="button" aria-label="답장 취소" disabled={busy} onClick={() => { setReplyToId(null); clientIdRef.current = null; }}>×</button></div>}
         {attachments.length > 0 && <div className="composer-attachments" aria-label="전송할 첨부">{attachments.map((item) => <div className="composer-attachment" key={item.id}>{item.type === 'image' ? <img src={item.url} alt={item.name} /> : <span className="composer-link-preview">↗ {item.url}</span>}<button type="button" aria-label={`${item.name || item.url} 첨부 취소`} disabled={busy || uploading} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); clientIdRef.current = null; }}>×</button></div>)}</div>}
         {linkOpen && <div className="composer-link-panel"><label htmlFor="chat-link-input">링크 첨부</label><div><input id="chat-link-input" type="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} disabled={busy || uploading} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); addLink(); } }} /><button type="button" onClick={addLink} disabled={busy || uploading}>추가</button><button type="button" aria-label="링크 첨부 닫기" onClick={() => setLinkOpen(false)}>×</button></div></div>}
-        <p className="chat-message-error" role="alert">{error}{error && !chatApi.useMock && !getToken() && <> <Link to="/islogin" state={{ from: `/chat/${room.id}` }}>로그인하기</Link></>}</p>
+        <p className="chat-message-error" role="alert">{error}{error && !getToken() && <> <Link to="/login" state={{ from: `/chat/rooms/${room.id}` }}>로그인하기</Link></>}</p>
         <p className="chat-message-notice" role="status">{uploading ? '이미지를 준비하고 있어요.' : notice}</p>
         <div className="input-area">
           <input ref={fileInputRef} type="file" aria-label="이미지 파일" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden onChange={attachImages} />

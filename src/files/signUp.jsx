@@ -31,7 +31,7 @@ function SignUp() {
     if (enteredPassword !== confirmedPassword) return setError('비밀번호가 동일하지 않습니다.');
     setError('');
     updateSignupDraft({ loginId: loginId.trim(), password: enteredPassword, passwordConfirm: confirmedPassword });
-    navigate('/signup/step2');
+    navigate('/registration/password');
   }
 
   return (
