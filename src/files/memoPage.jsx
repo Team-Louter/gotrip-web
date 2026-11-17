@@ -13,7 +13,6 @@ function Memo() {
   const [detail, setDetail] = useState({ id: null, error: null })
   const [loadRetry, setLoadRetry] = useState(0)
   const [detailRetry, setDetailRetry] = useState(0)
-  const [actionError, setActionError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(null)
   const titleRef = useRef(null)
@@ -28,7 +27,7 @@ function Memo() {
   const filteredMemos = memos.filter((memo) => matchesMemo(memo, query))
   const loadingDetail = current && !current.isNew && detail.id !== selectedId
   const detailError = detail.id === selectedId ? detail.error : null
-  const problem = actionError || detailError || list.error
+  const problem = detailError || list.error
   const canCreate = list.status === 'ready' && !busy && Boolean(getToken())
   const editable = Boolean(current && !loadingDetail && !detailError && !busy)
 
@@ -75,7 +74,6 @@ function Memo() {
   function resetNotice() {
     clearTimeout(savedTimerRef.current)
     setSaved(null)
-    setActionError(null)
   }
 
   function updateCurrent(patch) {
@@ -124,7 +122,6 @@ function Memo() {
       setSelectedId(memo.id)
       showSuccessToast('메모를 저장했어요.')
     } catch (error) {
-      setActionError(error)
       showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
@@ -142,7 +139,6 @@ function Memo() {
       setSaved('summary')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
     } catch (error) {
-      setActionError(error)
       showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
@@ -164,14 +160,12 @@ function Memo() {
         setSelectedId((remaining[index] ?? remaining[index - 1])?.id ?? null)
       }
     } catch (error) {
-      setActionError(error)
       showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
   function retryLoad() {
-    setActionError(null)
     if (list.error) {
       setList({ status: 'loading', error: null })
       setLoadRetry((value) => value + 1)
