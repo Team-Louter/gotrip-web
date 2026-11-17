@@ -5,24 +5,8 @@ const memberPath = '/api/members/me';
 
 export const DEFAULT_PROFILE_IMAGE = defaultProfileImage;
 
-export function chatCounterpartProfileImageSource(room) {
-  const otherMember = room?.members?.find((member) => member?.profileImageUrl || member?.avatarUrl);
-  const latestIncomingMessage = [...(room?.messages ?? [])].reverse().find((message) => !message.mine);
-  const imageUrl = room?.roomProfileImage
-    || room?.counterpartProfileImageUrl
-    || room?.partnerProfileImageUrl
-    || room?.profileImageUrl
-    || room?.otherMember?.profileImageUrl
-    || otherMember?.profileImageUrl
-    || otherMember?.avatarUrl
-    || latestIncomingMessage?.senderProfileImageUrl
-    || latestIncomingMessage?.profileImageUrl;
-
-  return profileImageSource(imageUrl) || '';
-}
-
 export function chatCounterpartProfileImage(room) {
-  return chatCounterpartProfileImageSource(room) || DEFAULT_PROFILE_IMAGE;
+  return profileImageSource(room?.roomProfileImage || room?.counterpartProfileImageUrl) || DEFAULT_PROFILE_IMAGE;
 }
 
 export const fetchAccountDetails = () => apiRequest(memberPath);

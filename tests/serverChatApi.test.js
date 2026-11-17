@@ -13,17 +13,18 @@ function serverApi(fetchImpl, options = {}) {
   return createServerChatApi({ token: () => 'test-token', currentMemberId: () => '7', onMemberIdentified: () => {}, fetchImpl, ...options });
 }
 
-test('default application uses real server; unsupported controls are unavailable', () => {
+test('default application uses real server with the supported chat controls', () => {
   assert.equal(chatApi.useMock, false);
   assert.equal(chatApi.maxMessageLength, 2000);
   assert.equal(chatApi.maxRoomNameLength, 100);
-  assert.deepEqual(Object.values(chatApi.capabilities), [true, false, false, false, false]);
+  assert.deepEqual(chatApi.capabilities, { friends: true, attachments: false, replies: false, deletion: true, reactions: true });
 });
 
 test('server room list uses Bearer auth, local search, and numeric member IDs on creation', async () => {
   const requests = [];
   const api = serverApi(async (url, options) => {
     requests.push({ url, ...options });
+    if (url.endsWith('/profile-image')) return reply(null, 404);
     return reply(options.method === 'POST' ? room : [room]);
   }, { baseUrl: 'https://api.example.test/' });
   const controller = new AbortController();
@@ -34,7 +35,9 @@ test('server room list uses Bearer auth, local search, and numeric member IDs on
   assert.equal(requests[0].url, 'https://api.example.test/api/chat/rooms');
   assert.equal(requests[0].signal, controller.signal);
   assert.equal(requests[0].headers.Authorization, 'Bearer test-token');
-  assert.deepEqual(JSON.parse(requests[2].body), { name: '제주 여행', memberIds: [7, 8] });
+  const creation = requests.find((request) => request.method === 'POST');
+  assert.equal(creation.url, 'https://api.example.test/api/chat/rooms');
+  assert.deepEqual(JSON.parse(creation.body), { name: '제주 여행', memberIds: [7, 8] });
 });
 
 test('room creation preserves server not-found reason without creating a local room', async () => {
@@ -51,6 +54,7 @@ test('room detail joins room metadata and paginated messages without a nonexiste
   const requests = [];
   const api = serverApi(async (url) => {
     requests.push(url);
+    if (url.endsWith('/profile-image')) return reply(null, 404);
     return reply(url === '/api/chat/rooms' ? [room] : [message(3, 9), message(2), message(1)]);
   });
   const detail = await api.getChatRoom('42');
@@ -60,7 +64,7 @@ test('room detail joins room metadata and paginated messages without a nonexiste
   assert.equal(detail.messages[0].senderName, '민지');
   assert.equal(detail.lastMessage, '메시지 3');
   assert.equal(detail.hasOlderMessages, false);
-  assert.deepEqual(requests, ['/api/chat/rooms', '/api/chat/rooms/42/messages?size=50']);
+  assert.deepEqual(requests, ['/api/chat/rooms', '/api/chat/rooms/42/profile-image', '/api/chat/rooms/42/messages?size=50']);
   await api.getMessages('42', { before: '1' });
   assert.equal(requests.at(-1), '/api/chat/rooms/42/messages?size=50&before=1');
   await assert.rejects(api.getChatRoom('1000'), /찾을 수 없/);
@@ -97,6 +101,7 @@ test('send posts only content, consumes single-message response, and learns send
   let identified;
   const api = serverApi(async (url, options) => {
     requests.push({ url, ...options });
+    if (url.endsWith('/profile-image')) return reply(null, 404);
     return reply(options.method === 'POST' ? message(10) : [room]);
   }, { onMemberIdentified: (id) => { identified = id; } });
   await api.getChatRooms();
@@ -105,14 +110,15 @@ test('send posts only content, consumes single-message response, and learns send
   assert.equal(sent.name, '제주 여행');
   assert.equal(sent.messages[0].mine, true);
   assert.equal(identified, 7);
-  assert.equal(requests.length, 2);
-  assert.equal(requests[1].url, '/api/chat/rooms/42/messages');
-  assert.deepEqual(JSON.parse(requests[1].body), { content: '안녕' });
+  assert.equal(requests.length, 3);
+  const sentRequest = requests.find((request) => request.method === 'POST');
+  assert.equal(sentRequest.url, '/api/chat/rooms/42/messages');
+  assert.deepEqual(JSON.parse(sentRequest.body), { content: '안녕' });
   await assert.rejects(api.sendMessage('42', { content: ' ' }), /1~2,000/);
   await assert.rejects(api.sendMessage('42', { content: '가'.repeat(2001) }), /1~2,000/);
   await assert.rejects(api.sendMessage('42', { content: '답장', replyToId: '1' }), /텍스트/);
   await assert.rejects(api.sendMessage('42', { attachments: [{ type: 'image' }] }), /텍스트/);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 3);
 });
 
 test('pagination and send/poll races preserve history, remove duplicates, and sort numeric IDs', () => {

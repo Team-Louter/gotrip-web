@@ -10,7 +10,7 @@ import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
-import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
+import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import '../styles/chatHome.css';
 import '../styles/chatRoom.css';
@@ -73,16 +73,14 @@ function ChatRoom() {
             : (await chatApi.getChatRoom(room.id, { signal: controller.signal })).messages;
           if (!disposed) {
             chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
-            const counterpartProfileImageUrl = chatCounterpartProfileImageSource({ ...room, messages });
             const lastMessage = messages.at(-1)?.content ?? '';
-            if (counterpartProfileImageUrl || lastMessage !== room.lastMessage) setList((latest) => {
+            if (lastMessage !== room.lastMessage) setList((latest) => {
               const currentRoom = latest.rooms.find((item) => item.id === room.id);
-              if (!currentRoom || (currentRoom.counterpartProfileImageUrl === counterpartProfileImageUrl && currentRoom.lastMessage === lastMessage)) return latest;
+              if (!currentRoom || currentRoom.lastMessage === lastMessage) return latest;
               return {
                 ...latest,
                 rooms: latest.rooms.map((item) => item.id === room.id ? {
                   ...item,
-                  ...(counterpartProfileImageUrl ? { counterpartProfileImageUrl } : {}),
                   lastMessage,
                 } : item),
               };

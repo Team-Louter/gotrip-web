@@ -19,11 +19,12 @@ import SignUp from './files/signUp';
 import SignUp2 from './files/signUp2';
 import SignUpTerms from './files/signUpTerms';
 import './App.css';
+import './styles/auth.css';
 import './styles/focusModality.css';
 
 function AuthLayout() {
   return (
-    <div className="layout">
+    <div className="layout auth-layout">
       <Outlet />
     </div>
   );
