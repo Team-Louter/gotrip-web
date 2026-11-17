@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import './Toast.css';
 
-function Toast({ message, onClose, tone = 'error' }) {
+export const TOAST_DURATION = 3000;
+
+function Toast({ message, onClose, tone = 'error', expiresAt }) {
+  const [startedAt] = useState(() => Date.now());
+  const deadline = expiresAt ?? startedAt + TOAST_DURATION;
+  const elapsed = Math.max(0, startedAt - (deadline - TOAST_DURATION));
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
@@ -9,6 +14,12 @@ function Toast({ message, onClose, tone = 'error' }) {
     const timer = window.setTimeout(() => onClose(''), 160);
     return () => window.clearTimeout(timer);
   }, [closing, onClose]);
+
+  useEffect(() => {
+    if (!message || closing) return undefined;
+    const timer = window.setTimeout(() => setClosing(true), Math.max(0, deadline - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [message, closing, deadline]);
 
   if (!message) return null;
 
@@ -31,7 +42,7 @@ function Toast({ message, onClose, tone = 'error' }) {
         <span
           className="auth-toast-progress"
           aria-hidden="true"
-          onAnimationEnd={() => setClosing(true)}
+          style={{ animationDuration: `${TOAST_DURATION}ms`, animationDelay: `-${elapsed}ms` }}
         />
       </div>
     </div>

@@ -1,14 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Toast from './Toast';
+import Toast, { TOAST_DURATION } from './Toast';
 
 const listeners = new Set();
+const popupKeys = new WeakMap();
 let toastSequence = 0;
 const MAX_VISIBLE_TOASTS = 2;
 
+function getOpenPopup() {
+  const dialogs = document.querySelectorAll('dialog:modal');
+  return Array.from(dialogs).find((dialog) => dialog.contains(document.activeElement))
+    ?? dialogs[dialogs.length - 1]
+    ?? document.querySelector('.place-add-backdrop, .pay-modal-backdrop');
+}
+
 export function showToast(message, tone = 'error') {
   if (!message) return;
-  const item = { id: ++toastSequence, message, tone };
+  const item = {
+    id: ++toastSequence,
+    message,
+    tone,
+    popup: getOpenPopup(),
+    expiresAt: Date.now() + TOAST_DURATION,
+  };
+  if (item.popup && !popupKeys.has(item.popup)) popupKeys.set(item.popup, item.id);
   listeners.forEach((listener) => listener(item));
 }
 
@@ -22,7 +37,6 @@ export function showErrorToast(message) {
 
 export default function AppToasts() {
   const [activeToasts, setActiveToasts] = useState([]);
-  const [dialogTarget, setDialogTarget] = useState(null);
   const addToast = useCallback((item) => {
     setActiveToasts((current) => [item, ...current].slice(0, MAX_VISIBLE_TOASTS));
   }, []);
@@ -36,27 +50,42 @@ export default function AppToasts() {
   }, [addToast]);
 
   useEffect(() => {
-    const updateDialogTarget = () => {
-      setDialogTarget(document.querySelector('dialog[open]'));
-    };
-    updateDialogTarget();
-    const observer = new MutationObserver(updateDialogTarget);
+    const observer = new MutationObserver(() => {
+      setActiveToasts((current) => {
+        const closed = (item) => item.popup && (
+          !item.popup.isConnected || item.popup.matches('dialog:not([open])')
+        );
+        if (!current.some(closed)) return current;
+        return current.map((item) => closed(item) ? { ...item, popup: null } : item);
+      });
+    });
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
     return () => observer.disconnect();
   }, []);
 
-  const stack = (
-    <div className={`auth-toast-stack${dialogTarget ? ' auth-toast-stack-in-dialog' : ''}`} aria-label="알림">
-      {activeToasts.map((item) => (
+  const renderStack = (items, inPopup = false) => (
+    <div className={`auth-toast-stack${inPopup ? ' auth-toast-stack-in-dialog' : ''}`} aria-label="알림">
+      {items.map((item) => (
         <Toast
           key={item.id}
           message={item.message}
           tone={item.tone}
+          expiresAt={item.expiresAt}
           onClose={() => closeToast(item.id)}
         />
       ))}
     </div>
   );
 
-  return dialogTarget ? createPortal(stack, dialogTarget) : stack;
+  const popupTargets = new Set(activeToasts.map((item) => item.popup).filter(Boolean));
+
+  return (
+    <>
+      {renderStack(activeToasts.filter((item) => !item.popup))}
+      {Array.from(popupTargets, (popup) => {
+        const items = activeToasts.filter((item) => item.popup === popup);
+        return createPortal(renderStack(items, true), popup, popupKeys.get(popup));
+      })}
+    </>
+  );
 }
