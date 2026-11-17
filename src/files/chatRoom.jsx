@@ -8,7 +8,7 @@ import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
-import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
+import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import '../styles/chatHome.css';
 import '../styles/chatRoom.css';
 import '../styles/chatRooms.css';
@@ -57,17 +57,7 @@ function ChatRoom() {
           const messages = typeof chatApi.getNewMessages === 'function'
             ? await chatApi.getNewMessages(room.id, { after: current[room.id]?.cursorMessageId, signal: controller.signal })
             : (await chatApi.getChatRoom(room.id, { signal: controller.signal })).messages;
-          if (!disposed) {
-            chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
-            const counterpartProfileImageUrl = chatCounterpartProfileImageSource({ ...room, messages });
-            if (counterpartProfileImageUrl) setList((latest) => {
-              if (latest.rooms.find((item) => item.id === room.id)?.counterpartProfileImageUrl === counterpartProfileImageUrl) return latest;
-              return {
-                ...latest,
-                rooms: latest.rooms.map((item) => item.id === room.id ? { ...item, counterpartProfileImageUrl } : item),
-              };
-            });
-          }
+          if (!disposed) chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
         } catch { /* 목록 표시는 유지하고 다음 새로고침에서 읽음 수를 다시 확인합니다. */ }
       }));
       if (!disposed) setUnreadByRoom(chatReadStore.read());
