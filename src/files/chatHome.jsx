@@ -7,6 +7,8 @@ import clipIcon from '../icons/gotrip-clip.png';
 import { chatApi } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
+import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
+import { getChatRoomProfileImage, setChatRoomProfileImage } from '../data/chatRoomProfileStore.js';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
 import { chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
 import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
@@ -81,8 +83,6 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
   const [menu, setMenu] = useState(null);
   const [roomMenuOpen, setRoomMenuOpen] = useState(false);
   const [roomEditOpen, setRoomEditOpen] = useState(false);
-  const [roomNameDraft, setRoomNameDraft] = useState(room.name);
-  const [roomActionError, setRoomActionError] = useState('');
   const [roomActionBusy, setRoomActionBusy] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState('');
@@ -104,7 +104,6 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
   const menuTriggerRef = useRef(null);
   const roomMenuRef = useRef(null);
   const roomMenuButtonRef = useRef(null);
-  const roomEditDialogRef = useRef(null);
   const mutationBusy = useRef(false);
   const uploadBusy = useRef(false);
   const clientIdRef = useRef(null);
@@ -166,13 +165,6 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
     };
   }, [roomMenuOpen]);
 
-  useEffect(() => {
-    if (!roomEditOpen) return undefined;
-    const dialog = roomEditDialogRef.current;
-    dialog?.showModal();
-    return () => dialog?.close();
-  }, [roomEditOpen]);
-
   async function mutate(operation) {
     if (mutationBusy.current) return false;
     mutationBusy.current = true; setBusy(true); setError('');
@@ -188,29 +180,21 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
 
   function openRoomEdit() {
     setRoomMenuOpen(false);
-    setRoomActionError('');
-    setRoomNameDraft(room.name);
     setRoomEditOpen(true);
   }
 
-  async function saveRoomName(event) {
-    event.preventDefault();
-    const name = roomNameDraft.trim();
-    if (!name || name.length > 100) {
-      setRoomActionError('채팅방 이름을 1~100자로 입력해 주세요.');
-      return;
+  async function saveRoomName({ name, profileImage }) {
+    const previousProfileImage = getChatRoomProfileImage(room.id);
+    if (profileImage && !setChatRoomProfileImage(room.id, profileImage)) {
+      throw new Error('프로필 사진을 저장하지 못했습니다. 다른 사진을 선택해 주세요.');
     }
-    setRoomActionBusy(true);
-    setRoomActionError('');
     try {
       const updatedRoom = await chatApi.updateChatRoom(room.id, { name });
-      onRoomUpdated({ ...room, ...updatedRoom });
-      setRoomEditOpen(false);
-      showSuccessToast('채팅방 이름을 수정했습니다.');
+      onRoomUpdated({ ...room, ...updatedRoom, ...(profileImage ? { roomProfileImage: profileImage } : {}) });
+      showSuccessToast('채팅방 정보를 수정했습니다.');
     } catch (reason) {
-      setRoomActionError(reason.message || '채팅방 이름을 수정하지 못했습니다.');
-    } finally {
-      setRoomActionBusy(false);
+      if (profileImage) setChatRoomProfileImage(room.id, previousProfileImage);
+      throw reason;
     }
   }
 
@@ -306,7 +290,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
         <img className="room-profile" src={chatCounterpartProfileImage(room)} alt="" />
         <div><p className="room-name">{room.name}</p><p className="room-status">{room.membersKnown === false ? '여행 대화' : `${room.members.length + 1}명 · ${[...room.members.map((member) => member.name), '나'].join(', ')}`}</p></div>
         <div className="room-menu-wrap" ref={roomMenuRef}>
-          <button ref={roomMenuButtonRef} className="room-menu-button" type="button" aria-label="채팅방 메뉴" aria-haspopup="menu" aria-expanded={roomMenuOpen} onClick={() => setRoomMenuOpen((open) => !open)}>
+          <button ref={roomMenuButtonRef} className="room-menu-button" type="button" aria-label="채팅방 메뉴" aria-haspopup="menu" aria-expanded={roomMenuOpen} disabled={roomActionBusy} onClick={() => setRoomMenuOpen((open) => !open)}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
           </button>
           {roomMenuOpen && <div className="room-menu-popover" role="menu" aria-label="채팅방 메뉴">
@@ -391,20 +375,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
           <button type="submit" className="chat-send-button" title="전송" aria-label="메시지 전송" disabled={busy || uploading || (!content.trim() && !attachments.length)}><img src={gotripplane} alt="" /></button>
         </div>
       </form>
-      {roomEditOpen && <dialog ref={roomEditDialogRef} className="chat-room-action-dialog" aria-labelledby="chat-room-edit-title"
-        onCancel={(event) => { event.preventDefault(); if (!roomActionBusy) setRoomEditOpen(false); }}
-        onClick={(event) => { if (event.target === roomEditDialogRef.current && !roomActionBusy) setRoomEditOpen(false); }}>
-        <form className="chat-room-action-form" onSubmit={saveRoomName}>
-          <h2 id="chat-room-edit-title">채팅방 수정</h2>
-          <label htmlFor="chat-room-name-edit">채팅방 이름</label>
-          <input id="chat-room-name-edit" autoFocus maxLength={100} value={roomNameDraft} disabled={roomActionBusy} onChange={(event) => { setRoomNameDraft(event.target.value); setRoomActionError(''); }} />
-          <p className="chat-room-action-error" role="alert">{roomActionError}</p>
-          <div className="chat-room-action-buttons">
-            <button type="button" className="is-secondary" disabled={roomActionBusy} onClick={() => setRoomEditOpen(false)}>취소</button>
-            <button type="submit" className="is-primary" disabled={roomActionBusy}>{roomActionBusy ? '저장 중…' : '저장'}</button>
-          </div>
-        </form>
-      </dialog>}
+      {roomEditOpen && <ChatRoomEditDialog room={room} onClose={() => setRoomEditOpen(false)} onSave={saveRoomName} />}
     </main>
   );
 }

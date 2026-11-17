@@ -4,10 +4,12 @@ import gotripsearch from '../icons/gotrip-search.png';
 import gotriplogo4 from '../images/gotrip-logo4.png';
 import ChatHome from './chatHome';
 import CreateChatRoom from '../components/CreateChatRoom';
+import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
 import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
+import { getChatRoomProfileImage, setChatRoomProfileImage } from '../data/chatRoomProfileStore.js';
 import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import '../styles/chatHome.css';
@@ -31,12 +33,9 @@ function ChatRoom() {
   const [syncError, setSyncError] = useState('');
   const [roomActionMenuId, setRoomActionMenuId] = useState(null);
   const [roomEditTarget, setRoomEditTarget] = useState(null);
-  const [roomEditName, setRoomEditName] = useState('');
-  const [roomActionError, setRoomActionError] = useState('');
   const [roomActionBusy, setRoomActionBusy] = useState(false);
   const roomActionMenuRef = useRef(null);
   const roomActionButtonRef = useRef(null);
-  const roomEditDialogRef = useRef(null);
   const chatReadStore = useMemo(() => createChatReadStore({ storageKey: getChatReadStorageKey() }), []);
   const [unreadByRoom, setUnreadByRoom] = useState(() => chatReadStore.read());
 
@@ -117,13 +116,6 @@ function ChatRoom() {
   }, [roomActionMenuId]);
 
   useEffect(() => {
-    if (!roomEditTarget) return undefined;
-    const dialog = roomEditDialogRef.current;
-    dialog?.showModal();
-    return () => dialog?.close();
-  }, [roomEditTarget]);
-
-  useEffect(() => {
     if (!roomId) return;
     const controller = new AbortController();
     let timer;
@@ -187,7 +179,7 @@ function ChatRoom() {
       },
       error: '',
     } : current);
-    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === updatedRoom.id ? { ...item, name: updatedRoom.name ?? item.name, lastMessage: updatedRoom.lastMessage ?? item.lastMessage } : item) }));
+    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === updatedRoom.id ? { ...item, name: updatedRoom.name ?? item.name, roomProfileImage: updatedRoom.roomProfileImage ?? item.roomProfileImage, lastMessage: updatedRoom.lastMessage ?? item.lastMessage } : item) }));
   }
 
   function roomRemoved(removedRoomId) {
@@ -200,29 +192,21 @@ function ChatRoom() {
 
   function openRoomEditFromList(room) {
     setRoomActionMenuId(null);
-    setRoomActionError('');
-    setRoomEditName(room.name);
     setRoomEditTarget(room);
   }
 
-  async function saveRoomEditFromList(event) {
-    event.preventDefault();
-    const name = roomEditName.trim();
-    if (!name || name.length > 100) {
-      setRoomActionError('채팅방 이름을 1~100자로 입력해 주세요.');
-      return;
+  async function saveRoomEditFromList({ name, profileImage }) {
+    const previousProfileImage = getChatRoomProfileImage(roomEditTarget.id);
+    if (profileImage && !setChatRoomProfileImage(roomEditTarget.id, profileImage)) {
+      throw new Error('프로필 사진을 저장하지 못했습니다. 다른 사진을 선택해 주세요.');
     }
-    setRoomActionBusy(true);
-    setRoomActionError('');
     try {
       const updatedRoom = await chatApi.updateChatRoom(roomEditTarget.id, { name });
-      roomUpdated({ ...roomEditTarget, ...updatedRoom });
-      setRoomEditTarget(null);
-      showSuccessToast('채팅방 이름을 수정했습니다.');
+      roomUpdated({ ...roomEditTarget, ...updatedRoom, ...(profileImage ? { roomProfileImage: profileImage } : {}) });
+      showSuccessToast('채팅방 정보를 수정했습니다.');
     } catch (reason) {
-      setRoomActionError(reason.message || '채팅방 이름을 수정하지 못했습니다.');
-    } finally {
-      setRoomActionBusy(false);
+      if (profileImage) setChatRoomProfileImage(roomEditTarget.id, previousProfileImage);
+      throw reason;
     }
   }
 
@@ -299,20 +283,7 @@ function ChatRoom() {
           <div className="chat-empty"><p className="lets-plan">여행 계획이라도 짜볼까요?</p><button className="lets-main" onClick={() => navigate('/calendar')}>캘린더로 가기</button></div>
         </main>
       )}
-      {roomEditTarget && <dialog ref={roomEditDialogRef} className="chat-room-action-dialog" aria-labelledby="chat-room-list-edit-title"
-        onCancel={(event) => { event.preventDefault(); if (!roomActionBusy) setRoomEditTarget(null); }}
-        onClick={(event) => { if (event.target === roomEditDialogRef.current && !roomActionBusy) setRoomEditTarget(null); }}>
-        <form className="chat-room-action-form" onSubmit={saveRoomEditFromList}>
-          <h2 id="chat-room-list-edit-title">채팅방 수정</h2>
-          <label htmlFor="chat-room-list-name-edit">채팅방 이름</label>
-          <input id="chat-room-list-name-edit" autoFocus maxLength={100} value={roomEditName} disabled={roomActionBusy} onChange={(event) => { setRoomEditName(event.target.value); setRoomActionError(''); }} />
-          <p className="chat-room-action-error" role="alert">{roomActionError}</p>
-          <div className="chat-room-action-buttons">
-            <button type="button" className="is-secondary" disabled={roomActionBusy} onClick={() => setRoomEditTarget(null)}>취소</button>
-            <button type="submit" className="is-primary" disabled={roomActionBusy}>{roomActionBusy ? '저장 중…' : '저장'}</button>
-          </div>
-        </form>
-      </dialog>}
+      {roomEditTarget && <ChatRoomEditDialog room={roomEditTarget} onClose={() => setRoomEditTarget(null)} onSave={saveRoomEditFromList} />}
       {creating && <CreateChatRoom onClose={() => setCreating(false)} onCreated={roomCreated} />}
     </div>
   );

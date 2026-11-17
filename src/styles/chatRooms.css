@@ -33,6 +33,7 @@
 .chat-rooms-page .chat-plus { width: 100%; height: 70px; border: 0; border-radius: 0; padding: 0; color: #213547; background: #fff; font: inherit; font-size: 32px; }
 .chat-rooms-page .chat-plus:hover { background: #f1f1f1; }
 .chat-rooms-page .chat-right { min-width: 0; padding: 24px; gap: 8px; }
+.chat-rooms-page .chat-gotriplogo { width: 120px; height: auto; }
 .chat-rooms-page .chat-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .chat-rooms-page .lets-plan { box-sizing: border-box; margin: 0; padding: 0; font-size: clamp(20px, 2.3vw, 30px); line-height: 1.2; }
 .chat-rooms-page .chat-main { min-width: 0; min-height: 0; height: 100%; }
@@ -50,6 +51,14 @@
 .chat-room-action-dialog::backdrop { background: #263b4b4d; backdrop-filter: blur(3px); }
 .chat-room-action-form { padding: 28px; }
 .chat-room-action-form h2 { margin: 0 0 22px; font-size: 23px; }
+.chat-room-profile-edit { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; padding: 13px; border: 1px solid #eee8d0; border-radius: 15px; background: #fffdf5; }
+.chat-room-profile-edit > img { flex: 0 0 64px; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #f2efdf; }
+.chat-room-profile-edit > div { display: flex; align-items: flex-start; flex-direction: column; gap: 7px; }
+.chat-room-profile-edit strong { color: #34424b; font-size: 13px; }
+.chat-room-profile-change { width: auto; padding: 6px 12px; border: 1px solid #e8dfb9; border-radius: 18px; color: #77631e; background: #fff3bd; font: inherit; font-size: 12px; }
+.chat-room-profile-change:hover { background: #ffeb9a; }
+.chat-room-profile-change:disabled { cursor: default; opacity: .55; }
+.chat-room-profile-file { display: none; }
 .chat-room-action-form label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 650; }
 .chat-room-action-form input { box-sizing: border-box; width: 100%; height: 46px; padding: 0 13px; border: 1px solid #ece3bb; border-radius: 11px; color: #263b4b; background: #fff8da; font: inherit; }
 .chat-room-action-form input:focus { outline: 2px solid #e6bf38; outline-offset: 2px; background: #fffdf3; }
