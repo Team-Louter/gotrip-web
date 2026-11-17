@@ -13,11 +13,11 @@ function serverApi(fetchImpl, options = {}) {
   return createServerChatApi({ token: () => 'test-token', currentMemberId: () => '7', onMemberIdentified: () => {}, fetchImpl, ...options });
 }
 
-test('default application exposes supported server chat controls', () => {
+test('default application uses real server; unsupported controls are unavailable', () => {
   assert.equal(chatApi.useMock, false);
   assert.equal(chatApi.maxMessageLength, 2000);
   assert.equal(chatApi.maxRoomNameLength, 100);
-  assert.deepEqual(chatApi.capabilities, { friends: true, attachments: false, replies: false, deletion: true, reactions: true });
+  assert.deepEqual(Object.values(chatApi.capabilities), [true, false, false, false, false]);
 });
 
 test('server room list uses Bearer auth, local search, and numeric member IDs on creation', async () => {

@@ -7,7 +7,7 @@ import { placeStore } from '../data/placeStore.js';
 import { loadKakaoMaps } from '../services/kakaoMapSdk.js';
 import mappin from '../icons/mappin.png';
 
-const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY?.trim();
+const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const NEARBY_CATEGORIES = [
   { key: 'all', label: '전체', codes: ['AT4', 'FD6', 'CE7', 'AD5', 'MT1', 'CS2'] },

@@ -116,13 +116,6 @@ export function createChatApi({ useMock = true, baseUrl = API_BASE_URL, fetchImp
         return room;
       });
     },
-    async editMessage(roomId, messageId, content) {
-      if (!content.trim() || content.trim().length > 4000) throw new Error('메시지는 1~4,000자로 입력해 주세요.');
-      return updateMessage(roomId, messageId, (message) => {
-        if (!message.mine) throw new Error('내 메시지만 수정할 수 있어요.');
-        return { ...message, content: content.trim(), edited: true };
-      });
-    },
     async deleteMessage(roomId, messageId) {
       return updateMessage(roomId, messageId, (message) => {
         if (!message.mine) throw new Error('내 메시지만 삭제할 수 있어요.');

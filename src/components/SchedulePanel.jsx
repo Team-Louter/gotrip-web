@@ -7,7 +7,6 @@ import deleteIcon from '../icons/deleteIcon.png';
 import { useSchedules } from '../hooks/useSchedules';
 import { addDays, formatDate, schedulesOn, tripDayCount } from '../data/scheduleDates';
 import { deleteSchedule, saveSchedule, selectScheduleDate, setTripEnd, setTripStart } from '../data/scheduleStore';
-import { showErrorToast, showSuccessToast } from './AppToasts';
 import '../styles/schedule.css';
 
 function resizeScheduleContent(textarea) {
@@ -43,27 +42,15 @@ export function ScheduleEditor({ event, selectedDate, onClose }) {
     const values = new FormData(e.currentTarget);
     const date = values.get('date');
     const time = values.get('time');
-    const content = String(values.get('content') || '').trim();
-    const minimumLength = event ? 1 : 5;
-    if (content.length < minimumLength) {
-      showErrorToast(event ? '일정 내용을 입력해 주세요.' : `일정 내용을 5자 이상 입력해 주세요. (현재 ${content.length}자)`);
-      setError('');
-      return;
-    }
-    const dateField = e.currentTarget.elements.namedItem('date');
-    const timeField = e.currentTarget.elements.namedItem('time');
-    if (!date || !time || !dateField?.validity.valid || !timeField?.validity.valid) {
-      showErrorToast('날짜와 시간을 입력해 주세요.');
-      setError('');
+    const content = values.get('content');
+    if (!content.trim()) {
+      setError('일정 내용을 입력해 주세요.');
       return;
     }
     submitting.current = true; setSaving(true); setError('');
     try {
       const next = event ? { id: event.id, date, time, content } : await tripApi.addSchedule({ date, time, content });
-      if (saveSchedule(next)) {
-        if (!event) showSuccessToast('일정을 추가했습니다.');
-        onClose();
-      }
+      if (saveSchedule(next)) onClose();
       else setError('날짜와 시간을 확인해 주세요.');
     } catch (reason) { setError(reason.message); }
     finally { submitting.current = false; setSaving(false); }
@@ -72,13 +59,13 @@ export function ScheduleEditor({ event, selectedDate, onClose }) {
   return (
     <dialog ref={dialogRef} className="trip-editor" aria-labelledby="trip-editor-title" onCancel={(e) => { e.preventDefault(); if (!saving) onClose(); }}
       onClick={(e) => { if (e.target === dialogRef.current && !saving) onClose(); }}>
-      <form className="trip-editor-form" noValidate onSubmit={submit}>
+      <form className="trip-editor-form" onSubmit={submit}>
         <h2 id="trip-editor-title">{event ? '일정 수정' : '새로운 일정'}</h2>
         <fieldset disabled={saving} className="trip-editor-fieldset"><div className="trip-editor-fields">
           <label>날짜<input type="date" required min="0001-01-01" max="9999-12-31" name="date" defaultValue={event?.date ?? selectedDate} /></label>
           <label>시간<input type="time" required name="time" defaultValue={event?.time ?? '09:00'} /></label>
         </div>
-          <label>일정 내용<textarea ref={contentRef} autoFocus required maxLength={200} rows={3} placeholder="어떤 여행을 계획하고 있나요?" name="content" defaultValue={event?.content ?? ''} onChange={(e) => { resizeScheduleContent(e.currentTarget); setError(''); }} /></label></fieldset>
+        <label>일정 내용<textarea ref={contentRef} autoFocus required minLength={event ? 1 : 5} maxLength={200} rows={3} placeholder="어떤 여행을 계획하고 있나요?" name="content" defaultValue={event?.content ?? ''} onChange={(e) => { resizeScheduleContent(e.currentTarget); setError(''); }} /></label></fieldset>
         <p className="trip-field-error" role="alert">{error}{error && !getToken() && <> <Link to="/login" state={{ from: location.pathname }}>로그인하기</Link></>}</p>
         <div className="trip-editor-actions">
           <button type="button" className="trip-secondary" disabled={saving} onClick={onClose}>취소</button>
@@ -94,11 +81,6 @@ export default function SchedulePanel({ compact = false }) {
   const [editor, setEditor] = useState(null);
   const selectedEvents = schedulesOn(events, selectedDate);
   const dates = Array.from({ length: tripDayCount(startDate, endDate) }, (_, index) => addDays(startDate, index));
-
-  function handleDeleteSchedule(id) {
-    deleteSchedule(id);
-    showSuccessToast('일정을 삭제했습니다.');
-  }
 
   return (
     <section className={`map-schedule-container trip-panel${compact ? ' trip-panel-compact' : ''}`} aria-label="내 여행 일정">
@@ -134,7 +116,7 @@ export default function SchedulePanel({ compact = false }) {
             <div className="trip-event-body"><p>{event.content}</p></div>
             <div className="trip-event-actions">
               <button className="trip-icon-button" aria-label={`${event.content} 수정`} title="수정" onClick={() => setEditor({ event })}><img src={editIcon} alt="" /></button>
-              <button className="trip-icon-button" aria-label={`${event.content} 삭제`} title="삭제" onClick={() => handleDeleteSchedule(event.id)}><img src={deleteIcon} alt="" /></button>
+              <button className="trip-icon-button" aria-label={`${event.content} 삭제`} title="삭제" onClick={() => deleteSchedule(event.id)}><img src={deleteIcon} alt="" /></button>
             </div>
           </article>
         ))}

@@ -5,7 +5,6 @@ import addMappin from '../icons/addMappin.png';
 import { getToken } from '../api/session';
 import { placeStore } from '../data/placeStore';
 import { tripApi } from '../services/tripApi';
-import { showSuccessToast } from '../components/AppToasts';
 import '../styles/map.css';
 import SchedulePanel from '../components/SchedulePanel';
 import KakaoMapPreview from '../components/KakaoMapPreview.jsx';
@@ -16,6 +15,7 @@ function Map() {
   const [address, setAddress] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [storageError, setStorageError] = useState(false);
   const addressInputRef = useRef(null);
   const operationBusy = useRef(false);
@@ -38,11 +38,10 @@ function Map() {
   async function handleAddPlace(event) {
     event.preventDefault();
     if (operationBusy.current) return;
-    operationBusy.current = true; setBusy(true); setError('');
+    operationBusy.current = true; setBusy(true); setError(''); setNotice('');
     try {
       const place = await tripApi.addPlace(address);
       commitPlaces([...places, place]);
-      showSuccessToast('장소를 추가했어요.');
       setAddress(''); setIsPlaceAddOpen(false);
     } catch (reason) { setError(reason.message); }
     finally { operationBusy.current = false; setBusy(false); }
@@ -50,18 +49,13 @@ function Map() {
 
   async function handleDeletePlace(id) {
     if (operationBusy.current) return;
-    operationBusy.current = true; setBusy(true); setError('');
+    operationBusy.current = true; setBusy(true); setError(''); setNotice('');
     try {
       await tripApi.deletePlace(id);
       commitPlaces(places.filter((place) => place.serverId !== String(id)));
-      showSuccessToast('장소를 삭제했어요.');
+      setNotice('장소를 삭제했어요.');
     } catch (reason) { setError(reason.message); }
     finally { operationBusy.current = false; setBusy(false); }
-  }
-
-  function handleDeleteLocalPlace(id) {
-    commitPlaces(places.filter((place) => place.id !== id));
-    showSuccessToast('장소를 삭제했어요.');
   }
 
   function openAddPlace() { if (!operationBusy.current) { setAddress(''); setError(''); setIsPlaceAddOpen(true); } }
@@ -77,13 +71,14 @@ function Map() {
               <img src={mappinIcon} alt="" className="mappin-icon" />
               <div className="map-elements-box"><span className="map-content-text" title={place.address}>{place.address}</span>
                 {place.serverId ? <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => handleDeletePlace(place.serverId)}>삭제</button>
-                  : <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => handleDeleteLocalPlace(place.id)}>삭제</button>}
+                  : <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => commitPlaces(places.filter((item) => item.id !== place.id))}>삭제</button>}
               </div>
             </div>)}
           </div>
           <button type="button" className="map-add-place" aria-label="장소 추가" disabled={busy} onClick={openAddPlace}><img src={addMappin} alt="" className="add-mappin-icon" /></button>
         </div>
         {!isPlaceAddOpen && error && <div className="map-api-error" role="alert">{error}{!getToken() && <> <Link to="/login" state={{ from: '/map' }}>로그인하기</Link></>}</div>}
+        <p className="map-api-notice" role="status">{notice}</p>
         {storageError && <p className="map-api-error" role="status">장소 목록을 저장하지 못했어요. 다시 시도해 주세요.</p>}
       </div>
       <SchedulePanel />
