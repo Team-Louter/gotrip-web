@@ -43,6 +43,7 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
   const members = createMemberApi({ baseUrl, fetchImpl, token, onUnauthorized, currentMemberId });
   const friendships = createFriendshipApi({ baseUrl, fetchImpl, token, onUnauthorized });
   const rooms = new Map();
+  const roomProfileImages = new Map();
   let memberIdentityPromise;
   let memberIdentityChecked = false;
 
@@ -98,6 +99,7 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
         friendshipId: friend.friendshipId,
         name: friend.nickname || `회원 ${friend.memberId}`,
         nickname: friend.nickname,
+        profileImageUrl: friend.profileImageUrl,
         loginId: '',
       })).filter((friend) => matchesMember(friend, query));
     },
@@ -106,7 +108,17 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
     async getChatRooms({ query = '', signal } = {}) {
       const result = await request('/api/chat/rooms', { signal });
       if (!Array.isArray(result)) throw new Error('채팅방 목록 응답 형식을 확인해 주세요.');
-      const list = result.map(normalizeRoom);
+      const list = await Promise.all(result.map(async (item) => {
+        const room = normalizeRoom(item);
+        try {
+          const image = await api.getChatRoomProfileImage(room.id, { signal });
+          room.roomProfileImage = image || room.profileImageUrl || '';
+        } catch (error) {
+          if (signal?.aborted) throw error;
+          room.roomProfileImage = room.profileImageUrl || '';
+        }
+        return room;
+      }));
       list.forEach((room) => rooms.set(room.id, room));
       const search = query.normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '');
       return list.filter((room) => room.name.normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '').includes(search));
@@ -156,6 +168,47 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       const updatedRoom = { ...(rooms.get(key) ?? { id: key }), name: title };
       rooms.set(key, updatedRoom);
       return updatedRoom;
+    },
+    async getChatRoomProfileImage(roomId, { signal } = {}) {
+      const key = String(roomId);
+      if (roomProfileImages.has(key)) return roomProfileImages.get(key);
+      try {
+        const blob = await request(`/api/chat/rooms/${encodeURIComponent(key)}/profile-image`, { signal, responseType: 'blob' });
+        const image = blob?.size ? await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('채팅방 프로필 사진을 불러오지 못했습니다.'));
+          reader.readAsDataURL(blob);
+        }) : '';
+        roomProfileImages.set(key, image);
+        return image;
+      } catch (error) {
+        if (error.status === 404) {
+          roomProfileImages.set(key, '');
+          return '';
+        }
+        throw error;
+      }
+    },
+    async updateChatRoomProfileImage(roomId, imageDataUrl, { signal } = {}) {
+      const key = String(roomId);
+      const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(String(imageDataUrl || ''));
+      if (!match) throw new Error('채팅방 프로필 사진을 확인해 주세요.');
+      const bytes = atob(match[2]);
+      const binary = new Uint8Array(bytes.length);
+      for (let index = 0; index < bytes.length; index += 1) binary[index] = bytes.charCodeAt(index);
+      const file = new File([binary], 'chat-room-profile.jpg', { type: match[1] });
+      const body = new FormData();
+      body.append('file', file);
+      await request(`/api/chat/rooms/${encodeURIComponent(key)}/profile-image`, { method: 'PUT', body, signal });
+      roomProfileImages.set(key, imageDataUrl);
+      return imageDataUrl;
+    },
+    async deleteChatRoomProfileImage(roomId, { signal } = {}) {
+      const key = String(roomId);
+      await request(`/api/chat/rooms/${encodeURIComponent(key)}/profile-image`, { method: 'DELETE', signal });
+      roomProfileImages.set(key, '');
+      return '';
     },
     async deleteChatRoom(roomId, { signal } = {}) {
       const key = String(roomId);

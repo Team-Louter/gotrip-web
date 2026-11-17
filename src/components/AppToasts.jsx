@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Toast from './Toast';
 
 const listeners = new Set();
@@ -22,7 +21,6 @@ export function showErrorToast(message) {
 
 export default function AppToasts() {
   const [activeToasts, setActiveToasts] = useState([]);
-  const [dialogTarget, setDialogTarget] = useState(null);
   const addToast = useCallback((item) => {
     setActiveToasts((current) => [item, ...current].slice(0, MAX_VISIBLE_TOASTS));
   }, []);
@@ -35,18 +33,8 @@ export default function AppToasts() {
     return () => listeners.delete(addToast);
   }, [addToast]);
 
-  useEffect(() => {
-    const updateDialogTarget = () => {
-      setDialogTarget(document.querySelector('dialog[open]'));
-    };
-    updateDialogTarget();
-    const observer = new MutationObserver(updateDialogTarget);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
-    return () => observer.disconnect();
-  }, []);
-
-  const stack = (
-    <div className={`auth-toast-stack${dialogTarget ? ' auth-toast-stack-in-dialog' : ''}`} aria-label="알림">
+  return (
+    <div className="auth-toast-stack" aria-label="알림">
       {activeToasts.map((item) => (
         <Toast
           key={item.id}
@@ -57,6 +45,4 @@ export default function AppToasts() {
       ))}
     </div>
   );
-
-  return dialogTarget ? createPortal(stack, dialogTarget) : stack;
 }
