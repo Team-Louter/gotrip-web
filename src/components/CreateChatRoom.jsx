@@ -2,15 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { getToken } from '../api/session';
 import { chatApi } from '../services/chatApi';
 import { matchesMember } from '../services/memberApi';
+import { chatCounterpartProfileImage } from '../services/profileApi.js';
+import prepareChatRoomProfileImage from '../data/prepareChatRoomProfileImage.js';
+import { showErrorToast } from './AppToasts';
 
-export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = [] }) {
+export default function CreateChatRoom({ onClose, onCreated }) {
   const dialogRef = useRef(null);
+  const fileInputRef = useRef(null);
   const submitted = useRef(false);
   const [name, setName] = useState('');
   const supportsFriends = chatApi.capabilities.friends;
   const [query, setQuery] = useState('');
   const [friends, setFriends] = useState([]);
-  const [selectedIds, setSelectedIds] = useState(initialMemberIds);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [profileImage, setProfileImage] = useState('');
+  const [imageError, setImageError] = useState('');
+  const [loadingImage, setLoadingImage] = useState(false);
   const [friendsStatus, setFriendsStatus] = useState('loading');
   const [friendError, setFriendError] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +38,6 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
     chatApi.getFriends({ signal: controller.signal }).then((items) => {
       if (controller.signal.aborted) return;
       setFriends(items); setFriendsStatus('ready'); setFriendError('');
-      setSelectedIds(items.filter((friend) => friend.id != null).map((friend) => friend.id));
     }).catch((reason) => {
       if (controller.signal.aborted) return;
       setFriendsStatus('error'); setFriendError(reason.message);
@@ -44,15 +50,38 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
     setError('');
   }
 
+  async function chooseProfileImage(event) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+    setLoadingImage(true);
+    try {
+      setProfileImage(await prepareChatRoomProfileImage(file));
+      setImageError('');
+    } catch (reason) {
+      setImageError(reason.message || '프로필 사진을 준비하지 못했습니다.');
+    } finally {
+      setLoadingImage(false);
+    }
+  }
+
   async function createRoom(e) {
     e.preventDefault();
     if (submitted.current) return;
-    if (!name.trim()) { setError('방 이름을 입력해 주세요.'); return; }
+    if (!name.trim()) { showErrorToast('방 이름을 입력해 주세요.'); return; }
     if (!selectedIds.length) { setError('친구를 한 명 이상 선택해 주세요.'); return; }
     submitted.current = true;
     setSaving(true); setError('');
     try {
-      const room = await chatApi.createChatRoom({ name, memberIds: selectedIds });
+      let room = await chatApi.createChatRoom({ name, memberIds: selectedIds });
+      if (profileImage) {
+        try {
+          const roomProfileImage = await chatApi.updateChatRoomProfileImage(room.id, profileImage);
+          room = { ...room, roomProfileImage };
+        } catch {
+          showErrorToast('채팅방은 만들었지만 프로필 사진을 저장하지 못했습니다. 채팅방에서 다시 변경해 주세요.');
+        }
+      }
       onCreated(room);
     } catch (reason) { setError(reason.message); }
     finally { submitted.current = false; setSaving(false); }
@@ -66,6 +95,14 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
       onClick={(e) => { if (e.target === dialogRef.current && !saving) onClose(); }}>
       <form className="chat-create-form" onSubmit={createRoom}>
         <h2 id="chat-create-title">채팅방 만들기</h2>
+        <div className="chat-create-profile">
+          <img src={profileImage || chatCounterpartProfileImage({})} alt="채팅방 프로필 미리보기" />
+          <div className="chat-create-profile-actions">
+            <button type="button" className="chat-create-profile-button" disabled={saving || loadingImage} onClick={() => fileInputRef.current?.click()}>{loadingImage ? '사진 준비 중…' : '사진 선택'}</button>
+            <input ref={fileInputRef} className="chat-create-profile-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="채팅방 프로필 사진 선택" disabled={saving || loadingImage} onChange={chooseProfileImage} />
+          </div>
+        </div>
+        {imageError && <p className="chat-create-error" role="alert">{imageError}</p>}
         <fieldset disabled={saving}>
           <label className="chat-create-label" htmlFor="chat-create-name">방 이름</label>
           <input id="chat-create-name" className="chat-create-input" autoFocus maxLength={chatApi.maxRoomNameLength} placeholder="방 이름 입력" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
@@ -87,7 +124,7 @@ export default function CreateChatRoom({ onClose, onCreated, initialMemberIds = 
         <p className="chat-create-error" role="alert">{error}</p>
         <div className="chat-create-actions">
           <button type="button" className="chat-create-cancel" disabled={saving} onClick={onClose}>취소</button>
-          <button type="submit" className="chat-create-confirm" disabled={saving || friendsStatus !== 'ready' || !selectedIds.length || !getToken()}>{saving ? '생성 중…' : '생성'}</button>
+          <button type="submit" className="chat-create-confirm" disabled={saving || loadingImage || friendsStatus !== 'ready' || !selectedIds.length || !getToken()}>{saving ? '생성 중…' : loadingImage ? '사진 준비 중…' : '생성'}</button>
         </div>
       </form>
     </dialog>

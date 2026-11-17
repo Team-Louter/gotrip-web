@@ -8,7 +8,7 @@ import { chatApi } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
-import { getChatRoomProfileImage, setChatRoomProfileImage } from '../data/chatRoomProfileStore.js';
+import ChatRoomConfirmDialog from '../components/ChatRoomConfirmDialog';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
 import { chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
 import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
@@ -83,6 +83,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
   const [menu, setMenu] = useState(null);
   const [roomMenuOpen, setRoomMenuOpen] = useState(false);
   const [roomEditOpen, setRoomEditOpen] = useState(false);
+  const [roomConfirmOpen, setRoomConfirmOpen] = useState(false);
   const [roomActionBusy, setRoomActionBusy] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState('');
@@ -184,24 +185,25 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
   }
 
   async function saveRoomName({ name, profileImage }) {
-    const previousProfileImage = getChatRoomProfileImage(room.id);
-    if (profileImage && !setChatRoomProfileImage(room.id, profileImage)) {
-      throw new Error('프로필 사진을 저장하지 못했습니다. 다른 사진을 선택해 주세요.');
+    const updatedRoom = await chatApi.updateChatRoom(room.id, { name });
+    let roomWithUpdatedProfile = { ...room, ...updatedRoom };
+    onRoomUpdated(roomWithUpdatedProfile);
+    if (profileImage) {
+      const roomProfileImage = await chatApi.updateChatRoomProfileImage(room.id, profileImage);
+      roomWithUpdatedProfile = { ...roomWithUpdatedProfile, roomProfileImage };
+      onRoomUpdated(roomWithUpdatedProfile);
     }
-    try {
-      const updatedRoom = await chatApi.updateChatRoom(room.id, { name });
-      onRoomUpdated({ ...room, ...updatedRoom, ...(profileImage ? { roomProfileImage: profileImage } : {}) });
-      showSuccessToast('채팅방 정보를 수정했습니다.');
-    } catch (reason) {
-      if (profileImage) setChatRoomProfileImage(room.id, previousProfileImage);
-      throw reason;
-    }
+    showSuccessToast('채팅방 정보를 수정했습니다.');
   }
 
   async function removeOrLeaveRoom() {
-    const isOwner = Boolean(room.isOwner);
     setRoomMenuOpen(false);
-    if (!window.confirm(isOwner ? '채팅방과 모든 대화 내용을 삭제할까요?' : '이 채팅방에서 나갈까요?')) return;
+    setRoomConfirmOpen(true);
+  }
+
+  async function confirmRemoveOrLeaveRoom() {
+    const isOwner = Boolean(room.isOwner);
+    setRoomConfirmOpen(false);
     setRoomActionBusy(true);
     try {
       if (isOwner) await chatApi.deleteChatRoom(room.id);
@@ -288,7 +290,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
     <main className="chat-main" aria-label={`${room.name} 대화`}>
       <div className="room-header">
         <img className="room-profile" src={chatCounterpartProfileImage(room)} alt="" />
-        <div><p className="room-name">{room.name}</p><p className="room-status">{room.membersKnown === false ? '여행 대화' : `${room.members.length + 1}명 · ${[...room.members.map((member) => member.name), '나'].join(', ')}`}</p></div>
+        <div className="room-header-copy"><p className="room-name">{room.name}</p></div>
         <div className="room-menu-wrap" ref={roomMenuRef}>
           <button ref={roomMenuButtonRef} className="room-menu-button" type="button" aria-label="채팅방 메뉴" aria-haspopup="menu" aria-expanded={roomMenuOpen} disabled={roomActionBusy} onClick={() => setRoomMenuOpen((open) => !open)}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
@@ -376,6 +378,13 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
         </div>
       </form>
       {roomEditOpen && <ChatRoomEditDialog room={room} onClose={() => setRoomEditOpen(false)} onSave={saveRoomName} />}
+      {roomConfirmOpen && <ChatRoomConfirmDialog
+        title={room.isOwner ? '채팅방 삭제' : '채팅방 나가기'}
+        message={room.isOwner ? `“${room.name}” 채팅방과 대화 내용을 삭제할까요?` : `“${room.name}” 채팅방에서 나갈까요?`}
+        confirmLabel={room.isOwner ? '삭제하기' : '나가기'}
+        onClose={() => setRoomConfirmOpen(false)}
+        onConfirm={confirmRemoveOrLeaveRoom}
+      />}
     </main>
   );
 }

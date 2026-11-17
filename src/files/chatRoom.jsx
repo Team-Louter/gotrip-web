@@ -5,11 +5,11 @@ import gotriplogo4 from '../images/gotrip-logo4.png';
 import ChatHome from './chatHome';
 import CreateChatRoom from '../components/CreateChatRoom';
 import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
+import ChatRoomConfirmDialog from '../components/ChatRoomConfirmDialog';
 import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
-import { getChatRoomProfileImage, setChatRoomProfileImage } from '../data/chatRoomProfileStore.js';
 import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import '../styles/chatHome.css';
@@ -34,6 +34,7 @@ function ChatRoom() {
   const [roomActionMenuId, setRoomActionMenuId] = useState(null);
   const [roomEditTarget, setRoomEditTarget] = useState(null);
   const [roomActionBusy, setRoomActionBusy] = useState(false);
+  const [roomConfirmTarget, setRoomConfirmTarget] = useState(null);
   const roomActionMenuRef = useRef(null);
   const roomActionButtonRef = useRef(null);
   const chatReadStore = useMemo(() => createChatReadStore({ storageKey: getChatReadStorageKey() }), []);
@@ -73,11 +74,17 @@ function ChatRoom() {
           if (!disposed) {
             chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
             const counterpartProfileImageUrl = chatCounterpartProfileImageSource({ ...room, messages });
-            if (counterpartProfileImageUrl) setList((latest) => {
-              if (latest.rooms.find((item) => item.id === room.id)?.counterpartProfileImageUrl === counterpartProfileImageUrl) return latest;
+            const lastMessage = messages.at(-1)?.content ?? '';
+            if (counterpartProfileImageUrl || lastMessage !== room.lastMessage) setList((latest) => {
+              const currentRoom = latest.rooms.find((item) => item.id === room.id);
+              if (!currentRoom || (currentRoom.counterpartProfileImageUrl === counterpartProfileImageUrl && currentRoom.lastMessage === lastMessage)) return latest;
               return {
                 ...latest,
-                rooms: latest.rooms.map((item) => item.id === room.id ? { ...item, counterpartProfileImageUrl } : item),
+                rooms: latest.rooms.map((item) => item.id === room.id ? {
+                  ...item,
+                  ...(counterpartProfileImageUrl ? { counterpartProfileImageUrl } : {}),
+                  lastMessage,
+                } : item),
               };
             });
           }
@@ -196,24 +203,27 @@ function ChatRoom() {
   }
 
   async function saveRoomEditFromList({ name, profileImage }) {
-    const previousProfileImage = getChatRoomProfileImage(roomEditTarget.id);
-    if (profileImage && !setChatRoomProfileImage(roomEditTarget.id, profileImage)) {
-      throw new Error('프로필 사진을 저장하지 못했습니다. 다른 사진을 선택해 주세요.');
+    const updatedRoom = await chatApi.updateChatRoom(roomEditTarget.id, { name });
+    let roomWithUpdatedProfile = { ...roomEditTarget, ...updatedRoom };
+    roomUpdated(roomWithUpdatedProfile);
+    if (profileImage) {
+      const roomProfileImage = await chatApi.updateChatRoomProfileImage(roomEditTarget.id, profileImage);
+      roomWithUpdatedProfile = { ...roomWithUpdatedProfile, roomProfileImage };
+      roomUpdated(roomWithUpdatedProfile);
     }
-    try {
-      const updatedRoom = await chatApi.updateChatRoom(roomEditTarget.id, { name });
-      roomUpdated({ ...roomEditTarget, ...updatedRoom, ...(profileImage ? { roomProfileImage: profileImage } : {}) });
-      showSuccessToast('채팅방 정보를 수정했습니다.');
-    } catch (reason) {
-      if (profileImage) setChatRoomProfileImage(roomEditTarget.id, previousProfileImage);
-      throw reason;
-    }
+    showSuccessToast('채팅방 정보를 수정했습니다.');
   }
 
   async function removeOrLeaveRoomFromList(room) {
-    const isOwner = Boolean(room.isOwner);
     setRoomActionMenuId(null);
-    if (!window.confirm(isOwner ? `“${room.name}” 채팅방과 대화 내용을 삭제할까요?` : `“${room.name}” 채팅방에서 나갈까요?`)) return;
+    setRoomConfirmTarget(room);
+  }
+
+  async function confirmRoomActionFromList() {
+    const room = roomConfirmTarget;
+    if (!room) return;
+    const isOwner = Boolean(room.isOwner);
+    setRoomConfirmTarget(null);
     setRoomActionBusy(true);
     try {
       if (isOwner) await chatApi.deleteChatRoom(room.id);
@@ -284,6 +294,13 @@ function ChatRoom() {
         </main>
       )}
       {roomEditTarget && <ChatRoomEditDialog room={roomEditTarget} onClose={() => setRoomEditTarget(null)} onSave={saveRoomEditFromList} />}
+      {roomConfirmTarget && <ChatRoomConfirmDialog
+        title={roomConfirmTarget.isOwner ? '채팅방 삭제' : '채팅방 나가기'}
+        message={roomConfirmTarget.isOwner ? `“${roomConfirmTarget.name}” 채팅방과 대화 내용을 삭제할까요?` : `“${roomConfirmTarget.name}” 채팅방에서 나갈까요?`}
+        confirmLabel={roomConfirmTarget.isOwner ? '삭제하기' : '나가기'}
+        onClose={() => setRoomConfirmTarget(null)}
+        onConfirm={confirmRoomActionFromList}
+      />}
       {creating && <CreateChatRoom onClose={() => setCreating(false)} onCreated={roomCreated} />}
     </div>
   );
