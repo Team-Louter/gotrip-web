@@ -38,7 +38,7 @@
 .chat-rooms-page .lets-plan { box-sizing: border-box; margin: 0; padding: 0; font-size: clamp(20px, 2.3vw, 30px); line-height: 1.2; }
 .chat-rooms-page .chat-main { min-width: 0; min-height: 0; height: 100%; }
 .chat-rooms-page .room-header { position: relative; min-height: 100px; flex-shrink: 0; }
-.chat-rooms-page .room-header-copy { position: absolute; left: 50%; display: block !important; width: max-content; max-width: calc(100% - 190px); transform: translateX(-50%); text-align: center; }
+.chat-rooms-page .room-header-copy { position: static; display: block !important; flex: 1 1 auto; width: auto; min-width: 0; max-width: none; transform: none; text-align: left; }
 .chat-rooms-page .room-header .room-name { max-width: 100%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-rooms-page .room-header .room-menu-wrap { position: relative; display: block; flex: 0 0 auto; margin-left: auto; }
 .room-menu-button { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; color: #263b4b; background: transparent; }

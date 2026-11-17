@@ -12,6 +12,25 @@
   pointer-events: none;
 }
 
+.auth-toast-top-layer {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.auth-toast-top-layer:popover-open { display: block; }
+.auth-toast-dialog-stack { position: absolute; top: 20px; }
+
 .auth-toast-region {
   position: relative;
   box-sizing: border-box;
@@ -45,6 +64,8 @@
   animation: auth-toast-exit 160ms ease-in both;
   pointer-events: none;
 }
+
+.auth-toast.is-relocated:not(.is-closing) { animation: none; }
 
 .auth-toast[data-tone='error'] {
   border-color: #f0e2b9;
@@ -109,7 +130,7 @@
   background: #edc928;
   transform: scaleX(1);
   transform-origin: left center;
-  animation: auth-toast-progress 3000ms linear forwards;
+  animation: auth-toast-progress var(--toast-progress-duration, 3000ms) linear forwards;
 }
 
 .auth-toast.is-paused .auth-toast-progress {
@@ -132,6 +153,7 @@
 }
 
 @keyframes auth-toast-progress {
+  from { transform: scaleX(var(--toast-progress-start, 1)); }
   to { transform: scaleX(0); }
 }
 
