@@ -72,12 +72,11 @@
   margin-left: -10px;
 }
 
-.login-left .login-error { width: 350px; max-width: 100%; box-sizing: border-box; color: #a14532; margin: 0 0 8px -10px; font-size: 13px; line-height: 1.5; text-align: center; overflow-wrap: anywhere; white-space: pre-line; }
 .lets-login:disabled { opacity: .5; cursor: default; }
 .login-left form .login-button { margin-top: 18px; }
 .login-success { color: #168542; margin: 0 0 8px -10px; line-height: 1.5; }
 
-button:hover {
+.lets-login:enabled:hover {
   background-color: #000000;
 }
 

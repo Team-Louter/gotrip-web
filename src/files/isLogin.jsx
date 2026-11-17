@@ -1,3 +1,4 @@
+import Toast, { useToast } from '../components/Toast';
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
 import gotripbackground from '../images/gotrip-join.jpeg';
@@ -14,7 +15,7 @@ function IsLogin() {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [notice, notify] = useToast();
   const submitting = useRef(false);
 
   async function submit(event) {
@@ -23,17 +24,19 @@ function IsLogin() {
     const values = new FormData(event.currentTarget);
     const enteredLoginId = String(values.get('loginId') || '').trim();
     const enteredPassword = String(values.get('password') || '');
-    if (!enteredLoginId || !enteredPassword) return setError('아이디와 비밀번호를 입력해주세요.');
-    submitting.current = true; setBusy(true); setError('');
+    if (!enteredLoginId || !enteredPassword) return notify('아이디와 비밀번호를 입력해주세요.');
+    submitting.current = true;
+    setBusy(true);
     try {
       await login({ loginId: enteredLoginId, password: enteredPassword });
       const destination = location.state?.from;
       navigate(typeof destination === 'string' && (/^\/chat(?:\/|$)/.test(destination) || ['/memo', '/friends', '/calendar', '/map', '/map-api'].includes(destination)) ? destination : getStartPage(), { replace: true });
-    } catch (reason) { setError(reason.message || '로그인하지 못했어요. 다시 시도해 주세요.'); }
+    } catch (reason) { notify(reason.message || '로그인하지 못했어요. 다시 시도해 주세요.'); }
     finally { submitting.current = false; setBusy(false); }
   }
   return(
     <div className='login-container'>
+      <Toast notice={notice} />
       <div className='login-left'>
         <div className='service-start'>
           <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/><br />
@@ -42,14 +45,13 @@ function IsLogin() {
         </div>
 
         {location.state?.signupComplete && <p className="login-success" role="status">회원가입이 완료되었습니다. 가입한 아이디와 비밀번호로 로그인해주세요.</p>}
-        <form onSubmit={submit}>
+        <form onSubmit={submit} noValidate>
         <div className='text-in'>
-          <input name="loginId" type="text" aria-label="아이디" autoComplete="username" placeholder='아이디' required value={loginId} onChange={(event) => setLoginId(event.target.value)} disabled={busy} />
-          <input name="password" type="password" aria-label="비밀번호" autoComplete="current-password" placeholder='비밀번호' required value={password} onChange={(event) => setPassword(event.target.value)} disabled={busy} />
+          <input name="loginId" type="text" aria-label="아이디" autoComplete="username" placeholder='아이디' required value={loginId} onInput={(event) => setLoginId(event.target.value)} disabled={busy} />
+          <input name="password" type="password" aria-label="비밀번호" autoComplete="current-password" placeholder='비밀번호' required value={password} onInput={(event) => setPassword(event.target.value)} disabled={busy} />
         </div>
 
         <div className='login-button'>
-          <p className="login-error" role="alert">{error}</p>
           <button type="submit" className='lets-login' disabled={busy || !loginId.trim() || !password}>{busy ? '로그인 중…' : '로그인'}</button>
         </div>
         </form>

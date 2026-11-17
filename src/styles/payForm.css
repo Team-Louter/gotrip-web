@@ -19,32 +19,6 @@
   padding: clamp(12px, 5dvh, 55px) 24px;
 }
 
-.pay-notice {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 28px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
-  white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-.pay-notice-success {
-  background: #dcf9c5;
-  color: #222;
-}
-
-.pay-notice-error {
-  background: #ffc5c2;
-  color: #222;
-}
-
 .pay-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -337,4 +311,43 @@
   .budget-pay {
     margin-top: 8px;
   }
+}
+
+#settlement-group {
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.pay-groups {
+  margin-bottom: 12px;
+}
+
+.pay-groups summary {
+  cursor: pointer;
+}
+
+.pay-group-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pay-group-form input {
+  flex: 1 1 105px;
+  min-width: 0;
+  width: auto;
+}
+
+.pay-remainder {
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.total-pay p {
+  margin-top: 0;
+  line-height: 1.4;
+  text-align: center;
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
+import Toast, { useToast } from '../components/Toast'
 
 function Memo() {
   const [memos, setMemos] = useState([])
@@ -12,6 +13,7 @@ function Memo() {
   const [detail, setDetail] = useState({ id: null, error: null })
   const [loadRetry, setLoadRetry] = useState(0)
   const [detailRetry, setDetailRetry] = useState(0)
+  const [notice, notify] = useToast()
   const [actionError, setActionError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(null)
@@ -26,6 +28,7 @@ function Memo() {
   const loadingDetail = current && !current.isNew && detail.id !== selectedId
   const detailError = detail.id === selectedId ? detail.error : null
   const problem = actionError || detailError || list.error
+  const canCreate = list.status === 'ready' && !busy && Boolean(getToken())
   const editable = Boolean(current && !loadingDetail && !detailError && !busy)
 
   useEffect(() => {
@@ -75,6 +78,10 @@ function Memo() {
   }
 
   function updateCurrent(patch) {
+    if (!current && canCreate) {
+      addDraft({ title: '', ...patch })
+      return
+    }
     if (!editable) return
     resetNotice()
     setMemos((previous) => previous.map((memo) => memo.id === selectedId ? { ...memo, ...patch, dirty: true } : memo))
@@ -93,14 +100,15 @@ function Memo() {
     setSelectedId(memo.id)
   }
 
-  function handleAddMemo() {
-    if (mutationBusy.current || list.status !== 'ready') return
+  function addDraft(patch = {}, focusTitle = false) {
+    if (mutationBusy.current || !canCreate) return
     resetNotice()
-    const memo = { id: `draft:${crypto.randomUUID()}`, title: '새 메모', body: '', summary: '', summaryDraft: '', summaryDirty: false, isNew: true, dirty: true }
+    const memo = { id: `draft:${crypto.randomUUID()}`, title: '새 메모', body: '', summary: '', summaryDraft: '', summaryDirty: false, isNew: true, dirty: true, ...patch }
     setMemos((previous) => [memo, ...previous])
     setQuery('')
     setSelectedId(memo.id)
-    focusTitleRef.current = true
+    focusTitleRef.current = focusTitle
+    notify('새 메모를 추가했어요.', 'success')
   }
 
   async function handleSave(event) {
@@ -113,9 +121,11 @@ function Memo() {
       const memo = current.isNew ? await memoApi.createMemo(current) : await memoApi.updateMemo(current.id, current)
       setMemos((previous) => previous.map((item) => item.id === current.id ? { ...item, ...memo } : item))
       setSelectedId(memo.id)
-      setSaved('memo')
-      savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
-    } catch (error) { setActionError(error) }
+      notify('메모를 저장했어요.', 'success')
+    } catch (error) {
+      setActionError(error)
+      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
@@ -127,9 +137,13 @@ function Memo() {
     try {
       const summary = await memoApi.saveSummary(current.id, current.summaryDraft)
       setMemos((previous) => previous.map((memo) => memo.id === current.id ? { ...memo, summary, summaryDraft: summary, summaryDirty: false } : memo))
+      notify('한줄 요약을 저장했어요.', 'success')
       setSaved('summary')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
-    } catch (error) { setActionError(error) }
+    } catch (error) {
+      setActionError(error)
+      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
@@ -143,11 +157,15 @@ function Memo() {
       const index = memos.findIndex((item) => item.id === memo.id)
       const remaining = memos.filter((item) => item.id !== memo.id)
       setMemos(remaining)
+      notify('메모를 삭제했어요.', 'success')
       if (memo.id === selectedId) {
         setDetail({ id: null, error: null })
         setSelectedId((remaining[index] ?? remaining[index - 1])?.id ?? null)
       }
-    } catch (error) { setActionError(error) }
+    } catch (error) {
+      setActionError(error)
+      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
@@ -164,6 +182,7 @@ function Memo() {
 
   return (
     <div className="memo-page">
+      <Toast notice={notice} />
       <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
@@ -177,7 +196,7 @@ function Memo() {
           value={current?.title ?? ''}
           onChange={(event) => updateCurrent({ title: event.target.value })}
           placeholder="제목"
-          disabled={!editable}
+          disabled={!editable && (Boolean(current) || !canCreate)}
         />
         <textarea
           className="memo-board-input"
@@ -191,23 +210,23 @@ function Memo() {
             }
           }}
           placeholder="여기에 자유롭게 메모하세요 (5자 이상)"
-          disabled={!editable}
+          disabled={!editable && (Boolean(current) || !canCreate)}
         />
         <div className="memo-board-actions">
-          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : saved === 'memo' ? '메모가 저장되었습니다.' : ''}</span>
+          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : ''}</span>
           <button type="submit" className="memo-save" disabled={!editable || (!current?.dirty && !current?.isNew)}>메모 저장</button>
         </div>
       </form>
       <div className="memo-side">
         <div className="memo-header">
           <h2>메모</h2>
-          <button type="button" className="memo-plus" aria-label="새 메모 추가" onClick={handleAddMemo} disabled={busy || list.status !== 'ready' || !getToken()}>+</button>
+          <button type="button" className="memo-plus" aria-label="새 메모 추가" onClick={() => addDraft({}, true)} disabled={!canCreate}>+</button>
         </div>
         <div className="memo-list-box">
           <input className="memo-search" type="search" aria-label="메모 검색" placeholder="메모 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
           <div className="memo-list" ref={listRef} aria-label="메모 목록" aria-busy={list.status === 'loading'}>
             {list.status === 'loading' && <p className="memo-empty">메모를 불러오는 중이에요.</p>}
-            {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">메모가 없어요. + 버튼으로 새 메모를 추가해 보세요.</p>}
+            {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">제목이나 내용을 입력하면 새 메모가 추가돼요.</p>}
             {list.status === 'ready' && memos.length > 0 && filteredMemos.length === 0 && <p className="memo-empty">검색 결과가 없어요.</p>}
             {filteredMemos.map((memo) => (
               <div key={memo.id} className={`memo-item${memo.id === selectedId ? ' selected' : ''}`}

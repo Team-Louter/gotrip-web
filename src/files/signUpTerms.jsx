@@ -1,3 +1,4 @@
+import Toast, { useToast } from '../components/Toast';
 import { useState } from 'react';
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
@@ -51,18 +52,17 @@ function SignUpTerms() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [notice, notify] = useToast();
   const allAccepted = privacyAccepted && marketingAccepted;
 
   async function submit() {
     if (submitting) return;
-    if (!privacyAccepted) return setError('필수 약관에 동의해 주세요.');
+    if (!privacyAccepted) return notify('필수 약관에 동의해 주세요.');
     const draft = readSignupDraft();
     if (!draft.loginId || !draft.password || !draft.birthDate || !draft.email || !draft.nickname) {
-      return setError('가입 정보가 부족합니다. 회원 정보를 다시 입력해주세요.');
+      return notify('가입 정보가 부족합니다. 회원 정보를 다시 입력해주세요.');
     }
     setSubmitting(true);
-    setError('');
     try {
       await signUp({
         loginId: draft.loginId,
@@ -77,7 +77,7 @@ function SignUpTerms() {
       clearSignupDraft();
       navigate('/islogin', { replace: true, state: { signupComplete: true } });
     } catch (requestError) {
-      setError(requestError.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+      notify(requestError.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -90,6 +90,7 @@ function SignUpTerms() {
 
   return (
     <div className='login-container2'>
+      <Toast notice={notice} />
       <div className='login-left2'>
         <div className='service-start2'>
           <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/>
@@ -101,13 +102,13 @@ function SignUpTerms() {
             <div className='agree-wrapper2'>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={allAccepted} onChange={(e) => { toggleAll(e.target.checked); setError(''); }} />
+                  <input className='check-agree' type="checkbox" checked={allAccepted} onChange={(e) => toggleAll(e.target.checked)} />
                   <h4>전체 동의 하기</h4>
                 </div>
               </div>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={privacyAccepted} onChange={(e) => { setPrivacyAccepted(e.target.checked); setError(''); }} />
+                  <input className='check-agree' type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />
                   <h4>개인정보 수집 및 이용 동의 <span className='first-check'>(필수)</span></h4>
                 </div>
                 <div className='personal-information2'>
@@ -117,14 +118,13 @@ function SignUpTerms() {
               </div>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={marketingAccepted} onChange={(e) => { setMarketingAccepted(e.target.checked); setError(''); }} />
+                  <input className='check-agree' type="checkbox" checked={marketingAccepted} onChange={(e) => setMarketingAccepted(e.target.checked)} />
                   <h4>마케팅 정보 수신 동의 <span>(선택)</span></h4>
                 </div>
               </div>
               <div className='login-button2'>
                 <button className='yes-login' onClick={submit} disabled={submitting || !privacyAccepted}>{submitting ? '가입 중...' : '동의하고 가입하기'}</button>
               </div>
-              {error && <p role="alert" className="signup-error signup-terms-error">{error}</p>}
               <div className='ifyou-not2'>
                 <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')} style={{ cursor: 'pointer' }}>로그인</span></p>
               </div>

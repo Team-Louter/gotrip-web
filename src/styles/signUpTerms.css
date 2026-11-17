@@ -165,7 +165,7 @@
   /* margin-left: -10px;  ← 삭제 */
 }
 
-button:hover {
+.yes-login:enabled:hover {
   background-color: #ffd22f; /* 마우스 올렸을 때 살짝 진하게 */
 }
 

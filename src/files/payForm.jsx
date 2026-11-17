@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import '../styles/payForm.css';
+import Toast, { useToast } from '../components/Toast';
 import gotripwallet from '../icons/wallet.png';
 
 const initialExpenses = [
@@ -8,11 +9,34 @@ const initialExpenses = [
   { id: 3, name: '숙소 예약금', amount: 210000 },
 ];
 
+const GROUPS_KEY = 'gotrip.settlement.groups.v1';
+
+function readGroups() {
+  try {
+    const groups = JSON.parse(localStorage.getItem(GROUPS_KEY));
+    return Array.isArray(groups) ? groups : [];
+  } catch {
+    return [];
+  }
+}
+
+function expenseError(name, amount) {
+  if (!name.trim()) return '품목을 입력해주세요.';
+  if (!amount.trim()) return '금액을 입력해주세요.';
+  if (!/^\d+$/.test(amount)) return '금액칸에는 숫자만 입력해주세요.';
+  if (!Number.isSafeInteger(Number(amount)) || Number(amount) <= 0) return '금액을 1원 이상 입력해주세요. 금액이 너무 크지 않은지 확인해주세요.';
+  return '';
+}
+
 function PayForm() {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
-  const [notice, setNotice] = useState(null);
+  const [notice, notify] = useToast();
+  const [groups, setGroups] = useState(readGroups);
+  const [groupId, setGroupId] = useState('');
+  const [groupName, setGroupName] = useState('');
+  const [groupSize, setGroupSize] = useState('');
   const [dialog, setDialog] = useState(null);
   const [editName, setEditName] = useState('');
   const [editAmount, setEditAmount] = useState('');
@@ -30,18 +54,39 @@ function PayForm() {
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
 
-  const showNotice = (type, text) => {
-    setNotice({ type, text });
-    window.setTimeout(() => setNotice(null), 2500);
-  };
+  const group = groups.find((entry) => entry.id === groupId);
+  const share = group ? Math.floor(total / group.size) : 0;
+  const remainder = group ? total % group.size : 0;
 
-  // API 연동 시 각 핸들러에서 서버 요청을 보낸 뒤 성공 응답으로 목록을 갱신합니다.
-  const addExpense = () => {
-    const amount = Number(itemAmount);
-    if (!itemName.trim() || !Number.isFinite(amount) || amount <= 0) {
-      showNotice('error', '추가에 실패했습니다.');
-      return;
+  function addGroup(event) {
+    event.preventDefault();
+    const name = groupName.trim();
+    const size = Number(groupSize);
+    if (!name) return notify('그룹 이름을 입력해주세요.');
+    if (!/^\d+$/.test(groupSize) || !Number.isSafeInteger(size) || size < 2) {
+      return notify('정산 인원을 2명 이상의 숫자로 입력해주세요.');
     }
+    if (groups.some((entry) => entry.name === name)) return notify('이미 같은 이름의 그룹이 있어요.');
+
+    const newGroup = { id: crypto.randomUUID(), name, size };
+    const nextGroups = [...groups, newGroup];
+    try {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(nextGroups));
+    } catch {
+      return notify('그룹을 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.');
+    }
+    setGroups(nextGroups);
+    setGroupId(newGroup.id);
+    setGroupName('');
+    setGroupSize('');
+    notify('정산 그룹을 추가했어요.', 'success');
+  }
+
+  const addExpense = () => {
+    const error = expenseError(itemName, itemAmount);
+    if (error) return notify(error);
+    const amount = Number(itemAmount);
+    if (!Number.isSafeInteger(total + amount)) return notify('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
     scrollToNewExpense.current = true;
     setExpenses((current) => [
@@ -50,7 +95,7 @@ function PayForm() {
     ]);
     setItemName('');
     setItemAmount('');
-    showNotice('success', '추가 되었습니다!');
+    notify('품목을 추가했어요.', 'success');
   };
 
   const openEditDialog = (expense) => {
@@ -60,12 +105,11 @@ function PayForm() {
   };
 
   const confirmEditExpense = () => {
+    const error = expenseError(editName, editAmount);
+    if (error) return notify(error);
     const amount = Number(editAmount);
-    if (!editName.trim() || !Number.isFinite(amount) || amount <= 0) {
-      setDialog(null);
-      showNotice('error', '수정에 실패했습니다.');
-      return;
-    }
+    const previous = expenses.find((expense) => expense.id === dialog.id);
+    if (!Number.isSafeInteger(total - previous.amount + amount)) return notify('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
     setExpenses((current) => current.map((expense) => (
       expense.id === dialog.id
@@ -73,22 +117,18 @@ function PayForm() {
         : expense
     )));
     setDialog(null);
-    showNotice('success', '수정되었습니다.');
+    notify('품목을 수정했어요.', 'success');
   };
 
   const confirmDeleteExpense = () => {
     setExpenses((current) => current.filter((expense) => expense.id !== dialog.id));
     setDialog(null);
-    showNotice('success', '삭제되었습니다.');
+    notify('품목을 삭제했어요.', 'success');
   };
 
   return (
     <div className="pay-page">
-      {notice && (
-        <div className={`pay-notice pay-notice-${notice.type}`} role="status">
-          {notice.text}
-        </div>
-      )}
+      <Toast notice={notice} />
 
       <div className="pay-card">
         <h2 className="lets-pay">
@@ -98,8 +138,23 @@ function PayForm() {
         <div className="total-pay">
           <p id="total-usepay">총 사용액</p>
           <p id="total-money">{formatWon(total)}</p>
-          <p id="expec-pay">1인 예상 부담액: {formatWon(Math.round(total / 2))}</p>
+          <label htmlFor="settlement-group">정산 그룹</label>
+          <select id="settlement-group" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
+            <option value="">그룹 선택</option>
+            {groups.map((entry) => <option key={entry.id} value={entry.id}>{entry.name} ({entry.size}명)</option>)}
+          </select>
+          <p id="expec-pay">{group ? `1인 부담액: ${formatWon(share)}` : '정산할 그룹을 선택해주세요.'}</p>
+          {remainder > 0 && <p className="pay-remainder">{remainder}명은 1원씩 더 부담해요.</p>}
         </div>
+
+        <details className="pay-groups">
+          <summary>새 정산 그룹 만들기</summary>
+          <form className="pay-group-form" onSubmit={addGroup}>
+            <input aria-label="그룹 이름" placeholder="그룹 이름" value={groupName} onChange={(event) => setGroupName(event.target.value)} />
+            <input aria-label="정산 인원" inputMode="numeric" placeholder="인원수" value={groupSize} onChange={(event) => setGroupSize(event.target.value)} />
+            <button className="pay-add" type="submit">그룹 추가</button>
+          </form>
+        </details>
 
         <div className="pay-row">
           <input
@@ -113,8 +168,8 @@ function PayForm() {
           />
           <input
             className="pay-money"
-            type="number"
-            min="1"
+            type="text"
+            inputMode="numeric"
             placeholder="금액"
             aria-label="금액"
             value={itemAmount}
@@ -160,8 +215,8 @@ function PayForm() {
                 />
                 <input
                   className="pay-modal-input"
-                  type="number"
-                  min="1"
+                  type="text"
+                  inputMode="numeric"
                   value={editAmount}
                   onChange={(event) => setEditAmount(event.target.value)}
                   placeholder="금액"

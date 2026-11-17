@@ -1,0 +1,30 @@
+.app-toast-region {
+  position: fixed;
+  z-index: 1100;
+  top: 24px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.app-toast {
+  padding: 13px 22px;
+  border: 1px solid #f0df9c;
+  border-radius: 14px;
+  background: #fff9df;
+  color: #66551d;
+  box-shadow: 0 8px 26px rgb(33 53 71 / 14%);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.app-toast-error {
+  background: #fff0ee;
+  border-color: #ffc5c2;
+  color: #8b3228;
+}

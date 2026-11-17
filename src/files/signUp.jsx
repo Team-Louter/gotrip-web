@@ -1,3 +1,4 @@
+import Toast, { useToast } from '../components/Toast';
 import { useState } from 'react';
 import gotriplogo from '../images/gotrip-logo.png';
 import gotripjoin from '../images/gotrip-join.jpeg';
@@ -13,7 +14,7 @@ function SignUp() {
   const [loginId, setLoginId] = useState(draft.loginId || '');
   const [password, setPassword] = useState(draft.password || '');
   const [passwordConfirm, setPasswordConfirm] = useState(draft.passwordConfirm || '');
-  const [error, setError] = useState('');
+  const [notice, notify] = useToast();
   const passwordsMatch = password === passwordConfirm;
   const passwordRules = [
     { label: '8자 이상, 20자 이하', valid: password.length >= 8 && password.length <= 20 },
@@ -26,25 +27,25 @@ function SignUp() {
     const enteredPassword = event.currentTarget.querySelector('#signup-password')?.value ?? password;
     const confirmedPassword = event.currentTarget.querySelector('#signup-password-confirm')?.value ?? passwordConfirm;
     const validPassword = isValidSignupPassword(enteredPassword);
-    if (!loginId.trim()) return setError('아이디를 입력해주세요.');
-    if (!validPassword) return setError('비밀번호는 8~20자이며 대문자·소문자·숫자·특수문자 중 3종 이상 포함하고 같은 문자를 3번 연속 사용할 수 없습니다.');
-    if (enteredPassword !== confirmedPassword) return setError('비밀번호가 동일하지 않습니다.');
-    setError('');
+    if (!loginId.trim()) return notify('아이디를 입력해주세요.');
+    if (!validPassword) return notify('비밀번호는 8~20자이며 대문자·소문자·숫자·특수문자 중 3종 이상 포함하고 같은 문자를 3번 연속 사용할 수 없습니다.');
+    if (enteredPassword !== confirmedPassword) return notify('비밀번호가 동일하지 않습니다.');
     updateSignupDraft({ loginId: loginId.trim(), password: enteredPassword, passwordConfirm: confirmedPassword });
     navigate('/signup/step2');
   }
 
   return (
     <div className='join-cont'>
+      <Toast notice={notice} />
       <h1>회원 정보를 입력해주세요.</h1>
       <div className='card-wap'>
         <img className='gotrip-join' src={gotripjoin} alt="join-image" />
         <form className='card-from' onSubmit={next}>
           <img className='gotrip-logo' src={gotriplogo} alt="gotrip-logo" />
           <label htmlFor="signup-id">아이디</label>
-          <input id="signup-id" type="text" autoComplete="username" value={loginId} onChange={(e) => setLoginId(e.target.value)} required />
+          <input id="signup-id" type="text" autoComplete="username" value={loginId} onInput={(e) => setLoginId(e.target.value)} required />
           <label htmlFor="signup-password">비밀번호</label>
-          <input id="signup-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input id="signup-password" type="password" autoComplete="new-password" value={password} onInput={(e) => setPassword(e.target.value)} required />
           <div className="password-rules" aria-live="polite">
             {passwordRules.map((rule) => (
               <ul key={rule.label} className={password ? (rule.valid ? 'rule-valid' : 'rule-invalid') : 'rule-idle'}>
@@ -53,10 +54,9 @@ function SignUp() {
             ))}
           </div>
           <label htmlFor="signup-password-confirm">비밀번호 확인</label>
-          <input id="signup-password-confirm" type="password" autoComplete="new-password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} required />
+          <input id="signup-password-confirm" type="password" autoComplete="new-password" value={passwordConfirm} onInput={(e) => setPasswordConfirm(e.target.value)} required />
           {passwordConfirm && !passwordsMatch && <p role="alert" className="signup-error password-mismatch">비밀번호가 동일하지 않습니다.</p>}
-          {error && <p role="alert" className="signup-error">{error}</p>}
-          <button className='Next-button' type="submit">다음</button>
+          <button className='Next-button' type="submit" disabled={!loginId.trim() || !password || !passwordConfirm}>다음</button>
         </form>
       </div>
     </div>

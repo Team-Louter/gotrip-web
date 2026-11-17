@@ -96,3 +96,8 @@ p {
 .password-rules .rule-invalid .check { filter: sepia(1) saturate(8) hue-rotate(320deg); }
 .signup-error { color: #d93025; margin: 8px 0 0; line-height: 1.5; }
 .password-mismatch { margin-top: 4px; }
+
+.Next-button:disabled {
+  opacity: .5;
+  cursor: default;
+}
