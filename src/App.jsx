@@ -20,6 +20,7 @@ import SignUp2 from './files/signUp2';
 import SignUpTerms from './files/signUpTerms';
 import './App.css';
 import './styles/focusModality.css';
+import './styles/motion.css';
 
 function AuthLayout() {
   return (

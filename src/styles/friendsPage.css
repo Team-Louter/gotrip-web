@@ -33,12 +33,70 @@
 .friends-search-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 650; }
 .friends-search { box-sizing: border-box; width: min(100%, 560px); height: 46px; padding: 0 15px; border: 1px solid #dedede; border-radius: 13px; color: #213547; background: #fff; font: inherit; font-size: 13px; }
 .friends-search:focus-visible { outline: 2px solid #ba9c2c; outline-offset: 2px; }
+.friends-subnav { display: flex; gap: 7px; margin-top: 16px; padding-bottom: 11px; border-bottom: 1px solid #eee7d0; }
+.friends-subnav button { width: auto; padding: 8px 15px; border: 0; border-radius: 18px; color: #74736d; background: transparent; font: inherit; font-size: 13px; }
+.friends-subnav button:hover { background: #fff8d9; color: #62521d; }
+.friends-subnav button.is-active { color: #5e4f1e; background: #fff0a6; font-weight: 650; }
+.friends-subnav button:focus-visible, .friend-group-add:focus-visible, .friend-group-select:focus-visible, .friend-group-edit:focus-visible { outline: 2px solid #ba9c2c; outline-offset: 2px; }
 .friends-action-error { margin-top: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12px; }
 .friends-action-error { color: #a04735; background: #fff1eb; }
 .friends-count-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 6px; }
 .friends-count-row h2 { margin: 0; font-size: 15px; }
 .friends-count { color: #777; font-size: 12px; }
 .friends-list-region { flex: 1; min-height: 0; overflow-y: auto; }
+.friend-groups-view { flex: 1; min-height: 0; overflow-y: auto; }
+.friend-groups-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 18px 0 8px; }
+.friend-groups-heading h2 { margin: 0; font-size: 16px; }
+.friend-groups-heading p { margin-top: 5px; color: #777; font-size: 12px; }
+.friend-group-add { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #66551d; background: #ffe982; font: inherit; font-size: 27px; font-weight: 450; line-height: 1; }
+.friend-group-add svg { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.friend-group-add:hover { background: #f6de78; }
+.friend-groups-layout { display: grid; grid-template-columns: minmax(180px, .75fr) minmax(0, 1.25fr); gap: 20px; min-height: 220px; margin-top: 12px; }
+.friend-groups-list { min-width: 0; margin: 0; padding: 0; list-style: none; }
+.friend-groups-list li { display: flex; align-items: stretch; gap: 5px; padding: 5px 0; border-bottom: 1px solid #efeee9; }
+.friend-group-select { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 11px 12px; border-radius: 11px; color: #34424b; background: transparent; text-align: left; font: inherit; }
+.friend-group-select:hover, .friend-group-select.is-selected { background: #fff6ce; }
+.friend-group-select strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.friend-group-select span, .friend-group-detail-heading span { flex-shrink: 0; color: #8d7c45; font-size: 11px; }
+.friend-group-edit { display: grid; flex: 0 0 34px; width: 34px; place-items: center; padding: 0; border: 0; border-radius: 9px; color: #766b48; background: transparent; font: inherit; font-size: 17px; line-height: 1; }
+.friend-group-edit img { display: block; width: 20px; height: 20px; object-fit: contain; }
+.friend-group-edit:hover { background: #f5f2e6; }
+.friend-group-detail { min-width: 0; padding: 15px; border: 1px solid #eee8d6; border-radius: 14px; background: #fffefa; }
+.friend-group-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee8d6; }
+.friend-group-detail-heading h3 { min-width: 0; margin: 0; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.friend-group-detail .friend-row { min-height: 64px; gap: 10px; }
+.friend-group-detail .friend-avatar { flex-basis: 38px; width: 38px; height: 38px; }
+.friend-group-detail .friends-empty { padding: 20px 8px; }
+.friend-group-dialog { position: fixed; inset: 0; box-sizing: border-box; width: min(480px, calc(100% - 32px)); max-height: min(690px, calc(100dvh - 32px)); margin: auto; padding: 0; overflow: visible; border: 1px solid #eee4c3; border-radius: 24px; color: #263b4b; background: #fffef7; box-shadow: 0 18px 70px #263b4b30; color-scheme: light; }
+.friend-group-dialog::backdrop { background: #263b4b40; backdrop-filter: blur(3px); }
+.friend-group-form, .friend-group-confirm { display: flex; flex-direction: column; max-height: min(690px, calc(100dvh - 32px)); padding: 26px; }
+.friend-group-form h2, .friend-group-confirm h2 { margin: 0 0 20px; font-size: 22px; }
+.friend-group-form > label { margin-bottom: 7px; font-size: 12px; font-weight: 650; }
+.friend-group-form > input { box-sizing: border-box; width: 100%; height: 44px; padding: 0 12px; border: 1px solid #ece3bb; border-radius: 11px; color: #263b4b; background: #fff9df; font: inherit; font-size: 13px; }
+.friend-group-form > input:focus-visible { outline: 2px solid #e6bf38; outline-offset: 2px; }
+.friend-group-members-heading { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px; }
+.friend-group-members-heading h3 { margin: 0; font-size: 13px; }
+.friend-group-members-heading span { color: #8d7c45; font-size: 11px; }
+.friend-group-members { min-height: 70px; max-height: 300px; overflow-y: auto; border: 1px solid #eee8d6; border-radius: 12px; background: #fff; }
+.friend-group-member { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; padding: 6px 12px; border-bottom: 1px solid #f0efe9; cursor: pointer; }
+.friend-group-member:last-child { border-bottom: 0; }
+.friend-group-member:hover { background: #fffaf0; }
+.friend-group-member > span { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.friend-group-member strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.friend-group-member small { color: #85847e; font-size: 11px; }
+.friend-group-member input { width: 16px; height: 16px; accent-color: #dbb833; }
+.friend-group-empty { margin: 0; padding: 20px 10px; color: #85847e; text-align: center; font-size: 12px; }
+.friend-group-dialog-actions { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+.friend-group-dialog-actions > span { flex: 1; }
+.friend-group-dialog-actions button { flex: 0 0 auto; width: auto; min-height: 38px; padding: 8px 15px; border: 0; border-radius: 20px; font: inherit; font-size: 12px; font-weight: 650; }
+.friend-group-dialog-actions .is-secondary { color: #5a574b; background: #f1f0eb; }
+.friend-group-dialog-actions .is-primary { color: #5e4f1e; background: #ffe982; }
+.friend-group-dialog-actions .is-danger { color: #fff; background: #be624c; }
+.friend-group-dialog-actions .is-danger-text { margin-right: auto; color: #b25e49; background: #fff0e9; }
+.friend-group-dialog-actions button:hover:not(:disabled) { filter: brightness(.97); }
+.friend-group-dialog-actions button:disabled { opacity: .55; cursor: default; }
+.friend-group-confirm p { color: #777; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.friend-group-dialog button:focus-visible { outline: 2px solid #ba9c2c; outline-offset: 2px; }
 .friends-list-section { min-height: 0; }
 .friends-discover-section { margin-top: 18px; padding-top: 2px; border-top: 1px solid #e8e0c6; }
 .friends-list { max-width: 900px; padding: 0; list-style: none; }
@@ -82,6 +140,13 @@
   .friends-card { height: auto; min-height: 0; }
   .friends-directory { height: 560px; }
   .friends-requests { min-height: 430px; }
+}
+
+@media (max-width: 700px) {
+  .friend-groups-layout { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .friend-groups-list { display: flex; gap: 7px; overflow-x: auto; }
+  .friend-groups-list li { flex: 0 0 auto; border: 0; }
+  .friend-group-select { min-width: 130px; }
 }
 
 @media (max-width: 600px) {
