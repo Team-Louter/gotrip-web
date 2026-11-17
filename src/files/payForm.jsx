@@ -23,7 +23,7 @@ function expenseError(name, amount) {
 }
 
 function PayForm() {
-  const [expenses, setExpenses] = useState([]);
+  const [manualExpenses, setManualExpenses] = useState([]);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
   const [participantCount, setParticipantCount] = useState('2');
@@ -39,6 +39,9 @@ function PayForm() {
   const scrollToNewExpense = useRef(false);
   const invalidCountToastShown = useRef(false);
 
+  const group = groups.find((entry) => entry.id === groupId);
+  const expenses = group ? group.expenses ?? [] : manualExpenses;
+
   useLayoutEffect(() => {
     if (scrollToNewExpense.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -49,11 +52,9 @@ function PayForm() {
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
 
-  const group = groups.find((entry) => entry.id === groupId);
   const participantTotal = group?.size ?? Number(participantCount);
   const canSplit = Number.isInteger(participantTotal) && participantTotal >= 1 && participantTotal <= 10000;
   const share = canSplit ? Math.floor(total / participantTotal) : 0;
-  const remainder = canSplit ? total % participantTotal : 0;
 
   const showInvalidCountToast = () => {
     if (invalidCountToastShown.current) return;
@@ -85,6 +86,39 @@ function PayForm() {
     invalidCountToastShown.current = false;
   };
 
+  function selectGroup(id) {
+    setGroupId(id);
+    setDialog(null);
+    setItemName('');
+    setItemAmount('');
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }
+
+  function saveExpenses(nextExpenses) {
+    if (!group) {
+      setManualExpenses(nextExpenses);
+      return true;
+    }
+
+    const savedGroups = readGroups();
+    if (!savedGroups.some((entry) => entry.id === group.id)) {
+      showErrorToast('정산 그룹을 찾을 수 없어요.');
+      return false;
+    }
+
+    const nextGroups = savedGroups.map((entry) => (
+      entry.id === group.id ? { ...entry, expenses: nextExpenses } : entry
+    ));
+    try {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(nextGroups));
+    } catch {
+      showErrorToast('정산 내역을 저장하지 못했어요. 다시 시도해주세요.');
+      return false;
+    }
+    setGroups(nextGroups);
+    return true;
+  }
+
   function addGroup(event) {
     event.preventDefault();
     const name = groupName.trim();
@@ -93,20 +127,34 @@ function PayForm() {
     if (!/^\d+$/.test(groupSize) || !Number.isSafeInteger(size) || size < 2 || size > 10000) {
       return showErrorToast('정산 인원을 2명부터 10,000명까지 숫자로 입력해주세요.');
     }
-    if (groups.some((entry) => entry.name === name)) return showErrorToast('이미 같은 이름의 그룹이 있어요.');
+    const savedGroups = readGroups();
+    if (savedGroups.some((entry) => entry.name === name)) return showErrorToast('이미 같은 이름의 그룹이 있어요.');
 
-    const newGroup = { id: crypto.randomUUID(), name, size };
-    const nextGroups = [...groups, newGroup];
+    const newGroup = { id: crypto.randomUUID(), name, size, expenses: [] };
+    const nextGroups = [...savedGroups, newGroup];
     try {
       localStorage.setItem(GROUPS_KEY, JSON.stringify(nextGroups));
     } catch {
       return showErrorToast('그룹을 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.');
     }
     setGroups(nextGroups);
-    setGroupId(newGroup.id);
+    selectGroup(newGroup.id);
     setGroupName('');
     setGroupSize('');
     showSuccessToast('정산 그룹을 추가했어요.');
+  }
+
+  function confirmDeleteGroup() {
+    const nextGroups = readGroups().filter((entry) => entry.id !== dialog.id);
+    try {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(nextGroups));
+    } catch {
+      showErrorToast('그룹을 삭제하지 못했어요. 다시 시도해주세요.');
+      return;
+    }
+    setGroups(nextGroups);
+    selectGroup('');
+    showSuccessToast('정산 그룹을 삭제했어요.');
   }
 
   const addExpense = () => {
@@ -115,11 +163,10 @@ function PayForm() {
     const amount = Number(itemAmount);
     if (!Number.isSafeInteger(total + amount)) return showErrorToast('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
+    const expense = { id: crypto.randomUUID(), name: itemName.trim(), amount };
+    if (!saveExpenses([...expenses, expense])) return;
+
     scrollToNewExpense.current = true;
-    setExpenses((current) => [
-      ...current,
-      { id: Date.now(), name: itemName.trim(), amount },
-    ]);
     setItemName('');
     setItemAmount('');
     showSuccessToast('품목을 추가했어요.');
@@ -138,17 +185,18 @@ function PayForm() {
     const previous = expenses.find((expense) => expense.id === dialog.id);
     if (!Number.isSafeInteger(total - previous.amount + amount)) return showErrorToast('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
-    setExpenses((current) => current.map((expense) => (
+    const nextExpenses = expenses.map((expense) => (
       expense.id === dialog.id
         ? { ...expense, name: editName.trim(), amount }
         : expense
-    )));
+    ));
+    if (!saveExpenses(nextExpenses)) return;
     setDialog(null);
     showSuccessToast('품목을 수정했어요.');
   };
 
   const confirmDeleteExpense = () => {
-    setExpenses((current) => current.filter((expense) => expense.id !== dialog.id));
+    if (!saveExpenses(expenses.filter((expense) => expense.id !== dialog.id))) return;
     setDialog(null);
     showSuccessToast('품목을 삭제했어요.');
   };
@@ -164,11 +212,24 @@ function PayForm() {
         <div className="total-pay">
           <p id="total-usepay">총 사용액</p>
           <p id="total-money">{formatWon(total)}</p>
-          <label htmlFor="settlement-group">정산 그룹</label>
-          <select id="settlement-group" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
-            <option value="">인원 직접 입력</option>
-            {groups.map((entry) => <option key={entry.id} value={entry.id}>{entry.name} ({entry.size}명)</option>)}
-          </select>
+          <div className="pay-group-picker">
+            <label htmlFor="settlement-group">정산 그룹</label>
+            <div className="pay-group-select">
+              <select id="settlement-group" value={groupId} onChange={(event) => selectGroup(event.target.value)}>
+                <option value="">인원 직접 입력</option>
+                {groups.map((entry) => <option key={entry.id} value={entry.id}>{entry.name} ({entry.size}명)</option>)}
+              </select>
+            </div>
+            {group && (
+              <button
+                className="pay-delete"
+                type="button"
+                onClick={() => setDialog({ type: 'delete-group', id: group.id, name: group.name })}
+              >
+                그룹 삭제
+              </button>
+            )}
+          </div>
           {!group && (
           <div className="pay-split-control">
             <label htmlFor="pay-participant-count">정산 인원</label>
@@ -192,7 +253,6 @@ function PayForm() {
           </div>
           )}
           <p id="expec-pay">{canSplit ? `1인 부담액: ${formatWon(share)}` : '정산 인원을 입력해주세요.'}</p>
-          {remainder > 0 && <p className="pay-remainder">{remainder}명은 1원씩 더 부담해요.</p>}
         </div>
 
         <details className="pay-groups">
@@ -272,14 +332,22 @@ function PayForm() {
                 />
               </>
             ) : (
-              <p className="pay-delete-confirm">‘{dialog.name}’ 항목을 삭제하시겠습니까?</p>
+              <p className="pay-delete-confirm">
+                {dialog.type === 'delete-group'
+                  ? `‘${dialog.name}’ 그룹과 정산 내역을 삭제할까요?`
+                  : `‘${dialog.name}’ 항목을 삭제하시겠습니까?`}
+              </p>
             )}
             <div className="pay-modal-actions">
               <button type="button" className="pay-modal-cancel" onClick={() => setDialog(null)}>취소</button>
               <button
                 type="button"
-                className={`pay-modal-confirm${dialog.type === 'delete' ? ' is-delete' : ''}`}
-                onClick={dialog.type === 'edit' ? confirmEditExpense : confirmDeleteExpense}
+                className={`pay-modal-confirm${dialog.type === 'edit' ? '' : ' is-delete'}`}
+                onClick={{
+                  edit: confirmEditExpense,
+                  delete: confirmDeleteExpense,
+                  'delete-group': confirmDeleteGroup,
+                }[dialog.type]}
               >
                 확인
               </button>

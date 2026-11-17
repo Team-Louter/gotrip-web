@@ -33,7 +33,7 @@ function Toast({ message, onClose, tone = 'error' }) {
       >
         <svg className="auth-toast-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
           <circle cx="12" cy="12" r="9" />
-          {tone === 'success' ? <path d="m8 12 3 3 5-6" /> : <path d="M12 7v6m0 3v1" />}
+          {(tone === 'success' || tone === 'deleted') ? <path d="m8 12 3 3 5-6" /> : <path d="M12 7v6m0 3v1" />}
         </svg>
         <span className="auth-toast-message">{message}</span>
         <button className="auth-toast-close" type="button" aria-label="알림 닫기" onClick={() => setClosing(true)}>

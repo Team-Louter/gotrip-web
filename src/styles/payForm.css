@@ -193,7 +193,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: clamp(8px, 3dvh, 30px);
 }
 
 .pay-row > * {
@@ -350,14 +349,71 @@
   }
 }
 
+.pay-group-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 12px auto 8px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.pay-group-picker .pay-delete {
+  width: auto;
+  height: 38px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.pay-group-select {
+  position: relative;
+  width: min(200px, 100%);
+  min-width: 0;
+}
+
+.pay-group-select::after {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  content: '';
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
 #settlement-group {
-  max-width: 100%;
-  padding: 4px;
-  border-radius: 6px;
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 36px 8px 14px;
+  border: 1px solid #e3d9c0;
+  border-radius: 12px;
+  background: #fdfbf2;
+  color: #3b3426;
+  font-size: inherit;
+  font-weight: inherit;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+#settlement-group:hover {
+  border-color: #bfa566;
+  background: #fff6d5;
+}
+
+#settlement-group:focus-visible {
+  outline: 2px solid #896a21;
+  outline-offset: 2px;
 }
 
 .pay-groups {
-  margin-bottom: 12px;
+  margin-block: clamp(10px, 2.25dvh, 21px);
 }
 
 .pay-groups summary {
@@ -375,12 +431,6 @@
   flex: 1 1 105px;
   min-width: 0;
   width: auto;
-}
-
-.pay-remainder {
-  margin: 0;
-  text-align: center;
-  line-height: 1.5;
 }
 
 .total-pay p {

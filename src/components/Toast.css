@@ -122,3 +122,9 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-toast, .auth-toast.is-closing { animation: none; }
 }
+
+.auth-toast[data-tone='deleted'] {
+  border-color: #f2c4c4;
+  color: #a32929;
+  background: #fff1f1;
+}

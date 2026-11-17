@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
-import { showErrorToast, showSuccessToast } from '../components/AppToasts'
+import { showErrorToast, showSuccessToast, showToast } from '../components/AppToasts'
 
 function Memo() {
   const [memos, setMemos] = useState([])
@@ -21,6 +21,8 @@ function Memo() {
   const focusTitleRef = useRef(false)
   const savedTimerRef = useRef(null)
   const mutationBusy = useRef(false)
+  const deleteDialogRef = useRef(null)
+  const pendingDeleteRef = useRef(null)
 
   const current = memos.find((memo) => memo.id === selectedId)
   const filteredMemos = memos.filter((memo) => matchesMemo(memo, query))
@@ -147,7 +149,7 @@ function Memo() {
   }
 
   async function handleDeleteMemo(memo) {
-    if (mutationBusy.current || !window.confirm('이 메모를 삭제할까요?')) return
+    if (mutationBusy.current) return
     mutationBusy.current = true
     setBusy(true)
     resetNotice()
@@ -156,7 +158,7 @@ function Memo() {
       const index = memos.findIndex((item) => item.id === memo.id)
       const remaining = memos.filter((item) => item.id !== memo.id)
       setMemos(remaining)
-      showSuccessToast('메모를 삭제했어요.')
+      showToast('메모를 삭제했습니다.', 'deleted')
       if (memo.id === selectedId) {
         setDetail({ id: null, error: null })
         setSelectedId((remaining[index] ?? remaining[index - 1])?.id ?? null)
@@ -181,6 +183,16 @@ function Memo() {
 
   return (
     <div className="memo-page">
+      <dialog ref={deleteDialogRef} className="memo-delete-dialog" aria-labelledby="memo-delete-title">
+        <h2 id="memo-delete-title">메모를 삭제하시겠습니까?</h2>
+        <div className="memo-delete-dialog-actions">
+          <button type="button" autoFocus onClick={() => deleteDialogRef.current.close()}>취소</button>
+          <button type="button" onClick={() => {
+            deleteDialogRef.current.close()
+            handleDeleteMemo(pendingDeleteRef.current)
+          }}>삭제</button>
+        </div>
+      </dialog>
       <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
@@ -237,7 +249,7 @@ function Memo() {
                 <div className="memo-item-top">
                   <p className="memo-item-title">{memo.title || '제목 없음'}</p>
                   <button type="button" className="memo-delete" aria-label={`${memo.title || '제목 없음'} 삭제`} disabled={busy}
-                    onClick={(event) => { event.stopPropagation(); handleDeleteMemo(memo) }}>삭제</button>
+                    onClick={(event) => { event.stopPropagation(); pendingDeleteRef.current = memo; deleteDialogRef.current.showModal() }}>삭제</button>
                 </div>
                 {memo.summary && <p className="memo-item-summary">{memo.summary}</p>}
               </div>
