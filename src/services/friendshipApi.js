@@ -10,6 +10,7 @@ function normalizeFriendship(value) {
     friendshipId: String(friendshipId),
     memberId: String(memberId),
     nickname: typeof value.nickname === 'string' ? value.nickname : '',
+    profileImageUrl: typeof value.profileImageUrl === 'string' ? value.profileImageUrl : '',
     createdAt: value.createdAt ?? value.requestedAt ?? null,
   };
 }

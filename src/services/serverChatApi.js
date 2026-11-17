@@ -99,6 +99,7 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
         friendshipId: friend.friendshipId,
         name: friend.nickname || `회원 ${friend.memberId}`,
         nickname: friend.nickname,
+        profileImageUrl: friend.profileImageUrl,
         loginId: '',
       })).filter((friend) => matchesMember(friend, query));
     },

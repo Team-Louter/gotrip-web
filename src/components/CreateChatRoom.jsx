@@ -5,6 +5,7 @@ import { matchesMember } from '../services/memberApi';
 import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import prepareChatRoomProfileImage from '../data/prepareChatRoomProfileImage.js';
 import { showErrorToast } from './AppToasts';
+import ProfileAvatar from './ProfileAvatar.jsx';
 
 export default function CreateChatRoom({ onClose, onCreated }) {
   const dialogRef = useRef(null);
@@ -113,7 +114,7 @@ export default function CreateChatRoom({ onClose, onCreated }) {
           <div className="chat-friend-list" aria-label="친구 목록" aria-busy={friendsStatus === 'loading'}>
             {friendsStatus === 'loading' ? <p className="chat-feedback" role="status">친구 목록을 불러오는 중이에요.</p> : friendsStatus === 'error' ? <div className="chat-feedback" role="alert"><p>{friendError}</p><button type="button" className="chat-retry" onClick={() => { setFriendsStatus('loading'); setRetry((value) => value + 1); }}>다시 시도</button></div> : visibleFriends.length === 0 ? <p className="chat-feedback">{friends.length ? '검색된 친구가 없어요.' : '추가할 수 있는 친구가 없어요.'}</p> : visibleFriends.map((friend) => (
               <label className={`chat-friend-row${selectedIds.includes(friend.id) ? ' is-selected' : ''}${friend.id == null ? ' is-unavailable' : ''}`} key={friend.id ?? friend.loginId}>
-                <span className="chat-friend-avatar" aria-hidden="true">{friend.name.slice(-2)}</span><span className="chat-friend-identity">{friend.name}{friend.loginId && <small className="chat-friend-login">@{friend.loginId}</small>}</span>
+                <ProfileAvatar className="chat-friend-avatar" imageUrl={friend.profileImageUrl} /><span className="chat-friend-identity">{friend.name}{friend.loginId && <small className="chat-friend-login">@{friend.loginId}</small>}</span>
                 <input type="checkbox" disabled={friend.id == null} title={friend.id == null ? '회원 ID가 제공되지 않아 직접 선택할 수 없습니다.' : undefined} checked={selectedIds.includes(friend.id)} onChange={() => toggleFriend(friend.id)} aria-label={`${friend.name} 추가`} />
               </label>
             ))}
