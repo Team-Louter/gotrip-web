@@ -1,8 +1,15 @@
 import { API_BASE_URL, apiRequest } from '../api/client';
+import defaultProfileImage from '../images/gotrip-pro.jpg';
 
 const memberPath = '/api/members/me';
 
-export const fetchAccountDetails = () => apiRequest(memberPath + '/account-details');
+export const DEFAULT_PROFILE_IMAGE = defaultProfileImage;
+
+export function chatCounterpartProfileImage(room) {
+  return profileImageSource(room?.counterpartProfileImageUrl) || DEFAULT_PROFILE_IMAGE;
+}
+
+export const fetchAccountDetails = () => apiRequest(memberPath);
 export const fetchProfile = (signal) => apiRequest(memberPath, { signal });
 export const updateNickname = (nickname) => apiRequest(memberPath + '/nickname', { method: 'PUT', body: { nickname } });
 export const deleteAccount = () => apiRequest(memberPath, { method: 'DELETE' });

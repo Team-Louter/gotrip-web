@@ -1,12 +1,14 @@
-import Toast, { useToast } from '../components/Toast';
 import { useState } from 'react';
 import gotriplogo2 from '../images/gotrip-logo2.png';
 import gotriplogotext from '../images/gotrip-logotext.png';
 import gotripbackground from '../images/gotrip-join.jpeg';
-import { useNavigate } from 'react-router-dom';
+import gotripbackgroundUpscaled from '../images/gotrip-join-upscaled.jpeg';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import '../styles/signUpTerms.css';
 import { signUp } from '../services/authApi';
 import { clearSignupDraft, readSignupDraft } from '../services/signupDraft';
+import { isValidSignupBirthDate, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation';
+import Toast from '../components/Toast';
 
 const privacyPolicy = `개인정보 보호법 제15조제1항제4호(계약 체결/이행)에 따라, 아래와 같이 개인정보를 수집·이용합니다.
 네이버 회원가입 시 하나의 계정으로 전체 네이버 서비스 이용이 가능하며, 여기에는 네이버에서 제공하는 개인 맞춤형 서비스와 인공지능(AI) 서비스가 포함됩니다.
@@ -52,17 +54,22 @@ function SignUpTerms() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [notice, notify] = useToast();
+  const [error, setError] = useState('');
   const allAccepted = privacyAccepted && marketingAccepted;
+  // 가입 완료 후 저장소를 비워도 로그인 화면으로 이동할 때까지 진입 시 정보를 유지합니다.
+  const [draft] = useState(readSignupDraft);
+  const validAccount = Boolean(draft.loginId?.trim() && isValidSignupPassword(draft.password) && draft.password === draft.passwordConfirm);
+  const validProfile = isValidSignupBirthDate(draft.birthDate) && isValidSignupEmail(draft.email) && Boolean(draft.nickname?.trim());
 
   async function submit() {
     if (submitting) return;
-    if (!privacyAccepted) return notify('필수 약관에 동의해 주세요.');
+    if (!privacyAccepted) return setError('필수 약관에 동의해 주세요.');
     const draft = readSignupDraft();
     if (!draft.loginId || !draft.password || !draft.birthDate || !draft.email || !draft.nickname) {
-      return notify('가입 정보가 부족합니다. 회원 정보를 다시 입력해주세요.');
+      return setError('가입 정보가 부족합니다. 회원 정보를 다시 입력해주세요.');
     }
     setSubmitting(true);
+    setError('');
     try {
       await signUp({
         loginId: draft.loginId,
@@ -75,9 +82,9 @@ function SignUpTerms() {
         marketingAccepted,
       });
       clearSignupDraft();
-      navigate('/islogin', { replace: true, state: { signupComplete: true } });
+      navigate('/login', { replace: true, state: { signupComplete: true } });
     } catch (requestError) {
-      notify(requestError.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+      setError(requestError.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -88,9 +95,11 @@ function SignUpTerms() {
     setMarketingAccepted(checked);
   }
 
+  if (!validAccount) return <Navigate to="/registration" replace />;
+  if (!validProfile) return <Navigate to="/registration/password" replace />;
+
   return (
     <div className='login-container2'>
-      <Toast notice={notice} />
       <div className='login-left2'>
         <div className='service-start2'>
           <img src={gotriplogo2} alt="gotrip-logo2" className='gotrip-logo2'/>
@@ -102,14 +111,14 @@ function SignUpTerms() {
             <div className='agree-wrapper2'>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={allAccepted} onChange={(e) => toggleAll(e.target.checked)} />
-                  <h4>전체 동의 하기</h4>
+                  <input id="signup-agree-all" className='check-agree' type="checkbox" checked={allAccepted} disabled={submitting} onChange={(e) => { toggleAll(e.target.checked); setError(''); }} />
+                  <label htmlFor="signup-agree-all">전체 동의 하기</label>
                 </div>
               </div>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />
-                  <h4>개인정보 수집 및 이용 동의 <span className='first-check'>(필수)</span></h4>
+                  <input id="signup-agree-privacy" className='check-agree' type="checkbox" checked={privacyAccepted} disabled={submitting} onChange={(e) => { setPrivacyAccepted(e.target.checked); setError(''); }} />
+                  <label htmlFor="signup-agree-privacy">개인정보 수집 및 이용 동의 <span className='first-check'>(필수)</span></label>
                 </div>
                 <div className='personal-information2'>
                   <h4>개인정보 수집 및 이용 동의서</h4>
@@ -118,23 +127,24 @@ function SignUpTerms() {
               </div>
               <div className='agree-box2'>
                 <div className='lets-check2'>
-                  <input className='check-agree' type="checkbox" checked={marketingAccepted} onChange={(e) => setMarketingAccepted(e.target.checked)} />
-                  <h4>마케팅 정보 수신 동의 <span>(선택)</span></h4>
+                  <input id="signup-agree-marketing" className='check-agree' type="checkbox" checked={marketingAccepted} disabled={submitting} onChange={(e) => { setMarketingAccepted(e.target.checked); setError(''); }} />
+                  <label htmlFor="signup-agree-marketing">마케팅 정보 수신 동의 <span>(선택)</span></label>
                 </div>
               </div>
               <div className='login-button2'>
                 <button className='yes-login' onClick={submit} disabled={submitting || !privacyAccepted}>{submitting ? '가입 중...' : '동의하고 가입하기'}</button>
               </div>
               <div className='ifyou-not2'>
-                <p>이미 계정이 있으신가요? <span className='lets-signup2' onClick={() => navigate('/islogin')} style={{ cursor: 'pointer' }}>로그인</span></p>
+                <p>이미 계정이 있으신가요? <Link className='lets-signup2' to="/login">로그인</Link></p>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div className="login-right2">
-        <img src={gotripbackground} alt="background" className='gotrip-background2'/>
+        <img src={gotripbackground} srcSet={`${gotripbackground} 3024w, ${gotripbackgroundUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 66vw" alt="" className='gotrip-background2' decoding="async" />
       </div>
+      <Toast key={error} message={error} onClose={setError} />
     </div>
   );
 }

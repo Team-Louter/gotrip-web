@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
-import Toast, { useToast } from '../components/Toast'
+import { showErrorToast, showSuccessToast } from '../components/AppToasts'
 
 function Memo() {
   const [memos, setMemos] = useState([])
@@ -13,7 +13,6 @@ function Memo() {
   const [detail, setDetail] = useState({ id: null, error: null })
   const [loadRetry, setLoadRetry] = useState(0)
   const [detailRetry, setDetailRetry] = useState(0)
-  const [notice, notify] = useToast()
   const [actionError, setActionError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(null)
@@ -108,7 +107,7 @@ function Memo() {
     setQuery('')
     setSelectedId(memo.id)
     focusTitleRef.current = focusTitle
-    notify('새 메모를 추가했어요.', 'success')
+    showSuccessToast('새 메모를 추가했어요.')
   }
 
   async function handleSave(event) {
@@ -121,10 +120,10 @@ function Memo() {
       const memo = current.isNew ? await memoApi.createMemo(current) : await memoApi.updateMemo(current.id, current)
       setMemos((previous) => previous.map((item) => item.id === current.id ? { ...item, ...memo } : item))
       setSelectedId(memo.id)
-      notify('메모를 저장했어요.', 'success')
+      showSuccessToast('메모를 저장했어요.')
     } catch (error) {
       setActionError(error)
-      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
   }
@@ -137,12 +136,12 @@ function Memo() {
     try {
       const summary = await memoApi.saveSummary(current.id, current.summaryDraft)
       setMemos((previous) => previous.map((memo) => memo.id === current.id ? { ...memo, summary, summaryDraft: summary, summaryDirty: false } : memo))
-      notify('한줄 요약을 저장했어요.', 'success')
+      showSuccessToast('한줄 요약을 저장했어요.')
       setSaved('summary')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
     } catch (error) {
       setActionError(error)
-      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
   }
@@ -157,14 +156,14 @@ function Memo() {
       const index = memos.findIndex((item) => item.id === memo.id)
       const remaining = memos.filter((item) => item.id !== memo.id)
       setMemos(remaining)
-      notify('메모를 삭제했어요.', 'success')
+      showSuccessToast('메모를 삭제했어요.')
       if (memo.id === selectedId) {
         setDetail({ id: null, error: null })
         setSelectedId((remaining[index] ?? remaining[index - 1])?.id ?? null)
       }
     } catch (error) {
       setActionError(error)
-      notify(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
     }
     finally { mutationBusy.current = false; setBusy(false) }
   }
@@ -182,11 +181,10 @@ function Memo() {
 
   return (
     <div className="memo-page">
-      <Toast notice={notice} />
       <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
-          {!getToken() ? <Link to="/islogin" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
+          {!getToken() ? <Link to="/login" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
         </div>}
         <input
           ref={titleRef}

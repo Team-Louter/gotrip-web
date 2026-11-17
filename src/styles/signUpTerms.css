@@ -3,7 +3,7 @@
 .login-container2 {
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   color: black;
 }
 
@@ -14,14 +14,14 @@
   justify-content: flex-start;
   box-sizing: border-box;
   min-width: 0;
-  height: 100vh;
+  height: max(720px, 100dvh);
   padding: 20px clamp(20px, 4vw, 80px);
   overflow: hidden;
 }
 
 .login-right2 {
   flex: 2;   /* 2/3 비율 */
-  height: 100vh;
+  height: max(720px, 100dvh);
   overflow: hidden;
 }
 
@@ -78,15 +78,10 @@
   overflow-wrap: anywhere;
 }
 
-.yes-login:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .lets-check2 {
   display: flex;
   align-items: center;   /* 늘어남 방지 */
-  gap: 4px;
+  gap: 8px;
 }
 
 .check-agree {
@@ -101,6 +96,7 @@
 
 
 .lets-check2 input[type="checkbox"] {
+  position: relative;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -132,9 +128,16 @@
   transform: rotate(45deg);
 }
 
-.lets-check2 h4 {
+.lets-check2 label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.5;
   font-weight: 500;
-  margin: 6px 0;
+  cursor: pointer;
 }
 
 .first-check2 {
@@ -154,7 +157,7 @@
 .yes-login {
   width: 350px;
   max-width: 100%;
-  height: 35px;
+  min-height: 44px;
   border-radius: 10px;
   border: none;
   background-color: #FFDC5B;
@@ -181,9 +184,12 @@
 .ifyou-not2 p { margin: 0; line-height: 1.5; text-align: center; }
 
 .lets-signup2, .first-check {
-  color: #FFC800;
+  color: var(--auth-link);
   font-weight: bold;
 }
+
+.lets-signup2 { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.lets-signup2:hover { color: #5c4700; }
 
 .agree-box2 {
   border: 1px solid #ddd;
@@ -213,6 +219,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   border: 1px solid #ddd;
   border-radius: 20px;
@@ -220,15 +227,6 @@
 }
 
 .agree-wrapper2 > :not(.agree-box2) { flex-shrink: 0; }
-
-.signup-terms-error {
-  color: #d93025;
-  margin: 12px 0 0;
-  text-align: center;
-  line-height: 1.5;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
 
 @media (max-width: 800px) {
   .login-right2 { display: none; }

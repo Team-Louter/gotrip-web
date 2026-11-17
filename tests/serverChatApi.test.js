@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createChatApi, chatApi } from '../src/services/chatApi.js';
+import { chatApi } from '../src/services/chatApi.js';
+import { createServerChatApi } from '../src/services/serverChatApi.js';
 import { mergeMessages, parseMemberIds } from '../src/services/serverChatApi.js';
 import { createApiClient } from '../src/api/client.js';
 import { clearSession, getMemberId, getToken, rememberMemberId, saveToken } from '../src/api/session.js';
@@ -9,7 +10,7 @@ const reply = (body, status = 200) => new Response(body == null ? null : JSON.st
 const room = { id: 42, name: '제주 여행', createdAt: '2026-10-27T12:00:00Z' };
 const message = (id, senderId = 7) => ({ id, roomId: 42, senderId, senderNickname: '민지', content: `메시지 ${id}`, type: 'TEXT', createdAt: '2026-10-27T12:30:00Z' });
 function serverApi(fetchImpl, options = {}) {
-  return createChatApi({ useMock: false, token: () => 'test-token', currentMemberId: () => '7', onMemberIdentified: () => {}, fetchImpl, ...options });
+  return createServerChatApi({ token: () => 'test-token', currentMemberId: () => '7', onMemberIdentified: () => {}, fetchImpl, ...options });
 }
 
 test('default application uses real server; unsupported controls are unavailable', () => {

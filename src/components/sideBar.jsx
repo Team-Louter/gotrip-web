@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { profileImageSource } from '../services/profileApi';
-import profileImg from '../images/profile.jpg';
+import { DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi';
 import homeIcon from '../icons/homeIcon.png';
 import chatIcon from '../icons/chatIcon.png';
 import mapIcon from '../icons/mapIcon.png';
 import memoIcon from '../icons/memoIcon.png';
 import calenderIcon from '../icons/calenderIcon.png';
 import recieptIcon from '../icons/recieptIcon.png';
+import settingIcon from '../icons/settingIcon.png';
 import { getLoginId, getToken } from '../api/session.js';
 import { memberApi } from '../services/memberApi.js';
 import '../styles/sideBar.css';
@@ -34,23 +34,23 @@ function SideBar({ profile }) {
   return (
     <div className="sidebar-container">
       <div className="profile-container">
-        <img src={profileImageSource(profile?.profileImageUrl) || profileImg} alt="프로필 사진" className="profile-img" />
+        <img src={profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="프로필 사진" className="profile-img" />
         <span className="user-name">{profile?.nickname || displayName}</span>
       </div>
       <nav className="menu-container" aria-label="사이드 메뉴">
-        <Link to="/main" className="sidebar-link" aria-current={isCurrent('/main') ? 'page' : undefined}>
+        <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={homeIcon} alt="홈" className="sidebar-icon" />
             홈
           </div>
         </Link>
-        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/map-api') ? 'page' : undefined}>
+        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/places') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={mapIcon} alt="지도" className="sidebar-icon" />
             지도
           </div>
         </Link>
-        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat', '/chat-api') ? 'page' : undefined}>
+        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img src={chatIcon} alt="채팅" className="sidebar-icon" />
             채팅
@@ -82,7 +82,7 @@ function SideBar({ profile }) {
             캘린더
           </div>
         </Link>
-        <Link to="/pay" className="sidebar-link" aria-current={isCurrent('/pay') ? 'page' : undefined}>
+        <Link to="/payment" className="sidebar-link" aria-current={isCurrent('/payment') ? 'page' : undefined}>
           <div className="sidebar-item">
             <img
               src={recieptIcon}
@@ -94,7 +94,7 @@ function SideBar({ profile }) {
         </Link>
         <Link to="/settings" className="sidebar-link" aria-current={isCurrent('/settings') ? 'page' : undefined}>
           <div className="sidebar-item">
-            <span className="sidebar-icon sidebar-settings-icon" aria-hidden="true">⚙</span>
+            <img src={settingIcon} alt="설정" className="sidebar-icon" />
             설정
           </div>
         </Link>

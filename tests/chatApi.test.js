@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CHAT_STORAGE_KEY, createChatApi } from '../src/services/chatApi.js';
+import { CHAT_STORAGE_KEY, createChatApi } from './helpers/mockChatApi.js';
 
 function memoryStorage() {
   const entries = new Map();

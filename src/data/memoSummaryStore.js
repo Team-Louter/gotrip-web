@@ -24,7 +24,7 @@ export function createMemoSummaryStore({ storage, account = getAccountId } = {})
         if (!target) throw new Error('Storage unavailable');
         if (summary) target.setItem(name, summary);
         else target.removeItem(name);
-      } catch { throw new Error('한줄 요약을 저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.'); }
+      } catch { throw new Error('한줄 요약을 저장하지 못했어요. 다시 시도해 주세요.'); }
       return summary;
     },
     remove(id) {

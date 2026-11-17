@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createChatApi } from '../src/services/chatApi.js';
-import { createHybridChatApi } from '../src/services/hybridChatApi.js';
+import { createChatApi } from './helpers/mockChatApi.js';
+import { createHybridChatApi } from './helpers/hybridChatApi.js';
 
 function setup({ serverFailure = null } = {}) {
   const entries = new Map(), calls = [];

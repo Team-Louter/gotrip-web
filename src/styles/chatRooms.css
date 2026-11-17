@@ -9,10 +9,14 @@
 .chat-search-button img { width: 16px; height: 16px; }
 .chat-rooms-page .chat-search-button:hover { background: #e9e9e9; }
 .chat-rooms-page .chat-list { min-height: 0; }
-.chat-rooms-page .chat-item { width: 100%; min-height: 106px; padding: 18px 15px; border: 0; border-radius: 0; background: #fff; text-align: left; color: #213547; font: inherit; }
+.chat-rooms-page .chat-item { position: relative; width: 100%; min-height: 106px; padding: 18px 15px; border: 0; border-radius: 0; background: #fff; text-align: left; color: #213547; font: inherit; }
 .chat-rooms-page .chat-item:hover, .chat-rooms-page .chat-item.is-active { background: #f1f1f1; }
-.chat-item-text { display: flex; flex-direction: column; min-width: 0; gap: 0; }
+.chat-item-text { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 0; }
+.chat-unread-badge { display: grid; flex: 0 0 auto; min-width: 20px; height: 20px; place-items: center; margin-left: auto; padding: 0 5px; border-radius: 12px; color: #fff; background: #e25542; font-size: 11px; font-weight: 750; line-height: 1; }
 .chat-rooms-page .gotrip-pro { flex-shrink: 0; }
+.chat-rooms-page .gotrip-pro,
+.chat-rooms-page .room-profile,
+.chat-rooms-page .msg-profile { filter: saturate(1.08) hue-rotate(3deg); }
 .chat-rooms-page .chatroom-name { display: block; height: auto; font-size: 18px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-rooms-page .chat-detail { display: block; font-size: 13px; line-height: 1.25; color: #69747c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-rooms-page .chat-plus { width: 100%; height: 70px; border: 0; border-radius: 0; padding: 0; color: #213547; background: #fff; font: inherit; font-size: 32px; }
@@ -88,14 +92,9 @@
 .chat-create-mode { display: flex; gap: 6px; margin-bottom: 10px; padding: 4px; border-radius: 14px; background: #f2efdf; }
 .chat-create-mode button { flex: 1; width: auto; padding: 9px 12px; border-radius: 11px; background: transparent; color: #6b6655; font: inherit; font-size: 13px; }
 .chat-create-mode button[aria-pressed=true] { background: #ffe982; color: #403a21; font-weight: 700; }
-.chat-mode-note { margin: 0 4px 20px; color: #777; font-size: 12px; line-height: 1.6; }
 .chat-recipient-actions { display: flex; align-items: center; gap: 7px; padding-bottom: 8px; }
 .chat-recipient-actions span { font-size: 12px; color: #96843f; white-space: nowrap; }
 .chat-recipient-actions button { width: auto; padding: 4px 7px; border-radius: 8px; color: #7d6c2d; background: #fff2b8; font: inherit; font-size: 11px; white-space: nowrap; }
-.chat-room-source { color: #8b7c42; font-size: 10px; font-weight: 500; }
-.chat-server-notice { padding: 12px 15px; background: #fff9e2; color: #807345; font-size: 11px; line-height: 1.7; }
-.chat-server-notice span, .chat-server-notice a { display: block; }
-.chat-local-notice { flex-shrink: 0; padding: 8px 20px; background: #fff9e2; color: #807345; font-size: 11px; line-height: 1.6; }
 .chat-sync-error { padding: 10px 20px; color: #9b452c; background: #fff6e1; font-size: 13px; }
 .chat-sync-error button, .chat-load-older { padding: 6px 14px; border-radius: 12px; color: #66551d; background: #fff3b4; font: inherit; font-size: 12px; }
 .chat-load-older { display: block; margin: 0 auto 20px; }

@@ -38,6 +38,12 @@
   font-weight: bolder;
 }
 
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 a {
   text-decoration: none;
   color: rgb(94, 94, 94);
@@ -84,14 +90,6 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.sidebar-settings-icon {
-  display: grid;
-  place-items: center;
-  font-size: 24px;
-}
-
-
 
 .layout:has(> .pay-page, > .settings-page) > .sidebar-container {
   box-sizing: border-box;

@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import gotrippro from '../images/gotrip-pro.jpg';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import gotripsearch from '../icons/gotrip-search.png';
 import gotriplogo4 from '../images/gotrip-logo4.png';
 import ChatHome from './chatHome';
@@ -8,6 +7,8 @@ import CreateChatRoom from '../components/CreateChatRoom';
 import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
+import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
+import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import '../styles/chatHome.css';
 import '../styles/chatRoom.css';
 import '../styles/chatRooms.css';
@@ -22,14 +23,15 @@ function ChatRoom() {
   const [detailRetry, setDetailRetry] = useState(0);
   const [creating, setCreating] = useState(false);
   const [syncError, setSyncError] = useState('');
+  const chatReadStore = useMemo(() => createChatReadStore({ storageKey: getChatReadStorageKey() }), []);
+  const [unreadByRoom, setUnreadByRoom] = useState(() => chatReadStore.read());
 
   useEffect(() => {
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       setList((current) => ({ ...current, status: current.rooms.length ? 'ready' : 'loading', error: '' }));
-      const request = chatApi.getRoomList ? chatApi.getRoomList({ query, signal: controller.signal }) : chatApi.getChatRooms({ query, signal: controller.signal }).then((rooms) => ({ rooms, serverError: null }));
-      request.then(({ rooms, serverError }) => {
-        if (!controller.signal.aborted) setList((current) => ({ rooms: rooms.map((room) => ({ ...room, lastMessage: room.lastMessage || current.rooms.find((item) => item.id === room.id)?.lastMessage || '' })), status: 'ready', error: '', serverError }));
+      chatApi.getChatRooms({ query, signal: controller.signal }).then((rooms) => {
+        if (!controller.signal.aborted) setList((current) => ({ rooms: rooms.map((room) => ({ ...room, lastMessage: room.lastMessage || current.rooms.find((item) => item.id === room.id)?.lastMessage || '' })), status: 'ready', error: '' }));
       }).catch((reason) => {
         if (!controller.signal.aborted) setList({ rooms: [], status: 'error', error: reason.message });
       });
@@ -37,8 +39,34 @@ function ChatRoom() {
     return () => { clearTimeout(timeout); controller.abort(); };
   }, [query, refresh]);
 
+  useEffect(() => setUnreadByRoom(chatReadStore.read()), [chatReadStore]);
+
   useEffect(() => {
-    if (chatApi.useMock) return;
+    if (list.status !== 'ready') return undefined;
+    if (!list.rooms.length) {
+      setUnreadByRoom(chatReadStore.read());
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let disposed = false;
+    async function updateUnreadCounts() {
+      const current = chatReadStore.read();
+      await Promise.all(list.rooms.map(async (room) => {
+        try {
+          const messages = typeof chatApi.getNewMessages === 'function'
+            ? await chatApi.getNewMessages(room.id, { after: current[room.id]?.cursorMessageId, signal: controller.signal })
+            : (await chatApi.getChatRoom(room.id, { signal: controller.signal })).messages;
+          if (!disposed) chatReadStore.observeMessages(room.id, messages, { active: room.id === roomId });
+        } catch { /* 목록 표시는 유지하고 다음 새로고침에서 읽음 수를 다시 확인합니다. */ }
+      }));
+      if (!disposed) setUnreadByRoom(chatReadStore.read());
+    }
+    updateUnreadCounts();
+    return () => { disposed = true; controller.abort(); };
+  }, [list.status, list.rooms, roomId, chatReadStore]);
+
+  useEffect(() => {
     const refreshList = () => { if (!document.hidden) setRefresh((value) => value + 1); };
     const interval = setInterval(refreshList, 10000);
     window.addEventListener('focus', refreshList);
@@ -46,7 +74,7 @@ function ChatRoom() {
   }, []);
 
   useEffect(() => {
-    if (!roomId || roomId.startsWith('local-')) return;
+    if (!roomId) return;
     const controller = new AbortController();
     let timer;
     let latestMessageId;
@@ -78,7 +106,7 @@ function ChatRoom() {
         setSyncError('');
         setDetail((current) => ({ id: roomId, room: current.id === roomId && current.room ? { ...room, messages: mergeMessages(room.messages, current.room.messages) } : room, error: '' }));
         setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === roomId ? { ...item, lastMessage: room.lastMessage } : item) }));
-        if (!chatApi.useMock && !chatApi.isLocalRoom?.(roomId)) timer = setTimeout(poll, 3000);
+        timer = setTimeout(poll, 3000);
       }
     }).catch((reason) => {
       if (!controller.signal.aborted) setDetail({ id: roomId, room: null, error: reason.message });
@@ -92,19 +120,36 @@ function ChatRoom() {
     setList((current) => ({ ...current, rooms: [room, ...current.rooms.filter((item) => item.id !== room.id)], status: 'ready', error: '' }));
     setDetail({ id: room.id, room, error: '' });
     setRefresh((value) => value + 1);
-    navigate(`/chat/${encodeURIComponent(room.id)}`);
+    navigate(`/chat/rooms/${encodeURIComponent(room.id)}`);
   }
 
   function roomUpdated(room) {
-    setDetail((current) => current.id === room.id ? { id: room.id, room: chatApi.useMock || !current.room ? room : { ...current.room, ...room, messages: mergeMessages(current.room.messages, room.messages) }, error: '' } : current);
-    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === room.id ? { ...item, lastMessage: room.lastMessage ?? item.lastMessage } : item) }));
+    const { deletedMessageId, ...updatedRoom } = room;
+    setDetail((current) => current.id === updatedRoom.id ? {
+      id: updatedRoom.id,
+      room: !current.room ? updatedRoom : {
+        ...current.room,
+        ...updatedRoom,
+        messages: mergeMessages(
+          deletedMessageId == null ? current.room.messages : current.room.messages.filter((message) => message.id !== String(deletedMessageId)),
+          updatedRoom.messages,
+        ),
+      },
+      error: '',
+    } : current);
+    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === updatedRoom.id ? { ...item, lastMessage: updatedRoom.lastMessage ?? item.lastMessage } : item) }));
   }
 
   const visibleRooms = list.rooms.filter((room) => matchesRoom(room, query));
   const activeRoom = roomId && detail.id === roomId ? detail.room : null;
   const detailError = detail.id === roomId ? detail.error : '';
+  const activeLatestMessage = detail.id === roomId ? detail.room?.messages.at(-1) : undefined;
 
-  if (roomId?.startsWith('local-')) return <Navigate to="/chat" replace />;
+  useEffect(() => {
+    if (!roomId || detail.id !== roomId) return;
+    chatReadStore.markRead(roomId, activeLatestMessage);
+    setUnreadByRoom(chatReadStore.read());
+  }, [roomId, detail.id, detail.room, activeLatestMessage, chatReadStore]);
 
   return (
     <div className="chatroom-layout chat-rooms-page">
@@ -117,20 +162,20 @@ function ChatRoom() {
           </form>
         </div>
         <div className="chat-list" aria-busy={list.status === 'loading'}>
-          {list.serverError && <div className="chat-server-notice" role="status"><p>{list.serverError.message}</p>{!getToken() && <Link to="/islogin" state={{ from: '/chat' }}>서버 채팅 로그인</Link>}<span>체험 채팅방은 + 버튼으로 만들 수 있어요.</span></div>}
-          {list.status === 'error' ? <div className="chat-feedback" role="alert"><p>{list.error}</p>{!chatApi.useMock && !getToken() ? <Link className="chat-retry" to="/islogin" state={{ from: roomId ? `/chat/${roomId}` : '/chat' }}>로그인하기</Link> : <button type="button" className="chat-retry" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button>}</div> : <>
+          {list.status === 'error' ? <div className="chat-feedback" role="alert"><p>{list.error}</p>{!getToken() ? <Link className="chat-retry" to="/login" state={{ from: roomId ? `/chat/rooms/${roomId}` : '/chat' }}>로그인하기</Link> : <button type="button" className="chat-retry" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button>}</div> : <>
             {visibleRooms.map((room) => (
               <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`} key={room.id}
-                aria-label={`${room.name} 채팅방 열기`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/${encodeURIComponent(room.id)}`)}>
-                <img className="gotrip-pro" src={gotrippro} alt="" />
-                <span className="chat-item-text"><span className="chatroom-name">{room.name}</span>{chatApi.supportsLocalRooms && <small className="chat-room-source">{room.source === 'local' ? '체험 · 이 브라우저에 저장' : '서버 채팅'}</small>}<span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
+                aria-label={`${room.name} 채팅방 열기${unreadByRoom[room.id]?.unreadCount ? `, 안 읽은 메시지 ${unreadByRoom[room.id].unreadCount}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
+                <img className="gotrip-pro" src={chatCounterpartProfileImage(room)} alt="" />
+                <span className="chat-item-text"><span className="chatroom-name">{room.name}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
+                {unreadByRoom[room.id]?.unreadCount > 0 && <span className="chat-unread-badge" aria-hidden="true">{unreadByRoom[room.id].unreadCount > 99 ? '99+' : unreadByRoom[room.id].unreadCount}</span>}
               </button>
             ))}
             {list.status === 'loading' && <p className="chat-feedback" role="status">채팅방을 불러오는 중이에요.</p>}
             {list.status === 'ready' && visibleRooms.length === 0 && <p className="chat-feedback chat-empty-message" role="status">{query.trim() ? '검색된 채팅방이 없어요.' : '아직 채팅방이 없어요'}</p>}
           </>}
         </div>
-        <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!chatApi.supportsLocalRooms && !chatApi.useMock && !getToken()} onClick={() => setCreating(true)}>+</button>
+        <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!getToken()} onClick={() => setCreating(true)}>+</button>
       </aside>
       {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : <main className="chat-right"><div className="chat-feedback" role={detailError ? 'alert' : 'status'}>{detailError || '채팅방을 불러오는 중이에요.'}{detailError && <button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button>}</div></main> : (
         <main className="chat-right">

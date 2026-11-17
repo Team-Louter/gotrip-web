@@ -1,13 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import '../styles/payForm.css';
-import Toast, { useToast } from '../components/Toast';
+import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import gotripwallet from '../icons/wallet.png';
-
-const initialExpenses = [
-  { id: 1, name: '항공권', amount: 320000 },
-  { id: 2, name: '라멘 식사', amount: 56000 },
-  { id: 3, name: '숙소 예약금', amount: 210000 },
-];
 
 const GROUPS_KEY = 'gotrip.settlement.groups.v1';
 
@@ -29,10 +23,9 @@ function expenseError(name, amount) {
 }
 
 function PayForm() {
-  const [expenses, setExpenses] = useState(initialExpenses);
+  const [expenses, setExpenses] = useState([]);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
-  const [notice, notify] = useToast();
   const [groups, setGroups] = useState(readGroups);
   const [groupId, setGroupId] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -62,31 +55,31 @@ function PayForm() {
     event.preventDefault();
     const name = groupName.trim();
     const size = Number(groupSize);
-    if (!name) return notify('그룹 이름을 입력해주세요.');
+    if (!name) return showErrorToast('그룹 이름을 입력해주세요.');
     if (!/^\d+$/.test(groupSize) || !Number.isSafeInteger(size) || size < 2) {
-      return notify('정산 인원을 2명 이상의 숫자로 입력해주세요.');
+      return showErrorToast('정산 인원을 2명 이상의 숫자로 입력해주세요.');
     }
-    if (groups.some((entry) => entry.name === name)) return notify('이미 같은 이름의 그룹이 있어요.');
+    if (groups.some((entry) => entry.name === name)) return showErrorToast('이미 같은 이름의 그룹이 있어요.');
 
     const newGroup = { id: crypto.randomUUID(), name, size };
     const nextGroups = [...groups, newGroup];
     try {
       localStorage.setItem(GROUPS_KEY, JSON.stringify(nextGroups));
     } catch {
-      return notify('그룹을 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.');
+      return showErrorToast('그룹을 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.');
     }
     setGroups(nextGroups);
     setGroupId(newGroup.id);
     setGroupName('');
     setGroupSize('');
-    notify('정산 그룹을 추가했어요.', 'success');
+    showSuccessToast('정산 그룹을 추가했어요.');
   }
 
   const addExpense = () => {
     const error = expenseError(itemName, itemAmount);
-    if (error) return notify(error);
+    if (error) return showErrorToast(error);
     const amount = Number(itemAmount);
-    if (!Number.isSafeInteger(total + amount)) return notify('총 사용액이 너무 커요. 금액을 확인해주세요.');
+    if (!Number.isSafeInteger(total + amount)) return showErrorToast('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
     scrollToNewExpense.current = true;
     setExpenses((current) => [
@@ -95,7 +88,7 @@ function PayForm() {
     ]);
     setItemName('');
     setItemAmount('');
-    notify('품목을 추가했어요.', 'success');
+    showSuccessToast('품목을 추가했어요.');
   };
 
   const openEditDialog = (expense) => {
@@ -106,10 +99,10 @@ function PayForm() {
 
   const confirmEditExpense = () => {
     const error = expenseError(editName, editAmount);
-    if (error) return notify(error);
+    if (error) return showErrorToast(error);
     const amount = Number(editAmount);
     const previous = expenses.find((expense) => expense.id === dialog.id);
-    if (!Number.isSafeInteger(total - previous.amount + amount)) return notify('총 사용액이 너무 커요. 금액을 확인해주세요.');
+    if (!Number.isSafeInteger(total - previous.amount + amount)) return showErrorToast('총 사용액이 너무 커요. 금액을 확인해주세요.');
 
     setExpenses((current) => current.map((expense) => (
       expense.id === dialog.id
@@ -117,18 +110,17 @@ function PayForm() {
         : expense
     )));
     setDialog(null);
-    notify('품목을 수정했어요.', 'success');
+    showSuccessToast('품목을 수정했어요.');
   };
 
   const confirmDeleteExpense = () => {
     setExpenses((current) => current.filter((expense) => expense.id !== dialog.id));
     setDialog(null);
-    notify('품목을 삭제했어요.', 'success');
+    showSuccessToast('품목을 삭제했어요.');
   };
 
   return (
     <div className="pay-page">
-      <Toast notice={notice} />
 
       <div className="pay-card">
         <h2 className="lets-pay">

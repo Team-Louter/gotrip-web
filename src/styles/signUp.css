@@ -1,8 +1,8 @@
 .gotrip-logo {
   width: 100px;
-  display: flex;
-  margin-left: 100px;
-  margin-bottom: 40px;
+  display: block;
+  align-self: center;
+  margin: 0 0 40px;
 }
 
 .join-cont > h1 {
@@ -11,7 +11,7 @@
 }
 
 .gotrip-join {
-  width: 500px;
+  width: 55.555%;
   height: 600px;
   border-radius: 20px 0px 0px 20px;
   object-fit: cover;
@@ -20,17 +20,17 @@
 
 .card-wap {
   display: flex;
-  width: 900px; 
+  width: min(900px, 100%);
   border: 1px solid #D9D9D9; 
   border-radius: 45px; 
   overflow: hidden; 
-  ;
 }
 
 
 .card-from {
   flex: 1;
-  padding: 50px 50px;
+  min-width: 0;
+  padding: 40px clamp(24px, 4vw, 50px);
   background: white;
   display: flex;
   flex-direction: column;
@@ -39,12 +39,15 @@
 }
 
 .join-cont {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 32px 24px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center; 
   justify-content: center; 
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .check {
@@ -78,16 +81,19 @@ p {
 
 .Next-button {
   font-size: 16px;
-  width: 300px;
-  height: 30px;
+  width: 100%;
+  min-height: 44px;
   border-radius: 20px;
-  background-color: #EFEDED;
+  background-color: var(--auth-accent);
+  color: var(--auth-text);
+  font-weight: 600;
+  cursor: pointer;
   border: none;
   margin-top: 16px;
 }
 
-.password-rules ul { transition: color 120ms ease; }
-.password-rules { display: flex; flex-direction: column; gap: 0; margin: 8px 0 20px; }
+.Next-button:enabled:hover { background-color: var(--auth-accent-hover); }
+.password-rules { display: flex; flex-direction: column; gap: 0; margin: 8px 0 20px; list-style: none; font-size: 12px; }
 .card-from label[for="signup-password"] { margin-top: 16px; }
 .password-rules .rule-idle { color: #536273; }
 .password-rules .rule-valid { color: #168542; }
@@ -97,7 +103,9 @@ p {
 .signup-error { color: #d93025; margin: 8px 0 0; line-height: 1.5; }
 .password-mismatch { margin-top: 4px; }
 
-.Next-button:disabled {
-  opacity: .5;
-  cursor: default;
+@media (max-width: 800px) {
+  .gotrip-join { display: none; }
+  .card-wap { max-width: 440px; border-radius: 28px; }
+  .card-from { padding: 32px 24px; }
+  .join-cont > h1 { text-align: center; line-height: 1.5; }
 }
