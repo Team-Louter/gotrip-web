@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import gotripsearch from '../icons/gotrip-search.png';
 import gotriplogo4 from '../images/gotrip-logo4.png';
@@ -9,9 +9,15 @@ import { getToken } from '../api/session';
 import { mergeMessages } from '../services/serverChatApi';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
 import { chatCounterpartProfileImage, chatCounterpartProfileImageSource } from '../services/profileApi.js';
+import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import '../styles/chatHome.css';
 import '../styles/chatRoom.css';
 import '../styles/chatRooms.css';
+
+function displayRoomName(name) {
+  const characters = Array.from(String(name ?? ''));
+  return characters.length > 7 ? `${characters.slice(0, 7).join('')}…` : String(name ?? '');
+}
 
 function ChatRoom() {
   const navigate = useNavigate();
@@ -23,6 +29,14 @@ function ChatRoom() {
   const [detailRetry, setDetailRetry] = useState(0);
   const [creating, setCreating] = useState(false);
   const [syncError, setSyncError] = useState('');
+  const [roomActionMenuId, setRoomActionMenuId] = useState(null);
+  const [roomEditTarget, setRoomEditTarget] = useState(null);
+  const [roomEditName, setRoomEditName] = useState('');
+  const [roomActionError, setRoomActionError] = useState('');
+  const [roomActionBusy, setRoomActionBusy] = useState(false);
+  const roomActionMenuRef = useRef(null);
+  const roomActionButtonRef = useRef(null);
+  const roomEditDialogRef = useRef(null);
   const chatReadStore = useMemo(() => createChatReadStore({ storageKey: getChatReadStorageKey() }), []);
   const [unreadByRoom, setUnreadByRoom] = useState(() => chatReadStore.read());
 
@@ -82,6 +96,32 @@ function ChatRoom() {
     window.addEventListener('focus', refreshList);
     return () => { clearInterval(interval); window.removeEventListener('focus', refreshList); };
   }, []);
+
+  useEffect(() => {
+    if (!roomActionMenuId) return undefined;
+    const closeOutside = (event) => {
+      if (!roomActionMenuRef.current?.contains(event.target)) setRoomActionMenuId(null);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setRoomActionMenuId(null);
+        roomActionButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [roomActionMenuId]);
+
+  useEffect(() => {
+    if (!roomEditTarget) return undefined;
+    const dialog = roomEditDialogRef.current;
+    dialog?.showModal();
+    return () => dialog?.close();
+  }, [roomEditTarget]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -152,8 +192,55 @@ function ChatRoom() {
 
   function roomRemoved(removedRoomId) {
     setList((current) => ({ ...current, rooms: current.rooms.filter((item) => item.id !== String(removedRoomId)) }));
-    setDetail({ id: null, room: null, error: '' });
-    navigate('/chat', { replace: true });
+    if (String(roomId) === String(removedRoomId)) {
+      setDetail({ id: null, room: null, error: '' });
+      navigate('/chat', { replace: true });
+    }
+  }
+
+  function openRoomEditFromList(room) {
+    setRoomActionMenuId(null);
+    setRoomActionError('');
+    setRoomEditName(room.name);
+    setRoomEditTarget(room);
+  }
+
+  async function saveRoomEditFromList(event) {
+    event.preventDefault();
+    const name = roomEditName.trim();
+    if (!name || name.length > 100) {
+      setRoomActionError('채팅방 이름을 1~100자로 입력해 주세요.');
+      return;
+    }
+    setRoomActionBusy(true);
+    setRoomActionError('');
+    try {
+      const updatedRoom = await chatApi.updateChatRoom(roomEditTarget.id, { name });
+      roomUpdated({ ...roomEditTarget, ...updatedRoom });
+      setRoomEditTarget(null);
+      showSuccessToast('채팅방 이름을 수정했습니다.');
+    } catch (reason) {
+      setRoomActionError(reason.message || '채팅방 이름을 수정하지 못했습니다.');
+    } finally {
+      setRoomActionBusy(false);
+    }
+  }
+
+  async function removeOrLeaveRoomFromList(room) {
+    const isOwner = Boolean(room.isOwner);
+    setRoomActionMenuId(null);
+    if (!window.confirm(isOwner ? `“${room.name}” 채팅방과 대화 내용을 삭제할까요?` : `“${room.name}” 채팅방에서 나갈까요?`)) return;
+    setRoomActionBusy(true);
+    try {
+      if (isOwner) await chatApi.deleteChatRoom(room.id);
+      else await chatApi.leaveChatRoom(room.id);
+      showSuccessToast(isOwner ? '채팅방을 삭제했습니다.' : '채팅방에서 나왔습니다.');
+      roomRemoved(room.id);
+    } catch (reason) {
+      showErrorToast(reason.message || (isOwner ? '채팅방을 삭제하지 못했습니다.' : '채팅방에서 나가지 못했습니다.'));
+    } finally {
+      setRoomActionBusy(false);
+    }
   }
 
   const visibleRooms = list.rooms.filter((room) => matchesRoom(room, query));
@@ -180,12 +267,25 @@ function ChatRoom() {
         <div className="chat-list" aria-busy={list.status === 'loading'}>
           {list.status === 'error' ? <div className="chat-feedback" role="alert"><p>{list.error}</p>{!getToken() ? <Link className="chat-retry" to="/login" state={{ from: roomId ? `/chat/rooms/${roomId}` : '/chat' }}>로그인하기</Link> : <button type="button" className="chat-retry" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button>}</div> : <>
             {visibleRooms.map((room) => (
-              <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`} key={room.id}
-                aria-label={`${room.name} 채팅방 열기${unreadByRoom[room.id]?.unreadCount ? `, 안 읽은 메시지 ${unreadByRoom[room.id].unreadCount}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
-                <img className="gotrip-pro" src={chatCounterpartProfileImage(room)} alt="" />
-                <span className="chat-item-text"><span className="chatroom-name">{room.name}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
-                {unreadByRoom[room.id]?.unreadCount > 0 && <span className="chat-unread-badge" aria-hidden="true">{unreadByRoom[room.id].unreadCount > 99 ? '99+' : unreadByRoom[room.id].unreadCount}</span>}
-              </button>
+              <div className="chat-item-row" key={room.id}>
+                <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`}
+                  aria-label={`${room.name} 채팅방 열기${unreadByRoom[room.id]?.unreadCount ? `, 안 읽은 메시지 ${unreadByRoom[room.id].unreadCount}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
+                  <img className="gotrip-pro" src={chatCounterpartProfileImage(room)} alt="" />
+                  <span className="chat-item-text"><span className="chatroom-name" title={room.name}>{displayRoomName(room.name)}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
+                  {unreadByRoom[room.id]?.unreadCount > 0 && <span className="chat-unread-badge" aria-hidden="true">{unreadByRoom[room.id].unreadCount > 99 ? '99+' : unreadByRoom[room.id].unreadCount}</span>}
+                </button>
+                <div className="chat-item-menu-wrap" ref={roomActionMenuId === room.id ? roomActionMenuRef : null}>
+                  <button ref={roomActionMenuId === room.id ? roomActionButtonRef : null} type="button" className="chat-item-more" aria-label={`${room.name} 채팅방 메뉴`} aria-haspopup="menu" aria-expanded={roomActionMenuId === room.id} disabled={roomActionBusy} onClick={() => setRoomActionMenuId((current) => current === room.id ? null : room.id)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+                  </button>
+                  {roomActionMenuId === room.id && <div className="chat-item-menu" role="menu" aria-label={`${room.name} 채팅방 관리`}>
+                    {room.isOwner ? <>
+                      <button type="button" role="menuitem" onClick={() => openRoomEditFromList(room)}>방 수정하기</button>
+                      <button type="button" role="menuitem" className="is-danger" onClick={() => removeOrLeaveRoomFromList(room)}>방 삭제하기</button>
+                    </> : <button type="button" role="menuitem" className="is-danger" onClick={() => removeOrLeaveRoomFromList(room)}>방 나가기</button>}
+                  </div>}
+                </div>
+              </div>
             ))}
             {list.status === 'loading' && <p className="chat-feedback" role="status">채팅방을 불러오는 중이에요.</p>}
             {list.status === 'ready' && visibleRooms.length === 0 && <p className="chat-feedback chat-empty-message" role="status">{query.trim() ? '검색된 채팅방이 없어요.' : '아직 채팅방이 없어요'}</p>}
@@ -199,6 +299,20 @@ function ChatRoom() {
           <div className="chat-empty"><p className="lets-plan">여행 계획이라도 짜볼까요?</p><button className="lets-main" onClick={() => navigate('/calendar')}>캘린더로 가기</button></div>
         </main>
       )}
+      {roomEditTarget && <dialog ref={roomEditDialogRef} className="chat-room-action-dialog" aria-labelledby="chat-room-list-edit-title"
+        onCancel={(event) => { event.preventDefault(); if (!roomActionBusy) setRoomEditTarget(null); }}
+        onClick={(event) => { if (event.target === roomEditDialogRef.current && !roomActionBusy) setRoomEditTarget(null); }}>
+        <form className="chat-room-action-form" onSubmit={saveRoomEditFromList}>
+          <h2 id="chat-room-list-edit-title">채팅방 수정</h2>
+          <label htmlFor="chat-room-list-name-edit">채팅방 이름</label>
+          <input id="chat-room-list-name-edit" autoFocus maxLength={100} value={roomEditName} disabled={roomActionBusy} onChange={(event) => { setRoomEditName(event.target.value); setRoomActionError(''); }} />
+          <p className="chat-room-action-error" role="alert">{roomActionError}</p>
+          <div className="chat-room-action-buttons">
+            <button type="button" className="is-secondary" disabled={roomActionBusy} onClick={() => setRoomEditTarget(null)}>취소</button>
+            <button type="submit" className="is-primary" disabled={roomActionBusy}>{roomActionBusy ? '저장 중…' : '저장'}</button>
+          </div>
+        </form>
+      </dialog>}
       {creating && <CreateChatRoom onClose={() => setCreating(false)} onCreated={roomCreated} />}
     </div>
   );
