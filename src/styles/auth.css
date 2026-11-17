@@ -45,12 +45,37 @@
 }
 
 @keyframes auth-enter {
-  from { opacity: 0; translate: 0 8px; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes auth-toast-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes auth-toast-out {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes auth-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes auth-fade-out {
+  to { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-layout :is(.login-left, .login-left2, .card-from, .join-cont > h1) {
-    animation: none;
+  .auth-layout :is(.login-left, .login-left2, .card-from, .join-cont > h1),
+  .auth-toast {
+    animation-name: auth-fade-in;
+    animation-duration: 120ms;
+  }
+
+  .auth-toast.is-closing {
+    animation-name: auth-fade-out;
   }
 
   .auth-layout button {
