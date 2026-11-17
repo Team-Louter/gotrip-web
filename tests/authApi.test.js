@@ -19,7 +19,7 @@ test('signup normalizes member fields and blocks invalid saved drafts before sen
   await api.signUp({ ...signup, loginId: ' test-user ', email: ' test@example.test ', nickname: ' 여행자 ', birthDate: '2000-01-01' });
   assert.equal(requests[0].birthDate, '20000101');
   assert.equal(requests[0].email, signup.email);
-  for (const fields of [{ passwordConfirm: undefined }, { password: 'short' }, { birthDate: '200001' }, { email: 'invalid' }]) {
+  for (const fields of [{ passwordConfirm: undefined }, { password: 'short' }, { birthDate: '200001' }, { birthDate: '20010229' }, { email: 'invalid' }, { email: 'user@@example.test' }]) {
     await assert.rejects(api.signUp({ ...signup, ...fields }));
   }
   assert.equal(requests.length, 1);
