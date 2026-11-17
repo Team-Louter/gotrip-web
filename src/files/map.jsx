@@ -42,6 +42,7 @@ function Map() {
     try {
       const place = await tripApi.addPlace(address);
       commitPlaces([...places, place]);
+      showSuccessToast('장소를 추가했어요.');
       setAddress(''); setIsPlaceAddOpen(false);
     } catch (reason) { setError(reason.message); }
     finally { operationBusy.current = false; setBusy(false); }
@@ -58,6 +59,11 @@ function Map() {
     finally { operationBusy.current = false; setBusy(false); }
   }
 
+  function handleDeleteLocalPlace(id) {
+    commitPlaces(places.filter((place) => place.id !== id));
+    showSuccessToast('장소를 삭제했어요.');
+  }
+
   function openAddPlace() { if (!operationBusy.current) { setAddress(''); setError(''); setIsPlaceAddOpen(true); } }
 
   return (
@@ -71,7 +77,7 @@ function Map() {
               <img src={mappinIcon} alt="" className="mappin-icon" />
               <div className="map-elements-box"><span className="map-content-text" title={place.address}>{place.address}</span>
                 {place.serverId ? <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => handleDeletePlace(place.serverId)}>삭제</button>
-                  : <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => commitPlaces(places.filter((item) => item.id !== place.id))}>삭제</button>}
+                  : <button type="button" className="mappin-delete-button" disabled={busy} aria-label={`${place.address} 삭제`} onClick={() => handleDeleteLocalPlace(place.id)}>삭제</button>}
               </div>
             </div>)}
           </div>

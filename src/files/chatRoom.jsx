@@ -147,7 +147,13 @@ function ChatRoom() {
       },
       error: '',
     } : current);
-    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === updatedRoom.id ? { ...item, lastMessage: updatedRoom.lastMessage ?? item.lastMessage } : item) }));
+    setList((current) => ({ ...current, rooms: current.rooms.map((item) => item.id === updatedRoom.id ? { ...item, name: updatedRoom.name ?? item.name, lastMessage: updatedRoom.lastMessage ?? item.lastMessage } : item) }));
+  }
+
+  function roomRemoved(removedRoomId) {
+    setList((current) => ({ ...current, rooms: current.rooms.filter((item) => item.id !== String(removedRoomId)) }));
+    setDetail({ id: null, room: null, error: '' });
+    navigate('/chat', { replace: true });
   }
 
   const visibleRooms = list.rooms.filter((room) => matchesRoom(room, query));
@@ -187,7 +193,7 @@ function ChatRoom() {
         </div>
         <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!getToken()} onClick={() => setCreating(true)}>+</button>
       </aside>
-      {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : <main className="chat-right"><div className="chat-feedback" role={detailError ? 'alert' : 'status'}>{detailError || '채팅방을 불러오는 중이에요.'}{detailError && <button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button>}</div></main> : (
+      {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} onRoomRemoved={roomRemoved} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : <main className="chat-right"><div className="chat-feedback" role={detailError ? 'alert' : 'status'}>{detailError || '채팅방을 불러오는 중이에요.'}{detailError && <button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button>}</div></main> : (
         <main className="chat-right">
           <img className="chat-gotriplogo" src={gotriplogo4} alt="GoTrip" />
           <div className="chat-empty"><p className="lets-plan">여행 계획이라도 짜볼까요?</p><button className="lets-main" onClick={() => navigate('/calendar')}>캘린더로 가기</button></div>
