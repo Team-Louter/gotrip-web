@@ -33,7 +33,6 @@
 .friends-search-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 650; }
 .friends-search { box-sizing: border-box; width: min(100%, 560px); height: 46px; padding: 0 15px; border: 1px solid #dedede; border-radius: 13px; color: #213547; background: #fff; font: inherit; font-size: 13px; }
 .friends-search:focus-visible { outline: 2px solid #ba9c2c; outline-offset: 2px; }
-.friends-toast { position: fixed; z-index: 1000; top: 24px; left: 50%; box-sizing: border-box; max-width: calc(100vw - 32px); padding: 13px 22px; transform: translateX(-50%); border: 1px solid #f0df9c; border-radius: 14px; color: #66551d; background: #fff9df; box-shadow: 0 8px 26px rgb(33 53 71 / 14%); font-size: 14px; font-weight: 650; text-align: center; animation: friends-toast-enter 160ms ease-out; }
 .friends-action-error { margin-top: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12px; }
 .friends-action-error { color: #a04735; background: #fff1eb; }
 .friends-count-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 6px; }
@@ -44,7 +43,7 @@
 .friends-discover-section { margin-top: 18px; padding-top: 2px; border-top: 1px solid #e8e0c6; }
 .friends-list { max-width: 900px; padding: 0; list-style: none; }
 .friend-row { display: flex; align-items: center; gap: 14px; min-height: 78px; padding: 8px 2px; border-bottom: 1px solid #ececec; }
-.friend-avatar { display: grid; flex: 0 0 48px; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #6e5b1f; background: #fff0a6; font-size: 18px; font-weight: 700; }
+.friend-avatar { display: block; flex: 0 0 48px; width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #fff0a6; }
 .friend-identity { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
 .friend-identity strong { overflow: hidden; color: #213547; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
 .friend-identity span { overflow: hidden; color: #777; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
@@ -72,15 +71,6 @@
 .friend-accept-button { color: #66551d; background: #ffe982; }
 .friend-reject-button { color: #675e53; background: #f1f0eb; }
 .friends-sent-section { margin-top: 0; }
-
-@keyframes friends-toast-enter {
-  from { opacity: 0; translate: 0 -6px; }
-  to { opacity: 1; translate: 0 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .friends-toast { animation: none; }
-}
 
 @media (max-width: 1100px) {
   .friends-page { padding: 20px; gap: 20px; grid-template-columns: minmax(0, 1fr) 290px; }

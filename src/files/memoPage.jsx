@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
+import { showSuccessToast } from '../components/AppToasts'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
 
@@ -114,6 +115,7 @@ function Memo() {
       setMemos((previous) => previous.map((item) => item.id === current.id ? { ...item, ...memo } : item))
       setSelectedId(memo.id)
       setSaved('memo')
+      showSuccessToast('메모가 저장되었습니다.')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
     } catch (error) { setActionError(error) }
     finally { mutationBusy.current = false; setBusy(false) }
@@ -128,6 +130,7 @@ function Memo() {
       const summary = await memoApi.saveSummary(current.id, current.summaryDraft)
       setMemos((previous) => previous.map((memo) => memo.id === current.id ? { ...memo, summary, summaryDraft: summary, summaryDirty: false } : memo))
       setSaved('summary')
+      showSuccessToast('한줄 요약이 저장되었습니다.')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
     } catch (error) { setActionError(error) }
     finally { mutationBusy.current = false; setBusy(false) }
@@ -194,7 +197,7 @@ function Memo() {
           disabled={!editable}
         />
         <div className="memo-board-actions">
-          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : saved === 'memo' ? '메모가 저장되었습니다.' : ''}</span>
+          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : ''}</span>
           <button type="submit" className="memo-save" disabled={!editable || (!current?.dirty && !current?.isNew)}>메모 저장</button>
         </div>
       </form>
@@ -236,7 +239,6 @@ function Memo() {
           {current?.isNew && (
             <p id="memo-save-help" className="memo-save-help">메모를 먼저 저장한 후 한줄 요약을 저장해 주세요.</p>
           )}
-          <span className="memo-summary-status" role="status">{saved === 'summary' ? '한줄 요약이 저장되었습니다.' : ''}</span>
           <button type="button" className="memo-save memo-summary-save" onClick={handleSaveSummary} disabled={!editable || current?.isNew || !current?.summaryDirty}>{saved === 'summary' ? '저장됨' : '저장'}</button>
         </div>
       </div>

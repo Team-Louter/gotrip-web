@@ -25,14 +25,14 @@ test('chat friend selector filters accepted friendships and preserves invitation
   const api = createServerChatApi({ token: () => 'token', fetchImpl: async (url, options) => {
     requests.push({ url, ...options });
     return new Response(JSON.stringify([
-      { friendshipId: 5, memberId: 17, nickname: '김 민지' },
+      { friendshipId: 5, memberId: 17, nickname: '김 민지', profileImageUrl: '/api/profile-images/minji.png' },
       { friendshipId: 9, memberId: 42, nickname: '다른 친구' },
     ]));
   } });
 
   const friends = await api.getFriends({ query: '김민지', signal: controller.signal });
 
-  assert.deepEqual(friends, [{ id: '17', friendshipId: '5', name: '김 민지', nickname: '김 민지', loginId: '' }]);
+  assert.deepEqual(friends, [{ id: '17', friendshipId: '5', name: '김 민지', nickname: '김 민지', profileImageUrl: '/api/profile-images/minji.png', loginId: '' }]);
   assert.equal(requests[0].url, '/api/friends');
   assert.equal(requests[0].headers.Authorization, 'Bearer token');
   assert.equal(requests[0].signal, controller.signal);

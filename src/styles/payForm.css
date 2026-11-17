@@ -19,32 +19,6 @@
   padding: clamp(12px, 5dvh, 55px) 24px;
 }
 
-.pay-notice {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 28px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
-  white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-.pay-notice-success {
-  background: #dcf9c5;
-  color: #222;
-}
-
-.pay-notice-error {
-  background: #ffc5c2;
-  color: #222;
-}
-
 .pay-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -176,6 +150,43 @@
   font-size: 18px;
   font-weight: 600;
   margin-top: 5px;
+}
+
+.pay-split-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #342e23;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.pay-split-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pay-participant-count {
+  box-sizing: border-box;
+  width: 96px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid #e5ddcb;
+  border-radius: 10px;
+  background: #fffdf7;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+
+.pay-participant-limit {
+  color: #786f5e;
+  font-size: 13px;
+  font-weight: 400;
 }
 
 .pay-row {

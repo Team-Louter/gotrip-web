@@ -14,7 +14,7 @@ export class ApiError extends Error {
 }
 
 export function createApiClient({ baseUrl = API_BASE_URL, fetchImpl = globalThis.fetch, token = getToken, onUnauthorized = clearSession } = {}) {
-  return async function request(path, { auth = true, body, headers, ...options } = {}) {
+  return async function request(path, { auth = true, body, headers, responseType, ...options } = {}) {
     const accessToken = auth ? token() : null;
     if (auth && !accessToken) throw new ApiError('로그인 후 이용해 주세요.', 401);
     const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -23,7 +23,7 @@ export function createApiClient({ baseUrl = API_BASE_URL, fetchImpl = globalThis
       response = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
         ...options,
         headers: {
-          Accept: 'application/json',
+          Accept: responseType === 'blob' ? 'image/*,application/octet-stream,*/*' : 'application/json',
           ...(body != null && !multipart ? { 'Content-Type': 'application/json' } : {}),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           ...headers,
@@ -34,6 +34,7 @@ export function createApiClient({ baseUrl = API_BASE_URL, fetchImpl = globalThis
       if (error.name === 'AbortError' || options.signal?.aborted) throw error;
       throw new ApiError('서버에 연결하지 못했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.', 0);
     }
+    if (response.ok && responseType === 'blob') return response.blob();
     const text = await response.text();
     let result;
     try { result = text ? JSON.parse(text) : null; } catch { result = text; }
