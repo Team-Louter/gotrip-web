@@ -1,5 +1,6 @@
 import { API_BASE_URL, apiRequest } from '../api/client';
 import defaultProfileImage from '../images/gotrip-pro.jpg';
+import { getChatRoomProfileImage } from '../data/chatRoomProfileStore.js';
 
 const memberPath = '/api/members/me';
 
@@ -8,7 +9,9 @@ export const DEFAULT_PROFILE_IMAGE = defaultProfileImage;
 export function chatCounterpartProfileImageSource(room) {
   const otherMember = room?.members?.find((member) => member?.profileImageUrl || member?.avatarUrl);
   const latestIncomingMessage = [...(room?.messages ?? [])].reverse().find((message) => !message.mine);
-  const imageUrl = room?.counterpartProfileImageUrl
+  const imageUrl = room?.roomProfileImage
+    || getChatRoomProfileImage(room?.id)
+    || room?.counterpartProfileImageUrl
     || room?.partnerProfileImageUrl
     || room?.profileImageUrl
     || room?.otherMember?.profileImageUrl
