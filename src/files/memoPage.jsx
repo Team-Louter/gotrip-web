@@ -253,7 +253,6 @@ function Memo() {
           {current?.isNew && (
             <p id="memo-save-help" className="memo-save-help">메모를 먼저 저장한 후 한줄 요약을 저장해 주세요.</p>
           )}
-          <span className="memo-summary-status" role="status">{saved === 'summary' ? '한줄 요약이 저장되었습니다.' : ''}</span>
           <button type="button" className="memo-save memo-summary-save" onClick={handleSaveSummary} disabled={!editable || current?.isNew || !current?.summaryDirty}>{saved === 'summary' ? '저장됨' : '저장'}</button>
         </div>
       </div>

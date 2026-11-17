@@ -26,6 +26,7 @@ function PayForm() {
   const [expenses, setExpenses] = useState([]);
   const [itemName, setItemName] = useState('');
   const [itemAmount, setItemAmount] = useState('');
+  const [participantCount, setParticipantCount] = useState('2');
   const [groups, setGroups] = useState(readGroups);
   const [groupId, setGroupId] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -36,6 +37,7 @@ function PayForm() {
 
   const listRef = useRef(null);
   const scrollToNewExpense = useRef(false);
+  const invalidCountToastShown = useRef(false);
 
   useLayoutEffect(() => {
     if (scrollToNewExpense.current) {
@@ -48,16 +50,48 @@ function PayForm() {
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
 
   const group = groups.find((entry) => entry.id === groupId);
-  const share = group ? Math.floor(total / group.size) : 0;
-  const remainder = group ? total % group.size : 0;
+  const participantTotal = group?.size ?? Number(participantCount);
+  const canSplit = Number.isInteger(participantTotal) && participantTotal >= 1 && participantTotal <= 10000;
+  const share = canSplit ? Math.floor(total / participantTotal) : 0;
+  const remainder = canSplit ? total % participantTotal : 0;
+
+  const showInvalidCountToast = () => {
+    if (invalidCountToastShown.current) return;
+    showErrorToast('정산 인원은 1명부터 10,000명까지 설정할 수 있습니다.');
+    invalidCountToastShown.current = true;
+  };
+
+  const updateParticipantCount = (event) => {
+    const value = event.target.value;
+    if (value === '') {
+      setParticipantCount('');
+      return;
+    }
+
+    const count = Number(value);
+    if (!Number.isInteger(count) || count > 10000) {
+      showInvalidCountToast();
+      return;
+    }
+
+    invalidCountToastShown.current = false;
+    setParticipantCount(value);
+  };
+
+  const validateParticipantCount = () => {
+    if (canSplit) return;
+    setParticipantCount('2');
+    showInvalidCountToast();
+    invalidCountToastShown.current = false;
+  };
 
   function addGroup(event) {
     event.preventDefault();
     const name = groupName.trim();
     const size = Number(groupSize);
     if (!name) return showErrorToast('그룹 이름을 입력해주세요.');
-    if (!/^\d+$/.test(groupSize) || !Number.isSafeInteger(size) || size < 2) {
-      return showErrorToast('정산 인원을 2명 이상의 숫자로 입력해주세요.');
+    if (!/^\d+$/.test(groupSize) || !Number.isSafeInteger(size) || size < 2 || size > 10000) {
+      return showErrorToast('정산 인원을 2명부터 10,000명까지 숫자로 입력해주세요.');
     }
     if (groups.some((entry) => entry.name === name)) return showErrorToast('이미 같은 이름의 그룹이 있어요.');
 
@@ -132,10 +166,32 @@ function PayForm() {
           <p id="total-money">{formatWon(total)}</p>
           <label htmlFor="settlement-group">정산 그룹</label>
           <select id="settlement-group" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
-            <option value="">그룹 선택</option>
+            <option value="">인원 직접 입력</option>
             {groups.map((entry) => <option key={entry.id} value={entry.id}>{entry.name} ({entry.size}명)</option>)}
           </select>
-          <p id="expec-pay">{group ? `1인 부담액: ${formatWon(share)}` : '정산할 그룹을 선택해주세요.'}</p>
+          {!group && (
+          <div className="pay-split-control">
+            <label htmlFor="pay-participant-count">정산 인원</label>
+            <div className="pay-split-input-wrap">
+              <input
+                id="pay-participant-count"
+                className="pay-participant-count"
+                type="number"
+                min="1"
+                max="10000"
+                step="1"
+                inputMode="numeric"
+                value={participantCount}
+                onChange={updateParticipantCount}
+                onBlur={validateParticipantCount}
+                aria-describedby="pay-participant-limit"
+              />
+              <span>명</span>
+            </div>
+            <span id="pay-participant-limit" className="pay-participant-limit">최대 10,000명</span>
+          </div>
+          )}
+          <p id="expec-pay">{canSplit ? `1인 부담액: ${formatWon(share)}` : '정산 인원을 입력해주세요.'}</p>
           {remainder > 0 && <p className="pay-remainder">{remainder}명은 1원씩 더 부담해요.</p>}
         </div>
 

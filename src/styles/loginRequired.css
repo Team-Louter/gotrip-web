@@ -1,0 +1,50 @@
+.login-required-page {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 12px clamp(12px, 2vw, 24px);
+  color: #213547;
+  background: #fff;
+}
+
+.login-required-page h1 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.35;
+}
+
+.login-required-prompt {
+  margin-top: clamp(72px, 15vh, 160px);
+}
+
+.login-required-prompt p {
+  margin: 0 0 38px;
+  color: #8b908e;
+  font-size: clamp(18px, 2vw, 23px);
+  line-height: 1.5;
+}
+
+.login-required-button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 28px;
+  border-radius: 24px;
+  color: #66551d;
+  background: #fff2b8;
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-required-button:hover {
+  background: #ffe982;
+}
+
+.login-required-button:focus-visible {
+  outline: 3px solid #b19529;
+  outline-offset: 3px;
+}

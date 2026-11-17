@@ -10,6 +10,7 @@ import recieptIcon from '../icons/recieptIcon.png';
 import settingIcon from '../icons/settingIcon.png';
 import { getLoginId, getToken } from '../api/session.js';
 import { memberApi } from '../services/memberApi.js';
+import { showErrorToast } from './AppToasts';
 import '../styles/sideBar.css';
 
 function SideBar({ profile }) {
@@ -17,6 +18,9 @@ function SideBar({ profile }) {
   const loginId = getLoginId();
   const [displayName, setDisplayName] = useState(loginId || '사용자');
   const isCurrent = (...paths) => paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const handleFeatureNavigation = () => {
+    if (!getToken()) showErrorToast('로그인이 필요합니다.');
+  };
 
   useEffect(() => {
     setDisplayName(loginId || '사용자');
@@ -38,25 +42,25 @@ function SideBar({ profile }) {
         <span className="user-name">{profile?.nickname || displayName}</span>
       </div>
       <nav className="menu-container" aria-label="사이드 메뉴">
-        <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined}>
+        <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img src={homeIcon} alt="홈" className="sidebar-icon" />
             홈
           </div>
         </Link>
-        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/places') ? 'page' : undefined}>
+        <Link to="/map" className="sidebar-link" aria-current={isCurrent('/map', '/places') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img src={mapIcon} alt="지도" className="sidebar-icon" />
             지도
           </div>
         </Link>
-        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat') ? 'page' : undefined}>
+        <Link to="/chat" className="sidebar-link" aria-current={isCurrent('/chat') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img src={chatIcon} alt="채팅" className="sidebar-icon" />
             채팅
           </div>
         </Link>
-        <Link to="/friends" className="sidebar-link" aria-current={isCurrent('/friends') ? 'page' : undefined}>
+        <Link to="/friends" className="sidebar-link" aria-current={isCurrent('/friends') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <svg className="sidebar-icon" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="9" r="4" />
@@ -66,13 +70,13 @@ function SideBar({ profile }) {
             친구
           </div>
         </Link>
-        <Link to="/memo" className="sidebar-link" aria-current={isCurrent('/memo') ? 'page' : undefined}>
+        <Link to="/memo" className="sidebar-link" aria-current={isCurrent('/memo') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img src={memoIcon} alt="메모" className="sidebar-icon" />
             메모
           </div>
         </Link>
-        <Link to="/calendar" className="sidebar-link" aria-current={isCurrent('/calendar') ? 'page' : undefined}>
+        <Link to="/calendar" className="sidebar-link" aria-current={isCurrent('/calendar') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img
               src={calenderIcon}
@@ -82,7 +86,7 @@ function SideBar({ profile }) {
             캘린더
           </div>
         </Link>
-        <Link to="/payment" className="sidebar-link" aria-current={isCurrent('/payment') ? 'page' : undefined}>
+        <Link to="/payment" className="sidebar-link" aria-current={isCurrent('/payment') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img
               src={recieptIcon}
@@ -92,7 +96,7 @@ function SideBar({ profile }) {
             영수증
           </div>
         </Link>
-        <Link to="/settings" className="sidebar-link" aria-current={isCurrent('/settings') ? 'page' : undefined}>
+        <Link to="/settings" className="sidebar-link" aria-current={isCurrent('/settings') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">
             <img src={settingIcon} alt="설정" className="sidebar-icon" />
             설정

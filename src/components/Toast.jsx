@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
+import './Toast.css';
 
 function Toast({ message, onClose, tone = 'error' }) {
   const [paused, setPaused] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    if (!message || paused || closing) return;
-    const timer = setTimeout(() => setClosing(true), 6000);
-    return () => clearTimeout(timer);
+    if (!message || paused || closing) return undefined;
+    const timer = window.setTimeout(() => setClosing(true), 6000);
+    return () => window.clearTimeout(timer);
   }, [message, paused, closing]);
 
   useEffect(() => {
-    if (!closing) return;
-    const timer = setTimeout(() => onClose(''), 160);
-    return () => clearTimeout(timer);
+    if (!closing) return undefined;
+    const timer = window.setTimeout(() => onClose(''), 160);
+    return () => window.clearTimeout(timer);
   }, [closing, onClose]);
 
   if (!message) return null;

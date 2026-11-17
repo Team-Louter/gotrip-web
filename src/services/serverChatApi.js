@@ -148,6 +148,25 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       rooms.set(room.id, room);
       return room;
     },
+    async updateChatRoom(roomId, { name }, { signal } = {}) {
+      const title = name?.trim();
+      if (!title || title.length > 100) throw new Error('방 이름은 1~100자로 입력해 주세요.');
+      const key = String(roomId);
+      await request(`/api/chat/rooms/${encodeURIComponent(key)}`, { method: 'PATCH', body: { name: title }, signal });
+      const updatedRoom = { ...(rooms.get(key) ?? { id: key }), name: title };
+      rooms.set(key, updatedRoom);
+      return updatedRoom;
+    },
+    async deleteChatRoom(roomId, { signal } = {}) {
+      const key = String(roomId);
+      await request(`/api/chat/rooms/${encodeURIComponent(key)}`, { method: 'DELETE', signal });
+      rooms.delete(key);
+    },
+    async leaveChatRoom(roomId, { signal } = {}) {
+      const key = String(roomId);
+      await request(`/api/chat/rooms/${encodeURIComponent(key)}/members/me`, { method: 'DELETE', signal });
+      rooms.delete(key);
+    },
     async sendMessage(roomId, { content = '', attachments = [], replyToId = null }, { signal } = {}) {
       if (attachments.length || replyToId != null) throw new Error('현재 서버는 텍스트 메시지만 지원합니다.');
       const text = content.trim();
