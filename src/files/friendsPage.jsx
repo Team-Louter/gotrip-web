@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLoginId, getToken } from '../api/session.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
+import { showSuccessToast } from '../components/AppToasts';
+import ProfileAvatar from '../components/ProfileAvatar.jsx';
 import '../styles/friendsPage.css';
 
 function decorateRelationship(relationship, membersById) {
@@ -21,16 +23,8 @@ function FriendsPage() {
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState('');
-  const [notice, setNotice] = useState(null);
-  const noticeSequence = useRef(0);
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
-
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timeoutId = window.setTimeout(() => setNotice(null), 2000);
-    return () => window.clearTimeout(timeoutId);
-  }, [notice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,18 +67,12 @@ function FriendsPage() {
       && !sentRequests.some((request) => request.loginId === member.loginId))
     : [];
 
-  function showNotice(message) {
-    noticeSequence.current += 1;
-    setNotice({ id: noticeSequence.current, message });
-  }
-
   async function performServerAction(action, successMessage) {
     setBusy(true);
     setActionError('');
-    setNotice(null);
     try {
       await action();
-      showNotice(successMessage);
+      showSuccessToast(successMessage);
       setRetry((value) => value + 1);
     } catch (reason) {
       setActionError(reason.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.');
@@ -115,7 +103,6 @@ function FriendsPage() {
 
   return (
     <main className="friends-page">
-      {notice && <div className="friends-toast" key={notice.id} role="status" aria-live="polite">{notice.message}</div>}
       <section className="friends-card friends-directory" aria-labelledby="friends-title">
         <header className="friends-header">
           <div>
@@ -148,7 +135,7 @@ function FriendsPage() {
               <ul className="friends-list" aria-label="내 친구 목록">
                 {visibleFriends.map((friend) => (
                   <li className="friend-row" key={friend.friendshipId ?? friend.id ?? friend.loginId}>
-                    <span className="friend-avatar" aria-hidden="true">{friend.name.slice(0, 1)}</span>
+                    <ProfileAvatar className="friend-avatar" imageUrl={friend.profileImageUrl} />
                     <div className="friend-identity">
                       <strong>{friend.name}</strong>
                       <span>@{friend.loginId}</span>
@@ -170,7 +157,7 @@ function FriendsPage() {
                 <ul className="friends-list" aria-label="친구 추가 검색 결과">
                   {visibleCandidates.map((member) => (
                     <li className="friend-row" key={member.id ?? member.loginId}>
-                      <span className="friend-avatar" aria-hidden="true">{member.name.slice(0, 1)}</span>
+                      <ProfileAvatar className="friend-avatar" imageUrl={member.profileImageUrl} />
                       <div className="friend-identity">
                         <strong>{member.name}</strong>
                         <span>@{member.loginId}</span>
@@ -211,7 +198,7 @@ function FriendsPage() {
             <ul className="friends-request-list" aria-label="받은 친구 요청">
               {incomingRequests.map((request) => (
                 <li className="friends-request-row" key={request.friendshipId ?? request.id}>
-                  <span className="friend-avatar" aria-hidden="true">{request.name.slice(0, 1)}</span>
+                  <ProfileAvatar className="friend-avatar" imageUrl={request.profileImageUrl} />
                   <div className="friend-identity">
                     <strong>{request.name}</strong>
                     <span>@{request.loginId}</span>
@@ -235,7 +222,7 @@ function FriendsPage() {
             <ul className="friends-request-list" aria-label="보낸 친구 요청">
               {sentRequests.map((request) => (
                 <li className="friends-request-row" key={request.friendshipId ?? request.id}>
-                  <span className="friend-avatar" aria-hidden="true">{request.name.slice(0, 1)}</span>
+                  <ProfileAvatar className="friend-avatar" imageUrl={request.profileImageUrl} />
                   <div className="friend-identity">
                     <strong>{request.name}</strong>
                     <span>@{request.loginId} · 요청 보냄</span>

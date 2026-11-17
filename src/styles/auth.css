@@ -5,6 +5,8 @@
   --auth-surface: #fff;
   --auth-text: #213547;
   --auth-disabled: #efeded;
+  --auth-error: #a14532;
+  --auth-success: #168542;
   --auth-enter-duration: 240ms;
   --auth-feedback-duration: 160ms;
 }
@@ -44,18 +46,18 @@
   animation: auth-enter var(--auth-enter-duration) ease-out;
 }
 
+.auth-layout .auth-toast-region {
+  position: fixed;
+  z-index: 2000;
+  top: 20px;
+  left: 50%;
+  width: min(480px, calc(100vw - 32px));
+  transform: translateX(-50%);
+}
+
 @keyframes auth-enter {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes auth-toast-in {
-  from { opacity: 0; transform: translateY(-12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes auth-toast-out {
-  to { opacity: 0; transform: translateY(-8px); }
 }
 
 @keyframes auth-fade-in {
@@ -63,19 +65,10 @@
   to { opacity: 1; }
 }
 
-@keyframes auth-fade-out {
-  to { opacity: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .auth-layout :is(.login-left, .login-left2, .card-from, .join-cont > h1),
-  .auth-toast {
+  .auth-layout :is(.login-left, .login-left2, .card-from, .join-cont > h1) {
     animation-name: auth-fade-in;
     animation-duration: 120ms;
-  }
-
-  .auth-toast.is-closing {
-    animation-name: auth-fade-out;
   }
 
   .auth-layout button {

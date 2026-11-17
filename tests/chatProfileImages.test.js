@@ -20,11 +20,13 @@ after(async () => { await vite?.close(); });
 
 test('chat renders counterpart and sender photos from normalized backend responses', async () => {
   const imageUrl = '/api/profile-images/00000000-0000-0000-0000-000000000017.png';
-  const api = createServerChatApi({ token: () => 'token', currentMemberId: () => '7', fetchImpl: async (url) =>
-    new Response(JSON.stringify(url === '/api/chat/rooms'
+  const api = createServerChatApi({ token: () => 'token', currentMemberId: () => '7', fetchImpl: async (url) => {
+    if (url.endsWith('/profile-image')) return new Response(null, { status: 404 });
+    return new Response(JSON.stringify(url === '/api/chat/rooms'
       ? [{ id: 42, name: '여행', counterpartProfileImageUrl: imageUrl }]
       : [{ id: 1, roomId: 42, senderId: 17, senderNickname: '친구', senderProfileImageUrl: imageUrl,
-        content: '여행 가자', createdAt: '2026-11-16T12:00:00Z' }])) });
+        content: '여행 가자', createdAt: '2026-11-16T12:00:00Z' }]));
+  } });
 
   const room = await api.getChatRoom('42');
   const html = renderToStaticMarkup(createElement(ChatHome, { room, onRoomUpdated() {} }));
@@ -34,11 +36,20 @@ test('chat renders counterpart and sender photos from normalized backend respons
 });
 
 test('room without a counterpart photo never borrows another group members photo', () => {
-  const room = { counterpartProfileImageUrl: null, messages: [
-    { mine: false, senderProfileImageUrl: '/api/profile-images/00000000-0000-0000-0000-000000000042.png' },
-  ] };
+  const room = {
+    counterpartProfileImageUrl: null,
+    members: [{ profileImageUrl: '/api/profile-images/group-member.png' }],
+    messages: [{ mine: false, senderProfileImageUrl: '/api/profile-images/00000000-0000-0000-0000-000000000042.png' }],
+  };
 
   const image = profileApi.chatCounterpartProfileImage(room);
 
   assert.equal(image, profileApi.DEFAULT_PROFILE_IMAGE);
+});
+
+test('custom room photo takes precedence over the counterpart photo', () => {
+  const roomProfileImage = 'data:image/png;base64,aW1hZ2U=';
+  const room = { roomProfileImage, counterpartProfileImageUrl: '/api/profile-images/counterpart.png' };
+
+  assert.equal(profileApi.chatCounterpartProfileImage(room), roomProfileImage);
 });

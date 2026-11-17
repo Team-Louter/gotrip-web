@@ -6,7 +6,7 @@ const memberPath = '/api/members/me';
 export const DEFAULT_PROFILE_IMAGE = defaultProfileImage;
 
 export function chatCounterpartProfileImage(room) {
-  return profileImageSource(room?.counterpartProfileImageUrl) || DEFAULT_PROFILE_IMAGE;
+  return profileImageSource(room?.roomProfileImage || room?.counterpartProfileImageUrl) || DEFAULT_PROFILE_IMAGE;
 }
 
 export const fetchAccountDetails = () => apiRequest(memberPath);
