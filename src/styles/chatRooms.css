@@ -14,6 +14,9 @@
 .chat-item-text { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 0; }
 .chat-unread-badge { display: grid; flex: 0 0 auto; min-width: 20px; height: 20px; place-items: center; margin-left: auto; padding: 0 5px; border-radius: 12px; color: #fff; background: #e25542; font-size: 11px; font-weight: 750; line-height: 1; }
 .chat-rooms-page .gotrip-pro { flex-shrink: 0; }
+.chat-rooms-page .gotrip-pro,
+.chat-rooms-page .room-profile,
+.chat-rooms-page .msg-profile { filter: saturate(1.08) hue-rotate(3deg); }
 .chat-rooms-page .chatroom-name { display: block; height: auto; font-size: 18px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-rooms-page .chat-detail { display: block; font-size: 13px; line-height: 1.25; color: #69747c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-rooms-page .chat-plus { width: 100%; height: 70px; border: 0; border-radius: 0; padding: 0; color: #213547; background: #fff; font: inherit; font-size: 32px; }
