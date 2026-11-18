@@ -6,7 +6,7 @@ import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import prepareChatRoomProfileImage from '../data/prepareChatRoomProfileImage.js';
 import { showErrorToast } from './AppToasts';
 import ProfileAvatar from './ProfileAvatar.jsx';
-import { SkeletonPanel, SkeletonRows } from './Skeleton';
+import { SkeletonFriendRows, SkeletonPanel } from './Skeleton';
 
 export default function CreateChatRoom({ onClose, onCreated }) {
   const dialogRef = useRef(null);
@@ -113,7 +113,7 @@ export default function CreateChatRoom({ onClose, onCreated }) {
           <input id="chat-friend-search" className="chat-create-input" type="search" placeholder="친구 닉네임 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
           {selectedIds.length > 0 && <div className="chat-selected-friends" aria-label="선택한 친구">{friends.filter((friend) => selectedIds.includes(friend.id)).map((friend) => <button type="button" key={friend.id} onClick={() => toggleFriend(friend.id)} aria-label={`${friend.name} 선택 취소`}>{friend.name} <span aria-hidden="true">×</span></button>)}</div>}
           <div className="chat-friend-list" aria-label="친구 목록" aria-busy={friendsStatus === 'loading'}>
-            {friendsStatus === 'loading' ? <SkeletonPanel label="친구 목록을 불러오는 중입니다." className="chat-create-friends-skeleton"><SkeletonRows count={4} avatar /></SkeletonPanel> : friendsStatus === 'error' ? <div className="chat-feedback" role="alert"><p>{friendError}</p><button type="button" className="chat-retry" onClick={() => { setFriendsStatus('loading'); setRetry((value) => value + 1); }}>다시 시도</button></div> : visibleFriends.length === 0 ? <p className="chat-feedback">{friends.length ? '검색된 친구가 없어요.' : '추가할 수 있는 친구가 없어요.'}</p> : visibleFriends.map((friend) => (
+            {friendsStatus === 'loading' ? <SkeletonPanel label="친구 목록을 불러오는 중입니다." className="chat-create-friends-skeleton"><SkeletonFriendRows count={4} action="check" /></SkeletonPanel> : friendsStatus === 'error' ? <div className="chat-feedback" role="alert"><p>{friendError}</p><button type="button" className="chat-retry" onClick={() => { setFriendsStatus('loading'); setRetry((value) => value + 1); }}>다시 시도</button></div> : visibleFriends.length === 0 ? <p className="chat-feedback">{friends.length ? '검색된 친구가 없어요.' : '추가할 수 있는 친구가 없어요.'}</p> : visibleFriends.map((friend) => (
               <label className={`chat-friend-row${selectedIds.includes(friend.id) ? ' is-selected' : ''}${friend.id == null ? ' is-unavailable' : ''}`} key={friend.id ?? friend.loginId}>
                 <ProfileAvatar className="chat-friend-avatar" imageUrl={friend.profileImageUrl} /><span className="chat-friend-identity">{friend.name}{friend.loginId && <small className="chat-friend-login">@{friend.loginId}</small>}</span>
                 <input type="checkbox" disabled={friend.id == null} title={friend.id == null ? '회원 ID가 제공되지 않아 직접 선택할 수 없습니다.' : undefined} checked={selectedIds.includes(friend.id)} onChange={() => toggleFriend(friend.id)} aria-label={`${friend.name} 추가`} />

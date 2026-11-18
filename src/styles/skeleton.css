@@ -30,14 +30,39 @@
 .friends-loading-skeleton, .chat-loading-skeleton, .memo-loading-skeleton { width: 100%; }
 .friends-loading-skeleton { padding: 12px 0; }
 .chat-loading-skeleton { padding: 12px; }
-.chat-detail-loading { width: 100%; height: 100%; box-sizing: border-box; padding: 30px; }
-.chat-detail-skeleton-header { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid #eeeade; }
-.chat-detail-skeleton-avatar { width: 52px; height: 52px; }
-.chat-detail-skeleton-title { width: 140px; height: 16px; }
-.chat-detail-skeleton-body { display: flex; min-height: 55%; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 18px; }
-.chat-detail-skeleton-bubble { width: min(42%, 260px); height: 54px; border-radius: 22px; }
-.chat-detail-skeleton-bubble.is-short { width: min(28%, 180px); }
-.chat-detail-skeleton-bubble.is-right { align-self: flex-end; }
+.chat-detail-loading { display: flex; width: 100%; height: 100%; box-sizing: border-box; flex-direction: column; padding: 0 28px; }
+.chat-detail-skeleton-header { display: flex; min-height: 84px; align-items: center; gap: 13px; border-bottom: 1px solid #e6ddca; }
+.chat-detail-skeleton-avatar { width: 48px; height: 48px; flex: 0 0 48px; }
+.chat-detail-header-copy { display: grid; gap: 8px; }
+.chat-detail-skeleton-title { width: 138px; height: 15px; }
+.chat-detail-skeleton-subtitle { width: 82px; height: 10px; }
+.chat-detail-skeleton-menu { display: flex; gap: 5px; margin-left: auto; }
+.chat-detail-skeleton-menu .skeleton-block { width: 5px; height: 5px; }
+.chat-detail-skeleton-messages { display: flex; flex: 1; min-height: 0; flex-direction: column; justify-content: flex-end; gap: 23px; padding: 28px 0; }
+.chat-skeleton-message { display: flex; align-items: flex-end; gap: 10px; }
+.chat-skeleton-message.is-outgoing { justify-content: flex-end; }
+.chat-skeleton-message-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
+.chat-skeleton-message-content { display: flex; max-width: min(60%, 330px); flex-direction: column; align-items: flex-start; gap: 7px; }
+.chat-skeleton-message.is-outgoing .chat-skeleton-message-content { align-items: flex-end; }
+.chat-skeleton-sender { width: 82px; height: 9px; margin-bottom: 2px; }
+.chat-skeleton-sender.is-short { width: 56px; }
+.chat-skeleton-bubble { width: min(270px, 42vw); height: 48px; border-radius: 18px; }
+.chat-skeleton-bubble.is-medium { width: min(230px, 38vw); }
+.chat-skeleton-bubble.is-short { width: min(158px, 30vw); height: 42px; }
+.chat-skeleton-time { width: 54px; height: 9px; }
+.skeleton-friend-list { display: flex; flex-direction: column; }
+.skeleton-friend-row { display: flex; min-height: 68px; align-items: center; gap: 14px; padding: 10px 8px; border-bottom: 1px solid #e6ddca; }
+.skeleton-friend-row:last-child, .skeleton-group-row:last-child { border-bottom: 0; }
+.skeleton-friend-avatar { width: 42px; height: 42px; flex: 0 0 42px; }
+.skeleton-friend-copy { display: grid; flex: 1; gap: 8px; min-width: 0; }
+.skeleton-friend-name { width: min(170px, 58%); height: 12px; }
+.skeleton-friend-id { width: min(112px, 40%); height: 9px; }
+.skeleton-friend-action { width: 70px; height: 28px; flex: 0 0 70px; border-radius: 16px; }
+.skeleton-friend-check { width: 17px; height: 17px; flex: 0 0 17px; border-radius: 4px; }
+.skeleton-group-list { display: flex; flex-direction: column; }
+.skeleton-group-row { display: flex; min-height: 56px; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 8px; border-bottom: 1px solid #e6ddca; }
+.skeleton-group-name { width: min(150px, 56%); height: 13px; }
+.skeleton-group-count { width: 32px; height: 10px; }
 .chat-create-friends-skeleton { padding: 8px; }
 .memo-loading-skeleton { padding: 12px; }
 .memo-loading-skeleton .skeleton-rows { display: flex; flex-direction: column; gap: 22px !important; row-gap: 22px !important; }
