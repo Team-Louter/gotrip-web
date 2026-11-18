@@ -21,6 +21,21 @@ export function mergeMessages(previous, incoming) {
   });
 }
 
+export function applyUnreadCounts(messages, members) {
+  if (!Array.isArray(members) || members.length === 0) return messages;
+  return messages.map((message) => {
+    if (!/^\d+$/.test(String(message.id)) || !/^\d+$/.test(String(message.senderId))) return message;
+    const messageId = BigInt(message.id);
+    const unreadCount = members.filter((member) => {
+      if (String(member.memberId) === String(message.senderId)) return false;
+      if (member.lastReadMessageId == null || member.lastReadMessageId === '') return true;
+      if (!/^\d+$/.test(String(member.lastReadMessageId))) return false;
+      return BigInt(member.lastReadMessageId) < messageId;
+    }).length;
+    return { ...message, unreadCount };
+  });
+}
+
 export function parseMemberIds(value) {
   const ids = String(value).trim().split(/[\s,]+/).filter(Boolean);
   if (!ids.length) throw new Error('초대할 회원 ID를 한 명 이상 입력해 주세요.');
@@ -44,6 +59,7 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
   const friendships = createFriendshipApi({ baseUrl, fetchImpl, token, onUnauthorized });
   const rooms = new Map();
   const roomProfileImages = new Map();
+  const messageImages = new Map();
   let memberIdentityPromise;
   let memberIdentityChecked = false;
 
@@ -72,6 +88,13 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
     return memberIdentityPromise;
   }
 
+  function otherMembers(members) {
+    const list = Array.isArray(members) ? members : [];
+    const currentId = currentMemberId();
+    if (currentId == null || !list.some((member) => String(member.memberId) === String(currentId))) return list;
+    return list.filter((member) => String(member.memberId) !== String(currentId));
+  }
+
   function normalizeMessage(message, mine = false) {
     if (message?.id == null || message.senderId == null || typeof message.content !== 'string') throw new Error('메시지 응답 형식을 확인해 주세요.');
     const date = new Date(message.createdAt);
@@ -79,7 +102,8 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
     const reply = parseReplyContent(message.content);
     return {
       ...message,
-      content: reply.content,
+      unreadCount: Number.isSafeInteger(Number(message.unreadCount)) ? Math.max(0, Number(message.unreadCount)) : 0,
+      content: message.type === 'IMAGE' ? '' : reply.content,
       replyPreview: reply.replyPreview,
       id: String(message.id), roomId: String(message.roomId), senderId: String(message.senderId),
       senderName: message.senderNickname || `회원 ${message.senderId}`,
@@ -89,9 +113,37 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
     };
   }
 
+  async function getMessageImage(roomId, messageId, { signal } = {}) {
+    const key = `${roomId}:${messageId}`;
+    if (messageImages.has(key)) return messageImages.get(key);
+    const pending = request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}/image`, { signal, responseType: 'blob' })
+      .then((blob) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('채팅 사진을 불러오지 못했습니다.'));
+        reader.readAsDataURL(blob);
+      }))
+      .catch((error) => { messageImages.delete(key); throw error; });
+    messageImages.set(key, pending);
+    const image = await pending;
+    messageImages.set(key, image);
+    return image;
+  }
+
+  async function hydrateMessage(message, { signal } = {}) {
+    if (message.type !== 'IMAGE') return message;
+    try {
+      const url = await getMessageImage(message.roomId, message.id, { signal });
+      return { ...message, attachments: [{ id: `image-${message.id}`, type: 'image', url, name: '채팅 이미지' }] };
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      return message;
+    }
+  }
+
   const api = {
     useMock: false,
-    capabilities: { friends: true, attachments: false, replies: false, deletion: true, reactions: true },
+    capabilities: { friends: true, attachments: true, replies: false, deletion: true, reactions: true },
     async getFriends({ query = '', signal } = {}) {
       const list = await friendships.getFriends({ signal });
       return list.map((friend) => ({
@@ -106,16 +158,22 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
     maxMessageLength: 2000,
     maxRoomNameLength: 100,
     async getChatRooms({ query = '', signal } = {}) {
+      await identifyCurrentMember();
       const result = await request('/api/chat/rooms', { signal });
       if (!Array.isArray(result)) throw new Error('채팅방 목록 응답 형식을 확인해 주세요.');
       const list = await Promise.all(result.map(async (item) => {
         const room = normalizeRoom(item);
-        try {
-          const image = await api.getChatRoomProfileImage(room.id, { signal });
-          room.roomProfileImage = image || room.profileImageUrl || '';
-        } catch (error) {
-          if (signal?.aborted) throw error;
-          room.roomProfileImage = room.profileImageUrl || '';
+        const [imageResult, membersResult] = await Promise.allSettled([
+          api.getChatRoomProfileImage(room.id, { signal }),
+          api.getChatRoomMembers(room.id, { signal }),
+        ]);
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        room.roomProfileImage = imageResult.status === 'fulfilled' ? imageResult.value || room.profileImageUrl || '' : room.profileImageUrl || '';
+        if (membersResult.status === 'fulfilled' && membersResult.value.length > 0) {
+          room.members = membersResult.value;
+          room.otherMembers = otherMembers(membersResult.value);
+          room.membersKnown = true;
+          if (room.otherMembers.length === 1) room.counterpartProfileImageUrl = room.otherMembers[0].profileImageUrl || room.counterpartProfileImageUrl;
         }
         return room;
       }));
@@ -129,7 +187,8 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       if (before != null) params.set('before', String(before));
       const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages?${params}`, { signal });
       if (!Array.isArray(result)) throw new Error('메시지 목록 응답 형식을 확인해 주세요.');
-      return mergeMessages([], result.map((message) => normalizeMessage(message)));
+      const messages = await Promise.all(result.map((message) => hydrateMessage(normalizeMessage(message), { signal })));
+      return mergeMessages([], messages);
     },
     async getNewMessages(roomId, { after, signal } = {}) {
       let messages = await api.getMessages(roomId, { signal });
@@ -143,12 +202,43 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       }
       return messages;
     },
+    async getChatRoomMembers(roomId, { signal } = {}) {
+      const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/members`, { signal });
+      if (!Array.isArray(result)) throw new Error('채팅방 참여자 정보를 불러오지 못했습니다.');
+      return result.filter((member) => member?.memberId != null).map((member) => ({
+        ...member,
+        memberId: String(member.memberId),
+        lastReadMessageId: member.lastReadMessageId == null ? null : String(member.lastReadMessageId),
+      }));
+    },
+    async markRead(roomId, lastReadMessageId, { signal } = {}) {
+      const messageId = String(lastReadMessageId ?? '');
+      if (!/^\d+$/.test(messageId) || !Number.isSafeInteger(Number(messageId))) {
+        throw new Error('읽음 처리할 메시지를 확인해 주세요.');
+      }
+      return request(`/api/chat/rooms/${encodeURIComponent(roomId)}/read`, {
+        method: 'PUT',
+        body: { lastReadMessageId: Number(messageId) },
+        signal,
+      });
+    },
     async getChatRoom(id, { signal } = {}) {
       if (!rooms.has(String(id))) await api.getChatRooms({ signal });
       const room = rooms.get(String(id));
       if (!room) throw new Error('채팅방을 찾을 수 없습니다.');
-      const messages = await api.getMessages(id, { signal });
-      const updatedRoom = { ...room, messages, lastMessage: messages.at(-1)?.content ?? '', hasOlderMessages: messages.length === MESSAGE_PAGE_SIZE };
+      const [messages, members] = await Promise.all([
+        api.getMessages(id, { signal }),
+        api.getChatRoomMembers(id, { signal }).catch(() => null),
+      ]);
+      const roomMembers = members ?? room.members;
+      const messagesWithReadCounts = roomMembers?.length ? applyUnreadCounts(messages, roomMembers) : messages;
+      const updatedRoom = {
+        ...room,
+        ...(members?.length ? { members, otherMembers: otherMembers(members), membersKnown: true } : {}),
+        messages: messagesWithReadCounts,
+        lastMessage: messagesWithReadCounts.at(-1)?.content ?? '',
+        hasOlderMessages: messagesWithReadCounts.length === MESSAGE_PAGE_SIZE,
+      };
       rooms.set(String(id), updatedRoom);
       return updatedRoom;
     },
@@ -221,15 +311,31 @@ export function createServerChatApi({ baseUrl, fetchImpl, token, onUnauthorized,
       rooms.delete(key);
     },
     async sendMessage(roomId, { content = '', attachments = [], replyToId = null }, { signal } = {}) {
-      if (attachments.length || replyToId != null) throw new Error('현재 서버는 텍스트 메시지만 지원합니다.');
+      if (attachments.length) throw new Error('첨부 파일은 전송할 수 없습니다.');
       const text = content.trim();
       if (!text || text.length > 2000) throw new Error('메시지는 1~2,000자로 입력해 주세요.');
       const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages`, { method: 'POST', body: { content: text }, signal });
       const message = normalizeMessage(result, true);
       onMemberIdentified(result.senderId);
       const currentRoom = rooms.get(String(roomId)) ?? { id: String(roomId), name: '채팅방', members: [], membersKnown: false, messages: [] };
-      const updatedRoom = { ...currentRoom, messages: mergeMessages(currentRoom.messages ?? [], [message]), lastMessage: message.content };
+      const sentMessage = applyUnreadCounts([message], currentRoom.members)[0];
+      const updatedRoom = { ...currentRoom, messages: mergeMessages(currentRoom.messages ?? [], [sentMessage]), lastMessage: message.content };
       rooms.set(String(roomId), updatedRoom);
+      return updatedRoom;
+    },
+    async sendImage(roomId, file, { signal } = {}) {
+      if (!(file instanceof File) || !file.type.startsWith('image/')) throw new Error('이미지 파일을 확인해 주세요.');
+      if (file.size > 1024 * 1024) throw new Error('이미지는 1MB 이하로 선택해 주세요.');
+      const body = new FormData();
+      body.append('file', file);
+      const result = await request(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages/images`, { method: 'POST', body, signal });
+      const message = await hydrateMessage(normalizeMessage(result, true), { signal });
+      onMemberIdentified(result.senderId);
+      const key = String(roomId);
+      const currentRoom = rooms.get(key) ?? { id: key, name: '채팅방', members: [], membersKnown: false, messages: [] };
+      const sentMessage = applyUnreadCounts([message], currentRoom.members)[0];
+      const updatedRoom = { ...currentRoom, messages: mergeMessages(currentRoom.messages ?? [], [sentMessage]), lastMessage: '사진' };
+      rooms.set(key, updatedRoom);
       return updatedRoom;
     },
     async setReaction(roomId, messageId, emoji, active, { signal } = {}) {

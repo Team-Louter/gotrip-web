@@ -10,7 +10,7 @@ import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
 import ChatRoomConfirmDialog from '../components/ChatRoomConfirmDialog';
 import { MESSAGE_PAGE_SIZE } from '../services/serverChatApi';
-import { chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
+import { canEditChatRoomProfile, chatCounterpartProfileImage, DEFAULT_PROFILE_IMAGE, profileImageSource } from '../services/profileApi.js';
 import { REACTION_EMOJIS, formatReplyContent, httpUrl, messagePreview, validateImages } from '../data/chatMessages';
 import '../styles/chatMessages.css';
 
@@ -74,6 +74,18 @@ function formatMessageDate(message) {
   const date = new Date(message.createdAt ?? '');
   if (Number.isNaN(date.valueOf())) return '';
   return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+}
+
+function renderMessageContent(content) {
+  return String(content).split(/(https?:\/\/[^\s<>"']+)/gi).map((part, index) => {
+    if (!/^https?:\/\//i.test(part)) return <Fragment key={index}>{part}</Fragment>;
+    const match = /^(https?:\/\/[^\s<>"']+?)([.,!?;:)\]]*)$/i.exec(part);
+    const href = match?.[1] || part;
+    const suffix = match?.[2] || '';
+    try {
+      return <Fragment key={`${index}-${href}`}><a className="message-inline-link" href={httpUrl(href)} target="_blank" rel="noopener noreferrer">{href}</a>{suffix}</Fragment>;
+    } catch { return part; }
+  });
 }
 
 function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetrySync }) {
@@ -188,7 +200,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
     const updatedRoom = await chatApi.updateChatRoom(room.id, { name });
     let roomWithUpdatedProfile = { ...room, ...updatedRoom };
     onRoomUpdated(roomWithUpdatedProfile);
-    if (profileImage) {
+    if (profileImage && canEditChatRoomProfile(room)) {
       const roomProfileImage = await chatApi.updateChatRoomProfileImage(room.id, profileImage);
       roomWithUpdatedProfile = { ...roomWithUpdatedProfile, roomProfileImage };
       onRoomUpdated(roomWithUpdatedProfile);
@@ -225,7 +237,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
   async function send(e) {
     e.preventDefault();
     if (mutationBusy.current || uploadBusy.current || (!content.trim() && !attachments.length)) return;
-    const quotedReply = replyToId && !capabilities.replies && replyMessage
+    const quotedReply = content.trim() && replyToId && !capabilities.replies && replyMessage
       ? formatReplyContent(replyMessage, content)
       : content;
     if (quotedReply.trim().length > messageLimit) {
@@ -233,12 +245,21 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
       return;
     }
     clientIdRef.current ||= crypto.randomUUID();
-    const saved = await mutate(() => chatApi.sendMessage(room.id, {
-      content: quotedReply,
-      attachments,
-      replyToId: capabilities.replies ? replyToId : null,
-      clientId: clientIdRef.current,
-    }));
+    const saved = await mutate(async () => {
+      let updatedRoom = room;
+      for (const attachment of attachments.filter((item) => item.type === 'image')) {
+        updatedRoom = await chatApi.sendImage(room.id, attachment.file);
+        onRoomUpdated(updatedRoom);
+      }
+      if (quotedReply.trim()) {
+        updatedRoom = await chatApi.sendMessage(room.id, {
+          content: quotedReply,
+          replyToId: capabilities.replies ? replyToId : null,
+          clientId: clientIdRef.current,
+        });
+      }
+      return updatedRoom;
+    });
     if (saved) { followLatest.current = true; endRef.current?.scrollIntoView({ block: 'end' }); setContent(''); setAttachments([]); setReplyToId(null); setLinkOpen(false); setLink(''); clientIdRef.current = null; textInputRef.current?.focus(); }
   }
 
@@ -246,11 +267,19 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
     const files = [...e.target.files];
     e.target.value = '';
     if (!files.length || uploadBusy.current || mutationBusy.current) return;
-    try { validateImages(files, attachments.filter((item) => item.type === 'image')); }
+    try {
+      validateImages(files, attachments.filter((item) => item.type === 'image'));
+      if (files.some((file) => file.size > 1024 * 1024)) throw new Error('이미지는 한 장당 1MB 이하로 선택해 주세요.');
+    }
     catch (reason) { setError(reason.message); return; }
     uploadBusy.current = true; setUploading(true); setError('');
     try {
-      const images = await chatApi.uploadImages(files);
+      const images = await Promise.all(files.map((file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ id: crypto.randomUUID(), type: 'image', url: String(reader.result || ''), name: file.name, size: file.size, file });
+        reader.onerror = () => reject(new Error('이미지를 미리 볼 수 없습니다.'));
+        reader.readAsDataURL(file);
+      })));
       setAttachments((current) => [...current, ...images]); clientIdRef.current = null;
     } catch (reason) { setError(reason.message || '이미지를 첨부하지 못했어요.'); }
     finally { uploadBusy.current = false; setUploading(false); }
@@ -260,9 +289,9 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
     if (busy || uploading) return;
     try {
       const url = httpUrl(link);
-      if (attachments.some((item) => item.type === 'link' && item.url === url)) throw new Error('이미 첨부한 링크예요.');
-      if (attachments.filter((item) => item.type === 'link').length >= 3) throw new Error('링크는 최대 3개까지 첨부할 수 있어요.');
-      setAttachments((current) => [...current, { id: crypto.randomUUID(), type: 'link', url }]);
+      if (content.includes(url)) throw new Error('이미 입력한 링크예요.');
+      if (content.length + url.length + (content.trim() ? 1 : 0) > messageLimit) throw new Error(`메시지는 ${messageLimit.toLocaleString()}자 이내로 입력해 주세요.`);
+      setContent((current) => current.trim() ? `${current.trim()} ${url}` : url);
       setLink(''); setLinkOpen(false); setError(''); clientIdRef.current = null;
       textInputRef.current?.focus();
     } catch (reason) { setError(reason.message); }
@@ -338,7 +367,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
                   setMenu((current) => current?.id === message.id && current.type === 'actions' ? null : { id: message.id, type: 'actions' });
                 }}>
                   {message.deleted ? <p>삭제된 메시지입니다.</p> : <>
-                    {message.content && <p className="message-text">{message.content}</p>}
+                    {message.content && <p className="message-text">{renderMessageContent(message.content)}</p>}
                     {(message.attachments ?? []).map((attachment) => attachment.type === 'image' ? <img className="message-image" key={attachment.id} src={attachment.url} alt={attachment.name} /> : <a key={attachment.id} className="message-link" href={attachment.url} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span><span>{attachment.url}</span></a>)}
                     {!openMenu && <div className="message-toolbar">
                       <button type="button" title="메시지 작업" aria-label="메시지 작업" aria-haspopup="true" aria-expanded={false} disabled={busy} onClick={(e) => toggleMenu(message, 'actions', e.currentTarget)}><img src={dotsIcon} alt="" /></button>
@@ -354,6 +383,7 @@ function ChatHome({ room, onRoomUpdated, onRoomRemoved, syncError = '', onRetryS
                   </>}
                 </div>
                 </div>
+                {message.mine && !message.deleted && Number(message.unreadCount) > 0 && <span className="message-unread-count" role="status" aria-label={`${Number(message.unreadCount)}명이 읽지 않음`} aria-live="polite">{Number(message.unreadCount)}</span>}
                 {showTimestamp && <div className="message-meta"><span>{formatChatTime(message.time)}</span></div>}
                 {!message.deleted && (message.reactions ?? []).length > 0 && <div className="message-reactions" aria-label="메시지 반응">{message.reactions.map((reaction) => <button type="button" key={reaction.emoji} className={reaction.mine ? 'is-mine' : ''} aria-label={`${reaction.emoji} 반응 ${reaction.count}개`} aria-pressed={reaction.mine} disabled={busy} onClick={() => toggleReaction(message, reaction.emoji)}>{reaction.emoji} <span>{reaction.count}</span></button>)}</div>}
               </div>

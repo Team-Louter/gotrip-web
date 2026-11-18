@@ -8,7 +8,8 @@ import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
 import ChatRoomConfirmDialog from '../components/ChatRoomConfirmDialog';
 import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
-import { mergeMessages } from '../services/serverChatApi';
+import { applyUnreadCounts, mergeMessages } from '../services/serverChatApi';
+import { canEditChatRoomProfile } from '../services/profileApi.js';
 import { createChatReadStore, getChatReadStorageKey } from '../data/chatReadStore.js';
 import { chatCounterpartProfileImage } from '../services/profileApi.js';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
@@ -19,6 +20,13 @@ import '../styles/chatRooms.css';
 function displayRoomName(name) {
   const characters = Array.from(String(name ?? ''));
   return characters.length > 7 ? `${characters.slice(0, 7).join('')}…` : String(name ?? '');
+}
+
+function roomUnreadCount(room, fallback, activeRoomId) {
+  if (String(room.id) === String(activeRoomId)) return 0;
+  const serverCount = Number(room.unreadCount);
+  if (Number.isSafeInteger(serverCount) && serverCount >= 0) return serverCount;
+  return fallback?.[room.id]?.unreadCount ?? 0;
 }
 
 function ChatRoom() {
@@ -131,12 +139,29 @@ function ChatRoom() {
       try {
         if (!document.hidden) {
           const messages = await chatApi.getNewMessages(roomId, { after: latestMessageId, signal: controller.signal });
+          const fetchedLatestId = messages.at(-1)?.id ?? latestMessageId;
+          let readError = '';
+          if (fetchedLatestId != null) {
+            try { await chatApi.markRead(roomId, fetchedLatestId, { signal: controller.signal }); }
+            catch (reason) { if (!controller.signal.aborted) readError = reason.message || '읽음 상태를 저장하지 못했어요.'; }
+          }
+          latestMessageId = fetchedLatestId;
+          const members = await chatApi.getChatRoomMembers(roomId, { signal: controller.signal }).catch(() => null);
           if (!controller.signal.aborted) {
-            latestMessageId = messages.at(-1)?.id ?? latestMessageId;
-            setSyncError('');
-            setDetail((current) => current.id === roomId && current.room ? {
-              ...current, room: { ...current.room, messages: mergeMessages(current.room.messages, messages) },
-            } : current);
+            setSyncError(readError);
+            setDetail((current) => {
+              if (current.id !== roomId || !current.room) return current;
+              const mergedMessages = mergeMessages(current.room.messages, messages);
+              return {
+                ...current,
+                room: {
+                  ...current.room,
+                  members: members ?? current.room.members,
+                  membersKnown: members ? true : current.room.membersKnown,
+                  messages: members ? applyUnreadCounts(mergedMessages, members) : mergedMessages,
+                },
+              };
+            });
             if (messages.length) setList((current) => ({ ...current, rooms: current.rooms.map((room) => room.id === roomId ? { ...room, lastMessage: messages.at(-1).content } : room) }));
           }
         }
@@ -204,7 +229,7 @@ function ChatRoom() {
     const updatedRoom = await chatApi.updateChatRoom(roomEditTarget.id, { name });
     let roomWithUpdatedProfile = { ...roomEditTarget, ...updatedRoom };
     roomUpdated(roomWithUpdatedProfile);
-    if (profileImage) {
+    if (profileImage && canEditChatRoomProfile(roomEditTarget)) {
       const roomProfileImage = await chatApi.updateChatRoomProfileImage(roomEditTarget.id, profileImage);
       roomWithUpdatedProfile = { ...roomWithUpdatedProfile, roomProfileImage };
       roomUpdated(roomWithUpdatedProfile);
@@ -239,12 +264,19 @@ function ChatRoom() {
   const activeRoom = roomId && detail.id === roomId ? detail.room : null;
   const detailError = detail.id === roomId ? detail.error : '';
   const activeLatestMessage = detail.id === roomId ? detail.room?.messages.at(-1) : undefined;
+  const activeLatestMessageId = activeLatestMessage?.id ?? null;
+  const activeLatestMessageAt = activeLatestMessage?.createdAt ?? null;
 
   useEffect(() => {
-    if (!roomId || detail.id !== roomId) return;
-    chatReadStore.markRead(roomId, activeLatestMessage);
+    if (!roomId || detail.id !== roomId || activeLatestMessageId == null) return;
+    chatReadStore.markRead(roomId, { id: activeLatestMessageId, createdAt: activeLatestMessageAt });
     setUnreadByRoom(chatReadStore.read());
-  }, [roomId, detail.id, detail.room, activeLatestMessage, chatReadStore]);
+    let cancelled = false;
+    chatApi.markRead(roomId, activeLatestMessageId).catch((reason) => {
+      if (!cancelled) setSyncError(reason.message || '메시지 읽음 상태를 저장하지 못했어요.');
+    });
+    return () => { cancelled = true; };
+  }, [roomId, detail.id, activeLatestMessageId, activeLatestMessageAt, chatReadStore]);
 
   return (
     <div className="chatroom-layout chat-rooms-page">
@@ -259,12 +291,12 @@ function ChatRoom() {
         <div className="chat-list" aria-busy={list.status === 'loading'}>
           {list.status === 'error' ? <div className="chat-feedback" role="alert"><p>{list.error}</p>{!getToken() ? <Link className="chat-retry" to="/login" state={{ from: roomId ? `/chat/rooms/${roomId}` : '/chat' }}>로그인하기</Link> : <button type="button" className="chat-retry" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button>}</div> : <>
             {visibleRooms.map((room) => (
-              <div className="chat-item-row" key={room.id}>
+              <div className={`chat-item-row${roomActionMenuId === room.id ? ' is-menu-open' : ''}`} key={room.id}>
                 <button type="button" className={`chat-item${room.id === roomId ? ' is-active' : ''}`}
-                  aria-label={`${room.name} 채팅방 열기${unreadByRoom[room.id]?.unreadCount ? `, 안 읽은 메시지 ${unreadByRoom[room.id].unreadCount}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
+                  aria-label={`${room.name} 채팅방 열기${roomUnreadCount(room, unreadByRoom, roomId) ? `, 안 읽은 메시지 ${roomUnreadCount(room, unreadByRoom, roomId)}개` : ''}`} aria-current={room.id === roomId ? 'page' : undefined} onClick={() => navigate(`/chat/rooms/${encodeURIComponent(room.id)}`)}>
                   <img className="gotrip-pro" src={chatCounterpartProfileImage(room)} alt="" />
-                  <span className="chat-item-text"><span className="chatroom-name" title={room.name}>{displayRoomName(room.name)}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${room.members.length + 1}명이 함께하는 채팅방`)}</span></span>
-                  {unreadByRoom[room.id]?.unreadCount > 0 && <span className="chat-unread-badge" aria-hidden="true">{unreadByRoom[room.id].unreadCount > 99 ? '99+' : unreadByRoom[room.id].unreadCount}</span>}
+                  <span className="chat-item-text"><span className="chatroom-name" title={room.name}>{displayRoomName(room.name)}</span><span className="chat-detail">{room.lastMessage || (room.membersKnown === false ? '대화를 시작해 보세요.' : `${(room.otherMembers?.length ?? room.members.length) + 1}명이 함께하는 채팅방`)}</span></span>
+                  {roomUnreadCount(room, unreadByRoom, roomId) > 0 && <span className="chat-unread-badge" aria-hidden="true">{roomUnreadCount(room, unreadByRoom, roomId) > 99 ? '99+' : roomUnreadCount(room, unreadByRoom, roomId)}</span>}
                 </button>
                 <div className="chat-item-menu-wrap" ref={roomActionMenuId === room.id ? roomActionMenuRef : null}>
                   <button ref={roomActionMenuId === room.id ? roomActionButtonRef : null} type="button" className="chat-item-more" aria-label={`${room.name} 채팅방 메뉴`} aria-haspopup="menu" aria-expanded={roomActionMenuId === room.id} disabled={roomActionBusy} onClick={() => setRoomActionMenuId((current) => current === room.id ? null : room.id)}>
