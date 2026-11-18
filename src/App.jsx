@@ -40,20 +40,26 @@ function LegacyChatRoomRedirect() {
 function MainLayout() {
 
   const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(Boolean(getToken()));
 
   useEffect(() => {
-    if (!getToken()) return;
+    if (!getToken()) {
+      setProfileLoading(false);
+      return undefined;
+    }
     const controller = new AbortController();
     fetchProfile(controller.signal).then((data) => {
       if (!controller.signal.aborted) setProfile((current) => current ?? data);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => {
+      if (!controller.signal.aborted) setProfileLoading(false);
+    });
     return () => controller.abort();
   }, []);
 
   return (
     <div className="layout">
-      <SideBar profile={profile} />
-      {getToken() ? <Outlet context={{ profile, setProfile }} /> : <LoginRequiredPage />}
+      <SideBar profile={profile} profileLoading={profileLoading} />
+      {getToken() ? <Outlet context={{ profile, setProfile, profileLoading }} /> : <LoginRequiredPage />}
     </div>
   );
 }

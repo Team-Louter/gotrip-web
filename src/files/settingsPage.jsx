@@ -5,10 +5,11 @@ import { clearSession, getLoginId, getToken } from '../api/session';
 import penIcon from '../icons/gotrip-pen.png';
 import { DEFAULT_PROFILE_IMAGE, deleteAccount, fetchAccountDetails, profileImageSource, updateNickname, updateProfileImage } from '../services/profileApi';
 import '../styles/settingsPage.css';
+import { SkeletonBlock, SkeletonPanel } from '../components/Skeleton';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { profile, setProfile } = useOutletContext();
+  const { profile, setProfile, profileLoading = false } = useOutletContext();
   const [email, setEmail] = useState(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [nickname, setNickname] = useState(null);
@@ -101,7 +102,13 @@ export default function SettingsPage() {
         <section className="settings-section">
           <h3>프로필</h3>
           <p className="settings-description">사이드바에 표시되는 닉네임과 사진을 변경하세요.</p>
-          {signedIn ? (
+          {signedIn && profileLoading ? <SkeletonPanel label="프로필 정보를 불러오는 중입니다." className="settings-profile-skeleton">
+            <div className="settings-skeleton-profile-layout">
+              <div className="settings-skeleton-photo-row"><SkeletonBlock circle className="settings-skeleton-avatar" /></div>
+              <div className="settings-skeleton-nickname-group"><SkeletonBlock className="settings-skeleton-label" /><SkeletonBlock className="settings-skeleton-field" /></div>
+              <SkeletonBlock className="settings-skeleton-button" />
+            </div>
+          </SkeletonPanel> : signedIn ? (
             <form onSubmit={saveProfile}>
               <fieldset className="settings-profile" disabled={busy}>
                 <div className="settings-photo-row">
@@ -124,7 +131,10 @@ export default function SettingsPage() {
         </section>
         <section className="settings-section">
           <h3>계정 정보</h3>
-          {signedIn ? (
+          {signedIn && profileLoading ? <SkeletonPanel label="계정 정보를 불러오는 중입니다." className="settings-account-skeleton">
+            <div className="settings-skeleton-account-row"><SkeletonBlock className="settings-skeleton-label" /><SkeletonBlock className="settings-skeleton-account-value" /></div>
+            <div className="settings-skeleton-account-row"><SkeletonBlock className="settings-skeleton-label" /><div className="settings-skeleton-email-value"><SkeletonBlock className="settings-skeleton-account-value" /><SkeletonBlock className="settings-skeleton-inline-button" /></div></div>
+          </SkeletonPanel> : signedIn ? (
             <>
               <dl className="settings-account-details">
                 <div className="settings-account-row">

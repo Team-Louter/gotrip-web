@@ -29,6 +29,10 @@
   border-radius: 50%;
 }
 
+.sidebar-profile-skeleton { width: 60px; height: 60px; flex: 0 0 60px; }
+.sidebar-name-skeleton { width: 82px; height: 16px; }
+.sidebar-profile-skeleton, .sidebar-name-skeleton { background: var(--skeleton-fill) !important; }
+
 .profile-container {
   margin-top: 10px;
   display: flex;
