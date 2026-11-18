@@ -6,7 +6,7 @@ import gotripcheck from '../images/gotrip-check.png';
 import { useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
 import { readSignupDraft, updateSignupDraft } from '../services/signupDraft';
-import { isValidSignupPassword, passwordTypeCount } from '../data/signupValidation';
+import { signupPasswordError, signupPasswordRules } from '../data/signupValidation';
 import Toast from '../components/Toast';
 
 function SignUp() {
@@ -18,19 +18,15 @@ function SignUp() {
   const [error, setError] = useState('');
   const passwordsMatch = password === passwordConfirm;
   const canContinue = Boolean(loginId.trim() && password && passwordConfirm);
-  const passwordRules = [
-    { label: '8자 이상, 20자 이하', valid: password.length >= 8 && password.length <= 20 },
-    { label: '대문자·소문자·숫자·특수문자 중 3종 이상', valid: passwordTypeCount(password) >= 3 },
-    { label: '3자 이상 동일 문자/숫자 연속 사용 금지', valid: !/(.)\1\1/.test(password) },
-  ];
+  const passwordRules = signupPasswordRules(password);
 
   function next(event) {
     event.preventDefault();
     const enteredPassword = event.currentTarget.querySelector('#signup-password')?.value ?? password;
     const confirmedPassword = event.currentTarget.querySelector('#signup-password-confirm')?.value ?? passwordConfirm;
-    const validPassword = isValidSignupPassword(enteredPassword);
+    const passwordError = signupPasswordError(enteredPassword);
     if (!loginId.trim()) return setError('아이디를 입력해주세요.');
-    if (!validPassword) return setError('비밀번호는 8~20자이며 대문자·소문자·숫자·특수문자 중 3종 이상 포함하고 같은 문자를 3번 연속 사용할 수 없습니다.');
+    if (passwordError) return setError(passwordError);
     if (enteredPassword !== confirmedPassword) return setError('비밀번호가 동일하지 않습니다.');
     setError('');
     updateSignupDraft({ loginId: loginId.trim(), password: enteredPassword, passwordConfirm: confirmedPassword });

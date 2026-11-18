@@ -5,7 +5,7 @@ import gotripjoinUpscaled from '../images/gotrip-join-upscaled.jpeg';
 import { Navigate, useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
 import { readSignupDraft, updateSignupDraft } from '../services/signupDraft';
-import { isValidSignupBirthDate, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation';
+import { signupBirthDateError, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation';
 import Toast from '../components/Toast';
 
 function SignUp2() {
@@ -24,10 +24,8 @@ function SignUp2() {
       setError('첫 번째 단계의 계정 정보를 다시 입력해주세요.');
       return;
     }
-    if (!isValidSignupBirthDate(birthDate)) {
-      setError('실제 날짜를 YYYYMMDD 형식으로 입력해주세요.');
-      return;
-    }
+    const birthDateError = signupBirthDateError(birthDate);
+    if (birthDateError) return setError(birthDateError);
     if (!isValidSignupEmail(email)) return setError('올바른 이메일 주소를 입력해주세요.');
     if (!nickname.trim()) return setError('닉네임을 입력해주세요.');
     const normalizedBirthDate = birthDate.trim().replace(/[-/]/g, '');

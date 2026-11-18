@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { getLoginId, getToken } from '../api/session.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
-import { showSuccessToast } from '../components/AppToasts';
+import { showErrorToast, showSuccessToast } from '../components/AppToasts';
+import { friendGroupsStorageKey, readFriendGroups } from '../data/friendGroups.js';
+import FriendGroupDialog from '../components/FriendGroupDialog.jsx';
 import ProfileAvatar from '../components/ProfileAvatar.jsx';
+import memoIcon from '../icons/memoIcon.png';
 import '../styles/friendsPage.css';
 
 function decorateRelationship(relationship, membersById) {
@@ -18,8 +21,13 @@ function decorateRelationship(relationship, membersById) {
 }
 
 function FriendsPage() {
+  const groupStorageKey = friendGroupsStorageKey();
   const [serverData, setServerData] = useState({ members: [], friends: [], incomingRequests: [], sentRequests: [] });
   const [query, setQuery] = useState('');
+  const [activeView, setActiveView] = useState('friends');
+  const [groups, setGroups] = useState(readFriendGroups);
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [groupDialog, setGroupDialog] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -66,6 +74,10 @@ function FriendsPage() {
       && !incomingRequests.some((request) => request.loginId === member.loginId)
       && !sentRequests.some((request) => request.loginId === member.loginId))
     : [];
+  const selectedGroup = groups.find((group) => group.id === selectedGroupId) ?? groups[0] ?? null;
+  const selectedGroupFriends = selectedGroup
+    ? friends.filter((friend) => selectedGroup.friendIds.includes(String(friend.memberId ?? friend.id)))
+    : [];
 
   async function performServerAction(action, successMessage) {
     setBusy(true);
@@ -101,6 +113,39 @@ function FriendsPage() {
     performServerAction(() => friendshipApi.cancelFriendRequest(request.friendshipId), `${request.name}에게 보낸 친구 요청을 취소했어요.`);
   }
 
+  function saveGroup(group) {
+    const next = groups.some((item) => item.id === group.id)
+      ? groups.map((item) => item.id === group.id ? group : item)
+      : [...groups, group];
+    try {
+      localStorage.setItem(groupStorageKey, JSON.stringify(next));
+      setGroups(next);
+      setSelectedGroupId(group.id);
+      setGroupDialog(null);
+      showSuccessToast(groups.some((item) => item.id === group.id) ? '그룹을 수정했습니다.' : '그룹을 추가했습니다.');
+    } catch {
+      showErrorToast('그룹을 저장하지 못했습니다. 다시 시도해 주세요.');
+    }
+  }
+
+  function deleteGroup(groupId) {
+    const next = groups.filter((group) => group.id !== groupId);
+    try {
+      localStorage.setItem(groupStorageKey, JSON.stringify(next));
+      setGroups(next);
+      if (selectedGroupId === groupId) setSelectedGroupId(next[0]?.id ?? null);
+      setGroupDialog(null);
+      showSuccessToast('그룹을 삭제했습니다.');
+    } catch {
+      showErrorToast('그룹을 삭제하지 못했습니다. 다시 시도해 주세요.');
+    }
+  }
+
+  function closeGroupDialog() {
+    showSuccessToast(groupDialog?.mode === 'create' ? '그룹 추가를 취소했습니다.' : '그룹 수정을 취소했습니다.');
+    setGroupDialog(null);
+  }
+
   return (
     <main className="friends-page">
       <section className="friends-card friends-directory" aria-labelledby="friends-title">
@@ -121,9 +166,14 @@ function FriendsPage() {
           onChange={(event) => setQuery(event.target.value)}
         />
 
+        <div className="friends-subnav" role="tablist" aria-label="친구 기능">
+          <button type="button" id="friends-tab" role="tab" aria-controls="friends-tab-panel" aria-selected={activeView === 'friends'} className={activeView === 'friends' ? 'is-active' : ''} onClick={() => setActiveView('friends')}>친구</button>
+          <button type="button" id="groups-tab" role="tab" aria-controls="groups-tab-panel" aria-selected={activeView === 'groups'} className={activeView === 'groups' ? 'is-active' : ''} onClick={() => setActiveView('groups')}>그룹</button>
+        </div>
+
         {actionError && <p className="friends-action-error" role="alert">{actionError}</p>}
 
-        <div className="friends-list-region" aria-busy={status === 'loading'}>
+        {activeView === 'friends' ? <div id="friends-tab-panel" role="tabpanel" aria-labelledby="friends-tab" className="friends-list-region" aria-busy={status === 'loading'}>
           <section className="friends-list-section" aria-labelledby="my-friends-title">
             <div className="friends-count-row">
               <h2 id="my-friends-title">내 친구</h2>
@@ -180,7 +230,37 @@ function FriendsPage() {
                 : <button type="button" disabled={busy} onClick={() => setRetry((value) => value + 1)}>다시 시도</button>}
             </div>
           )}
-        </div>
+        </div> : <div id="groups-tab-panel" role="tabpanel" aria-labelledby="groups-tab" className="friend-groups-view" aria-busy={status === 'loading'}>
+          <div className="friend-groups-heading">
+            <h2>그룹</h2>
+            <button type="button" className="friend-group-add" aria-label="그룹 추가" title="그룹 추가" onClick={() => setGroupDialog({ mode: 'create' })}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+          </div>
+          {status === 'loading' ? <p className="friends-feedback" role="status">친구 정보를 불러오는 중이에요.</p> : status === 'error' ? <div className="friends-feedback" role="alert"><p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>{!getToken() ? <Link to="/login" state={{ from: '/friends' }}>로그인하기</Link> : <button type="button" disabled={busy} onClick={() => setRetry((value) => value + 1)}>다시 시도</button>}</div> : <>
+            {groups.length === 0 ? <p className="friends-empty">아직 그룹이 없어요. 그룹을 추가해 보세요.</p> : <div className="friend-groups-layout">
+              <ul className="friend-groups-list" aria-label="친구 그룹 목록">
+                {groups.filter((group) => !query.trim() || group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((group) => <li key={group.id}>
+                  <button type="button" className={`friend-group-select${selectedGroup?.id === group.id ? ' is-selected' : ''}`} onClick={() => setSelectedGroupId(group.id)} aria-pressed={selectedGroup?.id === group.id}>
+                    <strong>{group.name}</strong><span>{group.friendIds.length}명</span>
+                  </button>
+                  <button type="button" className="friend-group-edit" aria-label={`${group.name} 그룹 수정`} title="수정" onClick={() => setGroupDialog(group)}><img src={memoIcon} alt="" /></button>
+                </li>)}
+              </ul>
+              <section className="friend-group-detail" aria-label={selectedGroup ? `${selectedGroup.name} 그룹 친구` : '그룹 상세'}>
+                {selectedGroup ? <>
+                  <div className="friend-group-detail-heading"><h3>{selectedGroup.name}</h3><span>{selectedGroupFriends.length}명</span></div>
+                  {selectedGroupFriends.length ? <ul className="friends-list" aria-label={`${selectedGroup.name} 친구`}>
+                    {selectedGroupFriends.map((friend) => <li className="friend-row" key={friend.friendshipId ?? friend.id}>
+                      <ProfileAvatar className="friend-avatar" imageUrl={friend.profileImageUrl} />
+                      <div className="friend-identity"><strong>{friend.name}</strong><span>@{friend.loginId}</span></div>
+                    </li>)}
+                  </ul> : <p className="friends-empty">이 그룹에 등록된 친구가 없어요.</p>}
+                </> : <p className="friends-empty">조회할 그룹을 선택해 주세요.</p>}
+              </section>
+            </div>}
+          </>}
+        </div>}
       </section>
 
       <aside className="friends-card friends-requests" aria-labelledby="friend-requests-title">
@@ -234,6 +314,13 @@ function FriendsPage() {
           )}
         </section>
       </aside>
+      {groupDialog && <FriendGroupDialog
+        group={groupDialog.mode === 'create' ? null : groupDialog}
+        friends={friends}
+        onClose={closeGroupDialog}
+        onSave={saveGroup}
+        onDelete={deleteGroup}
+      />}
     </main>
   );
 }

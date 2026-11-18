@@ -3,6 +3,7 @@ import { useSchedules } from '../hooks/useSchedules';
 import { calendarDates, dateKey, formatDate, schedulesOn, shiftMonth } from '../data/scheduleDates';
 import { deleteSchedule, selectScheduleDate } from '../data/scheduleStore';
 import { ScheduleEditor } from '../components/SchedulePanel';
+import { showSuccessToast } from '../components/AppToasts';
 import todayPlaceIcon from '../icons/todaySchedulePlaceIcon.png';
 import '../styles/calender.css';
 
@@ -22,6 +23,11 @@ function Calender() {
   function selectDate(date) {
     selectScheduleDate(date);
     setMonthView({ selectedDate: date, month: date.slice(0, 7) });
+  }
+
+  function handleDeleteSchedule(id) {
+    deleteSchedule(id);
+    showSuccessToast('일정을 삭제했습니다.');
   }
 
   return (
@@ -70,7 +76,7 @@ function Calender() {
             <article className="today-schedule-content" key={event.id}>
               <div className="calendar-event-heading">
                 <time className="today-schedule-time" dateTime={`${event.date}T${event.time}`}>{event.time}</time>
-                <button type="button" className="calendar-delete-button" aria-label={`${event.time} ${event.content} 삭제`} onClick={() => deleteSchedule(event.id)}>삭제</button>
+                <button type="button" className="calendar-delete-button" aria-label={`${event.time} ${event.content} 삭제`} onClick={() => handleDeleteSchedule(event.id)}>삭제</button>
               </div>
               <p className="today-schedule-text">{event.content}</p>
               {event.location && <div className="today-schedule-place-box"><img src={todayPlaceIcon} alt="" className="schedule-place-icon" /><span className="today-schedule-place">{event.location}</span></div>}
