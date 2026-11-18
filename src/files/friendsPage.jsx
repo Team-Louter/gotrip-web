@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { getLoginId, getToken } from '../api/session.js';
+import { Link, useLocation } from 'react-router-dom';
+import { getAccountId, getLoginId, getToken } from '../api/session.js';
 import { friendshipApi } from '../services/friendshipApi.js';
 import { matchesMember, memberApi } from '../services/memberApi.js';
 import { showErrorToast, showSuccessToast } from '../components/AppToasts';
@@ -21,10 +21,11 @@ function decorateRelationship(relationship, membersById) {
 }
 
 function FriendsPage() {
+  const location = useLocation();
   const groupStorageKey = friendGroupsStorageKey();
   const [serverData, setServerData] = useState({ members: [], friends: [], incomingRequests: [], sentRequests: [] });
   const [query, setQuery] = useState('');
-  const [activeView, setActiveView] = useState('friends');
+  const [activeView, setActiveView] = useState(() => location.state?.initialTab === 'groups' ? 'groups' : 'friends');
   const [groups, setGroups] = useState(readFriendGroups);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [groupDialog, setGroupDialog] = useState(null);

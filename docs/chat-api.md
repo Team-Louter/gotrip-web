@@ -34,7 +34,11 @@ VITE_CHAT_USE_MOCK=false
 | 방 목록 | `GET /api/chat/rooms` | `ChatRoomResponse[]` |
 | 방 생성 | `POST /api/chat/rooms` | `ChatRoomResponse` |
 | 메시지 조회 | `GET /api/chat/rooms/{roomId}/messages?size=50&before={id}` | `ChatMessageResponse[]` |
+| 참여자 읽음 위치 | `GET /api/chat/rooms/{roomId}/members` | `ChatRoomMemberResponse[]` |
 | 메시지 전송 | `POST /api/chat/rooms/{roomId}/messages` | `ChatMessageResponse` |
+| 읽음 처리 | `PUT /api/chat/rooms/{roomId}/read` body `{ "lastReadMessageId": 123 }` | `ChatReadResponse` |
+
+대화방을 열거나 새 메시지를 확인하면 현재 화면의 마지막 메시지 ID로 읽음 처리 API를 호출합니다. 메시지 옆 숫자는 `GET /members`의 각 참여자 `lastReadMessageId`와 메시지 ID를 비교해 보낸 사람을 제외한 미확인 인원 수로 계산합니다. 참여자 목록은 대화가 열려 있는 동안 3초마다 새로 받아, 읽거나 답장한 사람이 생기면 숫자를 갱신하고 모두 읽으면 표시를 없앱니다. 멤버 조회에 실패해도 메시지 조회는 계속되고 메시지 응답의 `unreadCount`를 사용합니다.
 
 로그인 토큰은 `sessionStorage`에 저장하고 인증 요청에 Bearer 헤더를 붙입니다. 401이면 토큰을 제거합니다. 개발 중 `/api`는 Vite가 프록시하며 배포에서는 서버의 CORS 허용 또는 웹 서버의 역방향 프록시가 필요합니다.
 

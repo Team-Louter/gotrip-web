@@ -21,6 +21,7 @@ import SignUpTerms from './files/signUpTerms';
 import './App.css';
 import './styles/auth.css';
 import './styles/focusModality.css';
+import './styles/motion.css';
 
 function AuthLayout() {
   return (

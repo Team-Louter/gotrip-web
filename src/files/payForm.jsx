@@ -4,6 +4,7 @@ import { showErrorToast, showSuccessToast } from '../components/AppToasts';
 import { readSettlements, savedExpenses, saveSettlements } from '../data/settlements.js';
 import { readFriendGroups } from '../data/friendGroups.js';
 import gotripwallet from '../icons/wallet.png';
+import { useNavigate } from 'react-router-dom';
 
 function expenseError(name, amount) {
   if (!name.trim()) return '품목을 입력해주세요.';
@@ -18,8 +19,17 @@ function groupSize(group) {
 }
 
 function PayForm() {
+  const navigate = useNavigate();
   const [settlements, setSettlements] = useState(() => {
-    try { return readSettlements(); }
+    try {
+      const state = readSettlements();
+      const legacyManualKey = `manual:${Number(state.participantCount)}`;
+      if (!Object.hasOwn(state.entries, 'manual') && Array.isArray(state.entries[legacyManualKey])) {
+        try { return saveSettlements({}, 'manual', state.entries[legacyManualKey]); }
+        catch { return { ...state, entries: { ...state.entries, manual: state.entries[legacyManualKey] } }; }
+      }
+      return state;
+    }
     catch {
       return { participantCount: '2', selectedGroupId: null, entries: {} };
     }
@@ -34,10 +44,9 @@ function PayForm() {
   const [editAmount, setEditAmount] = useState('');
 
   const selectedGroup = groups.find((group) => group.id === selectedGroupId);
-  const settlementKey = selectedGroup ? `group:${selectedGroup.id}` : `manual:${Number(participantCount)}`;
+  const settlementKey = selectedGroup ? `group:${selectedGroup.id}` : 'manual';
   const expenses = savedExpenses(settlements, settlementKey);
 
-  const groupPickerRef = useRef(null);
   const listRef = useRef(null);
   const scrollToNewExpense = useRef(false);
 
@@ -52,10 +61,9 @@ function PayForm() {
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const formatWon = (amount) => `${amount.toLocaleString('ko-KR')}원`;
 
-  const participantTotal = selectedGroup ? groupSize(selectedGroup) + 1 : Number(participantCount);
-  const canSplit = (selectedGroup || /^\d+$/.test(participantCount)) && participantTotal >= 1 && participantTotal <= 10000;
+  const participantTotal = Number(participantCount);
+  const canSplit = /^\d+$/.test(participantCount) && participantTotal >= 1 && participantTotal <= 10000;
   const share = canSplit ? Math.floor(total / participantTotal) : 0;
-  const remainder = canSplit ? total % participantTotal : 0;
 
   function persist(patch, key, nextExpenses) {
     try {
@@ -74,20 +82,17 @@ function PayForm() {
     if (listRef.current) listRef.current.scrollTop = 0;
   }
 
-  function updateParticipantCount(value) {
-    if (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 10000) {
-      if (!persist({ participantCount: String(Number(value)) })) return;
-    }
-    setParticipantCount(value);
+  function selectGroup(id) {
+    const group = groups.find((entry) => entry.id === id);
+    const nextParticipantCount = group ? String(Math.min(groupSize(group) + 1, 10000)) : participantCount;
+    if (!persist({ selectedGroupId: id, participantCount: nextParticipantCount })) return;
+    setSelectedGroupId(id);
+    setParticipantCount(nextParticipantCount);
     resetInputs();
   }
 
-  function selectGroup(id) {
-    if (!persist({ selectedGroupId: id })) return;
-    setSelectedGroupId(id);
-    resetInputs();
-    groupPickerRef.current.open = false;
-    groupPickerRef.current.querySelector('summary').focus();
+  function openGroups() {
+    navigate('/friends', { state: { initialTab: 'groups' } });
   }
 
   const addExpense = (event) => {
@@ -142,44 +147,9 @@ function PayForm() {
           <img className="gotrip-wallet" src={gotripwallet} alt="" /> 정산
         </h1>
 
+        <div className="pay-layout">
+        <div className="pay-sidebar">
         <div className="pay-summary">
-          <div className="pay-group-heading">
-            <strong>{selectedGroup?.name ?? '인원 직접 입력'}</strong>
-            <details ref={groupPickerRef} className="pay-group-picker" onToggle={(event) => {
-              if (event.currentTarget.open) setGroups(readFriendGroups());
-            }}>
-              <summary aria-label="정산 그룹 선택" title="정산 그룹 선택">+</summary>
-              <div className="pay-group-options">
-                <button type="button" onClick={() => selectGroup(null)}>인원 직접 입력</button>
-                {groups.length === 0 && <p>친구 페이지에서 그룹을 먼저 만들어 주세요.</p>}
-                {groups.map((group) => (
-                  <button key={group.id} type="button" onClick={() => selectGroup(group.id)}
-                    disabled={groupSize(group) === 0} aria-pressed={selectedGroup?.id === group.id}>
-                    {group.name} · {groupSize(group)}명
-                  </button>
-                ))}
-              </div>
-            </details>
-          </div>
-          {selectedGroup ? <p className="pay-participant-limit">본인 포함 {participantTotal}명</p> : (
-            <div className="pay-split-control">
-              <label htmlFor="pay-participant-count">정산 인원</label>
-              <input
-                id="pay-participant-count"
-                type="number"
-                min="1"
-                max="10000"
-                step="1"
-                inputMode="numeric"
-                value={participantCount}
-                onChange={(event) => updateParticipantCount(event.target.value)}
-                aria-invalid={!canSplit}
-                aria-label="정산 인원 (1~10,000명)"
-              />
-              <span>명</span>
-            </div>
-
-          )}
           <div className="pay-totals" aria-live="polite">
             <div><span>총 사용액</span><strong>{formatWon(total)}</strong></div>
             <div className="pay-share">
@@ -188,10 +158,38 @@ function PayForm() {
             </div>
             {canSplit && <p className="pay-calculation">총 사용액 ÷ {participantTotal.toLocaleString('ko-KR')}명</p>}
             {!canSplit && <p className="pay-calculation">정산 인원을 1~10,000명 사이의 정수로 입력해주세요.</p>}
-            {remainder > 0 && <p className="pay-calculation">원 단위로 나눈 뒤 남은 금액 {formatWon(remainder)}</p>}
           </div>
         </div>
+        <section className="pay-group-panel" aria-label="그룹 조회와 정산 인원">
+          <div className="pay-group-heading">
+            <strong>그룹</strong>
+          </div>
+          {groups.length === 0 ? (
+            <div className="pay-group-empty">
+              <p>아직 그룹이 없어요.</p>
+              <button type="button" onClick={openGroups}>그룹 만들러 가기</button>
+            </div>
+          ) : (
+            <ul className="pay-group-list" aria-label="그룹 목록">
+              {groups.map((group) => (
+                <li key={group.id}>
+                  <button type="button" className={`pay-group-option${selectedGroup?.id === group.id ? ' is-selected' : ''}`}
+                    onClick={() => selectGroup(group.id)} disabled={groupSize(group) === 0} aria-pressed={selectedGroup?.id === group.id}>
+                    <span>{group.name}</span><small>{Math.min(groupSize(group) + 1, 10000)}명</small>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="pay-participant-display" aria-live="polite">
+            <span>총 정산인원</span>
+            <strong>{canSplit ? `${participantTotal.toLocaleString('ko-KR')}명` : '인원 확인 필요'}</strong>
+          </div>
+        </section>
+        </div>
 
+        <div className="pay-expense-panel">
+          <h2 className="pay-expense-title">지출 목록</h2>
           <form className="pay-row" onSubmit={addExpense}>
             <input
               className="pay-input"
@@ -226,6 +224,8 @@ function PayForm() {
               </li>
             ))}
           </ul>
+        </div>
+        </div>
       </section>
 
       {dialog && (

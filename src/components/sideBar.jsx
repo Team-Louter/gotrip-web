@@ -37,10 +37,12 @@ function SideBar({ profile }) {
 
   return (
     <div className="sidebar-container">
-      <div className="profile-container">
-        <img src={profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="프로필 사진" className="profile-img" />
-        <span className="user-name">{profile?.nickname || displayName}</span>
-      </div>
+      <Link to="/settings" className="sidebar-profile-link" aria-label="프로필 설정으로 이동" aria-current={isCurrent('/settings') ? 'page' : undefined} onClick={handleFeatureNavigation}>
+        <div className="profile-container">
+          <img src={profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="" className="profile-img" />
+          <span className="user-name">{profile?.nickname || displayName}</span>
+        </div>
+      </Link>
       <nav className="menu-container" aria-label="사이드 메뉴">
         <Link to="/home" className="sidebar-link" aria-current={isCurrent('/home') ? 'page' : undefined} onClick={handleFeatureNavigation}>
           <div className="sidebar-item">

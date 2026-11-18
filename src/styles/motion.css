@@ -1,0 +1,113 @@
+:root {
+  --motion-quick: 150ms;
+  --motion-standard: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+button:not(:disabled),
+a,
+input,
+textarea,
+select {
+  transition-property: color, background-color, border-color, box-shadow, filter, transform;
+  transition-duration: var(--motion-quick);
+  transition-timing-function: var(--motion-ease);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .layout > :not(.sidebar-container) {
+    animation: app-view-enter 260ms var(--motion-ease) both;
+  }
+
+  button:not(:disabled):not(.calendar-day-button):not(.chat-item):not(.auth-toast-close):hover {
+    transform: translateY(-1px);
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.985);
+  }
+
+  dialog[open] {
+    animation: app-dialog-enter 240ms var(--motion-ease) both;
+  }
+
+  dialog[open]::backdrop,
+  .place-add-backdrop,
+  .pay-modal-backdrop {
+    animation: app-backdrop-enter 200ms ease-out both;
+  }
+
+  .pay-modal {
+    animation: app-dialog-enter 220ms var(--motion-ease) both;
+  }
+
+  .chat-item-menu,
+  .room-menu-popover,
+  .message-popover,
+  .composer-link-panel {
+    transform-origin: top center;
+    animation: app-popover-enter 170ms var(--motion-ease) both;
+  }
+
+  .chat-item-row,
+  .friend-row,
+  .budget-pay > li {
+    animation: app-row-enter 220ms var(--motion-ease) both;
+  }
+}
+
+@keyframes app-view-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-dialog-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes app-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes app-popover-enter {
+  from { opacity: 0; transform: translateY(-5px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes app-row-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  a,
+  input,
+  textarea,
+  select {
+    transition-duration: 0.01ms;
+  }
+
+  .layout > :not(.sidebar-container),
+  dialog[open],
+  dialog[open]::backdrop,
+  .place-add-backdrop,
+  .pay-modal-backdrop,
+  .pay-modal,
+  .chat-item-menu,
+  .room-menu-popover,
+  .message-popover,
+  .composer-link-panel,
+  .chat-item-row,
+  .friend-row,
+  .budget-pay > li {
+    animation: none;
+  }
+
+  button:not(:disabled):hover,
+  button:not(:disabled):active {
+    transform: none;
+  }
+}

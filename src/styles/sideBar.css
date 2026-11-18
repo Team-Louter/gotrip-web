@@ -38,6 +38,14 @@
   font-weight: bolder;
 }
 
+.sidebar-profile-link,
+.sidebar-profile-link:link,
+.sidebar-profile-link:visited,
+.sidebar-profile-link:hover,
+.sidebar-profile-link:active { display: block; border-radius: 12px; color: inherit; cursor: pointer; }
+.sidebar-profile-link:hover .profile-img { filter: brightness(.96); }
+.sidebar-profile-link:focus-visible { outline: 2px solid #b19529; outline-offset: 4px; }
+
 .menu-container {
   display: flex;
   flex-direction: column;

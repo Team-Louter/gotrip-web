@@ -6,6 +6,8 @@
 .me-row .chat-message-content { margin-left: auto; }
 .chat-rooms-page .chat-message-row .message-surface { position: relative; box-sizing: border-box; max-width: 100%; padding: 4px 18px; font-size: 20px; font-weight: 500; line-height: 1.5; }
 .message-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-inline-link { color: #806b22; text-decoration: underline; text-decoration-color: #c7ac4c; text-underline-offset: 3px; }
+.message-inline-link:hover { color: #594914; text-decoration-color: currentColor; }
 .message-toolbar { position: absolute; top: 50%; right: auto; left: calc(100% + 8px); z-index: 5; display: flex; gap: 2px; padding: 3px; border: 1px solid #e6e4db; border-radius: 11px; background: #fffefb; box-shadow: 0 3px 12px #2135470c; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity 100ms; }
 .chat-message-row:hover .message-toolbar, .chat-message-row:focus-within .message-toolbar, .message-toolbar.is-open { opacity: 1; pointer-events: auto; }
 .me-row .message-toolbar { right: calc(100% + 8px); left: auto; }
@@ -24,6 +26,7 @@
 .message-actions-menu .message-delete { color: #b25e49; }
 .message-meta { display: flex; gap: 7px; margin-top: 3px; font-size: 11px; color: #959b9b; }
 .me-row .message-meta { justify-content: flex-end; }
+.message-unread-count { position: absolute; top: 50%; right: calc(100% + 8px); display: grid; min-width: 14px; min-height: 18px; place-items: center; color: #9b7b20; font-size: 12px; font-weight: 700; line-height: 1; transform: translateY(-50%); }
 .message-reactions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .me-row .message-reactions { justify-content: flex-end; }
 .message-reactions button { width: auto; min-width: 42px; padding: 3px 8px; border: 1px solid #e7e5db; border-radius: 14px; background: #fff; font-size: 14px; }
