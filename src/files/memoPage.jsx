@@ -4,6 +4,7 @@ import { getToken } from '../api/session'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
 import { showErrorToast, showSuccessToast, showToast } from '../components/AppToasts'
+import { SkeletonBlock, SkeletonPanel, SkeletonRows } from '../components/Skeleton'
 
 function Memo() {
   const [memos, setMemos] = useState([])
@@ -198,7 +199,7 @@ function Memo() {
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
           {!getToken() ? <Link to="/login" state={{ from: '/memo' }}>로그인하기</Link> : (detailError || list.error) && <button type="button" className="memo-retry" onClick={retryLoad}>다시 시도</button>}
         </div>}
-        <input
+        {list.status === 'loading' ? <SkeletonPanel label="메모를 불러오는 중입니다." className="memo-editor-loading"><SkeletonBlock className="memo-skeleton-title" /><div className="memo-skeleton-content"><SkeletonBlock className="memo-skeleton-text-line" /><SkeletonBlock className="memo-skeleton-text-line is-wide" /><SkeletonBlock className="memo-skeleton-text-line is-medium" /><SkeletonBlock className="memo-skeleton-text-line is-short" /></div></SkeletonPanel> : <><input
           ref={titleRef}
           className="memo-title-input"
           type="text"
@@ -208,7 +209,7 @@ function Memo() {
           placeholder="제목"
           disabled={!editable && (Boolean(current) || !canCreate)}
         />
-        <textarea
+        {loadingDetail ? <SkeletonPanel label="메모 내용을 불러오는 중입니다." className="memo-detail-skeleton"><div className="memo-skeleton-content"><SkeletonBlock className="memo-skeleton-text-line" /><SkeletonBlock className="memo-skeleton-text-line is-wide" /><SkeletonBlock className="memo-skeleton-text-line is-medium" /><SkeletonBlock className="memo-skeleton-text-line is-short" /></div></SkeletonPanel> : <textarea
           className="memo-board-input"
           aria-label="메모 내용"
           value={current?.body ?? ''}
@@ -221,9 +222,9 @@ function Memo() {
           }}
           placeholder="여기에 자유롭게 메모하세요 (5자 이상)"
           disabled={!editable && (Boolean(current) || !canCreate)}
-        />
+        />}</>}
         <div className="memo-board-actions">
-          <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : ''}</span>
+          <span role="status" />
           <button type="submit" className="memo-save" disabled={!editable || (!current?.dirty && !current?.isNew)}>메모 저장</button>
         </div>
       </form>
@@ -235,7 +236,7 @@ function Memo() {
         <div className="memo-list-box">
           <input className="memo-search" type="search" aria-label="메모 검색" placeholder="메모 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
           <div className="memo-list" ref={listRef} aria-label="메모 목록" aria-busy={list.status === 'loading'}>
-            {list.status === 'loading' && <p className="memo-empty">메모를 불러오는 중이에요.</p>}
+            {list.status === 'loading' && memos.length === 0 && <SkeletonPanel label="메모 목록을 불러오는 중입니다." className="memo-loading-skeleton"><SkeletonRows count={5} /></SkeletonPanel>}
             {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">제목이나 내용을 입력하면 새 메모가 추가돼요.</p>}
             {list.status === 'ready' && memos.length > 0 && filteredMemos.length === 0 && <p className="memo-empty">검색 결과가 없어요.</p>}
             {filteredMemos.map((memo) => (

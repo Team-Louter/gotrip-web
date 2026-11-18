@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { loadKakaoMaps } from '../services/kakaoMapSdk.js';
 import mappin from '../icons/mappin.png';
+import { SkeletonBlock, SkeletonPanel } from './Skeleton';
 
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY?.trim();
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -64,10 +65,8 @@ export default function KakaoMapPreview() {
     <section className="map-preview-map" aria-label="현재 위치 주변 지도">
       <div ref={containerRef} className="map-preview-canvas" />
       {mapStatus !== 'ready' && (
-        <div className="map-preview-message">
-          <div role={mapStatus === 'loading' ? 'status' : 'alert'}>
-            {mapStatus === 'loading' ? '지도를 불러오고 있어요.' : '지도를 불러오지 못했어요.'}
-          </div>
+        <div className={`map-preview-message${mapStatus === 'loading' ? ' is-loading' : ''}`}>
+          {mapStatus === 'loading' ? <SkeletonPanel label="지도를 불러오는 중입니다." className="map-preview-skeleton"><SkeletonBlock className="map-skeleton-road road-one" /><SkeletonBlock className="map-skeleton-road road-two" /><SkeletonBlock className="map-skeleton-block" /></SkeletonPanel> : <div role="alert">지도를 불러오지 못했어요.</div>}
           {mapStatus === 'error' && (KAKAO_MAP_APP_KEY ? (
             <button type="button" className="map-preview-recovery" onClick={() => {
               setMapStatus('loading');

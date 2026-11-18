@@ -9,6 +9,7 @@ import FriendGroupDialog from '../components/FriendGroupDialog.jsx';
 import ProfileAvatar from '../components/ProfileAvatar.jsx';
 import memoIcon from '../icons/memoIcon.png';
 import '../styles/friendsPage.css';
+import { SkeletonPanel, SkeletonRows } from '../components/Skeleton';
 
 function decorateRelationship(relationship, membersById) {
   const member = membersById.get(relationship.memberId);
@@ -181,7 +182,7 @@ function FriendsPage() {
               <span className="friends-count" aria-live="polite">{visibleFriends.length}명</span>
             </div>
 
-            {visibleFriends.length === 0 && <p className="friends-empty" role="status">{query.trim() ? '친구 목록에서 검색 결과가 없어요.' : '아직 친구가 없어요.'}</p>}
+            {status === 'ready' && visibleFriends.length === 0 && <p className="friends-empty" role="status">{query.trim() ? '친구 목록에서 검색 결과가 없어요.' : '아직 친구가 없어요.'}</p>}
             {visibleFriends.length > 0 && (
               <ul className="friends-list" aria-label="내 친구 목록">
                 {visibleFriends.map((friend) => (
@@ -199,7 +200,7 @@ function FriendsPage() {
             )}
           </section>
 
-          {query.trim() && (
+          {status === 'ready' && query.trim() && (
             <section className="friends-discover-section" aria-labelledby="friend-search-results-title">
               <div className="friends-count-row">
                 <h2 id="friend-search-results-title">검색 결과</h2>
@@ -222,7 +223,7 @@ function FriendsPage() {
             </section>
           )}
 
-          {status === 'loading' && <p className="friends-feedback" role="status">친구 정보를 불러오는 중이에요.</p>}
+          {status === 'loading' && serverData.friends.length === 0 && <SkeletonPanel label="친구 정보를 불러오는 중입니다." className="friends-loading-skeleton"><SkeletonRows count={5} avatar /></SkeletonPanel>}
           {status === 'error' && (
             <div className="friends-feedback" role="alert">
               <p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>
@@ -238,7 +239,7 @@ function FriendsPage() {
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             </button>
           </div>
-          {status === 'loading' ? <p className="friends-feedback" role="status">친구 정보를 불러오는 중이에요.</p> : status === 'error' ? <div className="friends-feedback" role="alert"><p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>{!getToken() ? <Link to="/login" state={{ from: '/friends' }}>로그인하기</Link> : <button type="button" disabled={busy} onClick={() => setRetry((value) => value + 1)}>다시 시도</button>}</div> : <>
+          {status === 'loading' && serverData.friends.length === 0 ? <SkeletonPanel label="그룹 정보를 불러오는 중입니다." className="friends-loading-skeleton"><SkeletonRows count={4} /></SkeletonPanel> : status === 'error' ? <div className="friends-feedback" role="alert"><p>{error?.message || '친구 정보를 불러오지 못했어요.'}</p>{!getToken() ? <Link to="/login" state={{ from: '/friends' }}>로그인하기</Link> : <button type="button" disabled={busy} onClick={() => setRetry((value) => value + 1)}>다시 시도</button>}</div> : <>
             {groups.length === 0 ? <p className="friends-empty">아직 그룹이 없어요. 그룹을 추가해 보세요.</p> : <div className="friend-groups-layout">
               <ul className="friend-groups-list" aria-label="친구 그룹 목록">
                 {groups.filter((group) => !query.trim() || group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((group) => <li key={group.id}>

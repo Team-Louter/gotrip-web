@@ -6,6 +6,7 @@ import ChatHome from './chatHome';
 import CreateChatRoom from '../components/CreateChatRoom';
 import ChatRoomEditDialog from '../components/ChatRoomEditDialog';
 import ChatRoomConfirmDialog from '../components/ChatRoomConfirmDialog';
+import { SkeletonBlock, SkeletonPanel, SkeletonRows } from '../components/Skeleton';
 import { chatApi, matchesRoom } from '../services/chatApi';
 import { getToken } from '../api/session';
 import { applyUnreadCounts, mergeMessages } from '../services/serverChatApi';
@@ -311,13 +312,13 @@ function ChatRoom() {
                 </div>
               </div>
             ))}
-            {list.status === 'loading' && <p className="chat-feedback" role="status">채팅방을 불러오는 중이에요.</p>}
+            {list.status === 'loading' && visibleRooms.length === 0 && <SkeletonPanel label="채팅방을 불러오는 중입니다." className="chat-loading-skeleton"><SkeletonRows count={5} avatar /></SkeletonPanel>}
             {list.status === 'ready' && visibleRooms.length === 0 && <p className="chat-feedback chat-empty-message" role="status">{query.trim() ? '검색된 채팅방이 없어요.' : '아직 채팅방이 없어요'}</p>}
           </>}
         </div>
         <button type="button" className="chat-plus" aria-label="채팅방 만들기" disabled={!getToken()} onClick={() => setCreating(true)}>+</button>
       </aside>
-      {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} onRoomRemoved={roomRemoved} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : <main className="chat-right"><div className="chat-feedback" role={detailError ? 'alert' : 'status'}>{detailError || '채팅방을 불러오는 중이에요.'}{detailError && <button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button>}</div></main> : (
+      {roomId ? activeRoom ? <ChatHome key={activeRoom.id} room={activeRoom} onRoomUpdated={roomUpdated} onRoomRemoved={roomRemoved} syncError={syncError} onRetrySync={() => setDetailRetry((value) => value + 1)} /> : detailError ? <main className="chat-right"><div className="chat-feedback" role="alert">{detailError}<button type="button" className="chat-retry" onClick={() => { setDetail({ id: null, room: null, error: '' }); setDetailRetry((value) => value + 1); }}>다시 시도</button></div></main> : <main className="chat-right"><SkeletonPanel label="채팅방을 불러오는 중입니다." className="chat-detail-loading"><div className="chat-detail-skeleton-header"><SkeletonBlock circle className="chat-detail-skeleton-avatar" /><SkeletonBlock className="skeleton-line chat-detail-skeleton-title" /></div><div className="chat-detail-skeleton-body"><SkeletonBlock className="chat-detail-skeleton-bubble" /><SkeletonBlock className="chat-detail-skeleton-bubble is-short" /><SkeletonBlock className="chat-detail-skeleton-bubble is-right" /></div></SkeletonPanel></main> : (
         <main className="chat-right">
           <img className="chat-gotriplogo" src={gotriplogo4} alt="GoTrip" />
           <div className="chat-empty"><p className="lets-plan">여행 계획이라도 짜볼까요?</p><button className="lets-main" onClick={() => navigate('/calendar')}>캘린더로 가기</button></div>

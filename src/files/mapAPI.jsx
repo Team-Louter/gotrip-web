@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/mapAPI.css';
+import { SkeletonBlock, SkeletonPanel } from '../components/Skeleton';
 import { useSchedules } from '../hooks/useSchedules.js';
 import { formatDate } from '../data/scheduleDates.js';
 import { placeStore } from '../data/placeStore.js';
@@ -247,8 +248,8 @@ function MapAPI() {
       <p className="map-api-sr-only" role="status">{locationStatus}</p>
 
       {mapStatus !== 'ready' && (
-        <div className={`map-api-loading${mapStatus === 'error' || mapStatus === 'missing-key' ? ' is-error' : ''}`} role={mapStatus === 'loading' ? 'status' : 'alert'}>
-          {mapStatus === 'loading' && '카카오 지도를 불러오고 있어요.'}
+        <div className={`map-api-loading${mapStatus === 'error' || mapStatus === 'missing-key' ? ' is-error' : ''}`} role={mapStatus === 'loading' ? undefined : 'alert'} aria-busy={mapStatus === 'loading'}>
+          {mapStatus === 'loading' && <SkeletonPanel label="지도를 불러오는 중입니다." className="map-api-skeleton"><SkeletonBlock className="map-skeleton-road road-one" /><SkeletonBlock className="map-skeleton-road road-two" /><SkeletonBlock className="map-skeleton-block" /></SkeletonPanel>}
           {mapStatus === 'missing-key' && '카카오 지도 키가 설정되지 않았어요. .env.local의 VITE_KAKAO_MAP_APP_KEY를 확인해 주세요.'}
           {mapStatus === 'error' && '카카오 지도를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'}
         </div>
@@ -270,6 +271,7 @@ function MapAPI() {
         ))}
         {nearbyStatus === 'empty' && <small role="status">이 주변에는 장소가 없어요.</small>}
         {nearbyStatus === 'error' && <small role="status">주변 장소를 불러오지 못했어요.</small>}
+        {nearbyStatus === 'loading' && mapStatus === 'ready' && <span className="map-nearby-skeleton" role="status" aria-label="주변 장소를 불러오는 중입니다."><SkeletonBlock /><SkeletonBlock /><SkeletonBlock /></span>}
       </div>
 
       {selectedPlace && (

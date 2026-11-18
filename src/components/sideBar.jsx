@@ -11,9 +11,10 @@ import settingIcon from '../icons/settingIcon.png';
 import { getLoginId, getToken } from '../api/session.js';
 import { memberApi } from '../services/memberApi.js';
 import { showErrorToast } from './AppToasts';
+import { SkeletonBlock } from './Skeleton';
 import '../styles/sideBar.css';
 
-function SideBar({ profile }) {
+function SideBar({ profile, profileLoading = false }) {
   const { pathname } = useLocation();
   const loginId = getLoginId();
   const [displayName, setDisplayName] = useState(loginId || '사용자');
@@ -39,8 +40,10 @@ function SideBar({ profile }) {
     <div className="sidebar-container">
       <Link to="/settings" className="sidebar-profile-link" aria-label="프로필 설정으로 이동" aria-current={isCurrent('/settings') ? 'page' : undefined} onClick={handleFeatureNavigation}>
         <div className="profile-container">
-          <img src={profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="" className="profile-img" />
-          <span className="user-name">{profile?.nickname || displayName}</span>
+          {profileLoading ? <><SkeletonBlock circle className="sidebar-profile-skeleton" /><SkeletonBlock className="sidebar-name-skeleton" /></> : <>
+            <img src={profileImageSource(profile?.profileImageUrl) || DEFAULT_PROFILE_IMAGE} alt="" className="profile-img" />
+            <span className="user-name">{profile?.nickname || displayName}</span>
+          </>}
         </div>
       </Link>
       <nav className="menu-container" aria-label="사이드 메뉴">
