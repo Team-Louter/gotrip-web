@@ -5,7 +5,7 @@ import gotripjoinUpscaled from '../images/gotrip-join-upscaled.jpeg';
 import { Navigate, useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
 import { readSignupDraft, updateSignupDraft } from '../services/signupDraft';
-import { isValidSignupBirthDate, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation';
+import { signupBirthDateError, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation';
 import Toast from '../components/Toast';
 
 function SignUp2() {
@@ -16,7 +16,7 @@ function SignUp2() {
   const [nickname, setNickname] = useState(draft.nickname || '');
   const [error, setError] = useState('');
   const validAccount = Boolean(draft.loginId?.trim() && isValidSignupPassword(draft.password) && draft.password === draft.passwordConfirm);
-  const canContinue = isValidSignupBirthDate(birthDate) && isValidSignupEmail(email) && Boolean(nickname.trim());
+  const canContinue = Boolean(birthDate.trim() && email.trim() && nickname.trim());
 
   function next(event) {
     event.preventDefault();
@@ -24,10 +24,8 @@ function SignUp2() {
       setError('첫 번째 단계의 계정 정보를 다시 입력해주세요.');
       return;
     }
-    if (!isValidSignupBirthDate(birthDate)) {
-      setError('실제 날짜를 YYYYMMDD 형식으로 입력해주세요.');
-      return;
-    }
+    const birthDateError = signupBirthDateError(birthDate);
+    if (birthDateError) return setError(birthDateError);
     if (!isValidSignupEmail(email)) return setError('올바른 이메일 주소를 입력해주세요.');
     if (!nickname.trim()) return setError('닉네임을 입력해주세요.');
     const normalizedBirthDate = birthDate.trim().replace(/[-/]/g, '');
@@ -42,7 +40,7 @@ function SignUp2() {
       <h1>회원 정보를 입력해주세요.</h1>
       <div className='card-wap'>
         <img className='gotrip-join' src={gotripjoin} srcSet={`${gotripjoin} 3024w, ${gotripjoinUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 500px" alt="" decoding="async" />
-        <form className='card-from' onSubmit={next}>
+        <form className='card-from' onSubmit={next} noValidate>
           <img className='gotrip-logo' src={gotriplogo} alt="gotrip-logo" />
           <label htmlFor="signup-birthdate">생년월일</label>
           <input id="signup-birthdate" type="text" inputMode="numeric" placeholder='YYYYMMDD' value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />

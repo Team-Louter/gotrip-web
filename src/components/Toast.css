@@ -12,6 +12,16 @@
   pointer-events: none;
 }
 
+.auth-toast-stack-in-dialog {
+  position: fixed;
+  z-index: 3;
+  top: 20px;
+  right: auto;
+  left: 50%;
+  width: min(480px, calc(100vw - 32px));
+  transform: translateX(-50%);
+}
+
 .auth-toast-region {
   position: relative;
   box-sizing: border-box;
@@ -99,28 +109,6 @@
   height: 18px;
 }
 
-.auth-toast-progress {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  border-radius: 0 0 16px 16px;
-  background: #edc928;
-  transform: scaleX(1);
-  transform-origin: left center;
-  animation: auth-toast-progress 3000ms linear forwards;
-}
-
-.auth-toast.is-paused .auth-toast-progress {
-  animation-play-state: paused;
-}
-
-.auth-toast.is-closing .auth-toast-progress {
-  animation: none;
-  transform: scaleX(0);
-}
-
 @keyframes auth-toast-enter {
   0% { opacity: 0; transform: translateY(-24px) scale(0.94); }
   68% { opacity: 1; transform: translateY(3px) scale(1.015); }
@@ -131,10 +119,31 @@
   to { opacity: 0; transform: translateY(-8px) scale(0.98); }
 }
 
-@keyframes auth-toast-progress {
+@media (prefers-reduced-motion: reduce) {
+  .auth-toast, .auth-toast.is-closing { animation: none; }
+}
+
+.auth-toast[data-tone='deleted'] {
+  border-color: #f2c4c4;
+  color: #a32929;
+  background: #fff1f1;
+}
+
+.auth-toast-progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  border-radius: 0 4px 4px 0;
+  background: #ebc420;
+  transform-origin: left;
+  animation: auth-toast-countdown linear both;
+}
+
+@keyframes auth-toast-countdown {
+  from { transform: scaleX(1); }
   to { transform: scaleX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-toast, .auth-toast.is-closing { animation: none; }
+  .auth-toast-progress { animation-timing-function: step-end; }
 }

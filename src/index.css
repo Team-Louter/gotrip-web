@@ -35,3 +35,9 @@ button {
 button, input, textarea, select {
   font-family: inherit;
 }
+/* Keep the field's own background and text when the browser fills it. */
+input:autofill,
+input:-webkit-autofill {
+  background-clip: text;
+  -webkit-text-fill-color: currentColor;
+}

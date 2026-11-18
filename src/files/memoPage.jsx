@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getToken } from '../api/session'
-import { showSuccessToast } from '../components/AppToasts'
 import { matchesMemo, memoApi } from '../services/memoApi'
 import '../styles/memoPage.css'
+import { showErrorToast, showSuccessToast, showToast } from '../components/AppToasts'
 
 function Memo() {
   const [memos, setMemos] = useState([])
@@ -21,12 +21,15 @@ function Memo() {
   const focusTitleRef = useRef(false)
   const savedTimerRef = useRef(null)
   const mutationBusy = useRef(false)
+  const deleteDialogRef = useRef(null)
+  const pendingDeleteRef = useRef(null)
 
   const current = memos.find((memo) => memo.id === selectedId)
   const filteredMemos = memos.filter((memo) => matchesMemo(memo, query))
   const loadingDetail = current && !current.isNew && detail.id !== selectedId
   const detailError = detail.id === selectedId ? detail.error : null
   const problem = actionError || detailError || list.error
+  const canCreate = list.status === 'ready' && !busy && Boolean(getToken())
   const editable = Boolean(current && !loadingDetail && !detailError && !busy)
 
   useEffect(() => {
@@ -76,6 +79,10 @@ function Memo() {
   }
 
   function updateCurrent(patch) {
+    if (!current && canCreate) {
+      addDraft({ title: '', ...patch })
+      return
+    }
     if (!editable) return
     resetNotice()
     setMemos((previous) => previous.map((memo) => memo.id === selectedId ? { ...memo, ...patch, dirty: true } : memo))
@@ -94,14 +101,15 @@ function Memo() {
     setSelectedId(memo.id)
   }
 
-  function handleAddMemo() {
-    if (mutationBusy.current || list.status !== 'ready') return
+  function addDraft(patch = {}, focusTitle = false) {
+    if (mutationBusy.current || !canCreate) return
     resetNotice()
-    const memo = { id: `draft:${crypto.randomUUID()}`, title: '새 메모', body: '', summary: '', summaryDraft: '', summaryDirty: false, isNew: true, dirty: true }
+    const memo = { id: `draft:${crypto.randomUUID()}`, title: '새 메모', body: '', summary: '', summaryDraft: '', summaryDirty: false, isNew: true, dirty: true, ...patch }
     setMemos((previous) => [memo, ...previous])
     setQuery('')
     setSelectedId(memo.id)
-    focusTitleRef.current = true
+    focusTitleRef.current = focusTitle
+    showSuccessToast('새 메모를 추가했어요.')
   }
 
   async function handleSave(event) {
@@ -114,10 +122,11 @@ function Memo() {
       const memo = current.isNew ? await memoApi.createMemo(current) : await memoApi.updateMemo(current.id, current)
       setMemos((previous) => previous.map((item) => item.id === current.id ? { ...item, ...memo } : item))
       setSelectedId(memo.id)
-      setSaved('memo')
-      showSuccessToast('메모가 저장되었습니다.')
-      savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
-    } catch (error) { setActionError(error) }
+      showSuccessToast('메모를 저장했어요.')
+    } catch (error) {
+      setActionError(error)
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
@@ -129,15 +138,18 @@ function Memo() {
     try {
       const summary = await memoApi.saveSummary(current.id, current.summaryDraft)
       setMemos((previous) => previous.map((memo) => memo.id === current.id ? { ...memo, summary, summaryDraft: summary, summaryDirty: false } : memo))
+      showSuccessToast('한줄 요약을 저장했어요.')
       setSaved('summary')
-      showSuccessToast('한줄 요약이 저장되었습니다.')
       savedTimerRef.current = setTimeout(() => setSaved(null), 1600)
-    } catch (error) { setActionError(error) }
+    } catch (error) {
+      setActionError(error)
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
   async function handleDeleteMemo(memo) {
-    if (mutationBusy.current || !window.confirm('이 메모를 삭제할까요?')) return
+    if (mutationBusy.current) return
     mutationBusy.current = true
     setBusy(true)
     resetNotice()
@@ -146,11 +158,15 @@ function Memo() {
       const index = memos.findIndex((item) => item.id === memo.id)
       const remaining = memos.filter((item) => item.id !== memo.id)
       setMemos(remaining)
+      showToast('메모를 삭제했습니다.', 'deleted')
       if (memo.id === selectedId) {
         setDetail({ id: null, error: null })
         setSelectedId((remaining[index] ?? remaining[index - 1])?.id ?? null)
       }
-    } catch (error) { setActionError(error) }
+    } catch (error) {
+      setActionError(error)
+      showErrorToast(error.message || '요청을 처리하지 못했어요. 다시 시도해주세요.')
+    }
     finally { mutationBusy.current = false; setBusy(false) }
   }
 
@@ -167,6 +183,16 @@ function Memo() {
 
   return (
     <div className="memo-page">
+      <dialog ref={deleteDialogRef} className="memo-delete-dialog" aria-labelledby="memo-delete-title">
+        <h2 id="memo-delete-title">메모를 삭제하시겠습니까?</h2>
+        <div className="memo-delete-dialog-actions">
+          <button type="button" autoFocus onClick={() => deleteDialogRef.current.close()}>취소</button>
+          <button type="button" onClick={() => {
+            deleteDialogRef.current.close()
+            handleDeleteMemo(pendingDeleteRef.current)
+          }}>삭제</button>
+        </div>
+      </dialog>
       <form id="memo-editor" className="memo-board" onSubmit={handleSave} aria-label="메모 편집">
         {problem && <div className="memo-error" role="alert">
           <p>{problem.message || '요청을 처리하지 못했어요. 다시 시도해 주세요.'}</p>
@@ -180,7 +206,7 @@ function Memo() {
           value={current?.title ?? ''}
           onChange={(event) => updateCurrent({ title: event.target.value })}
           placeholder="제목"
-          disabled={!editable}
+          disabled={!editable && (Boolean(current) || !canCreate)}
         />
         <textarea
           className="memo-board-input"
@@ -194,7 +220,7 @@ function Memo() {
             }
           }}
           placeholder="여기에 자유롭게 메모하세요 (5자 이상)"
-          disabled={!editable}
+          disabled={!editable && (Boolean(current) || !canCreate)}
         />
         <div className="memo-board-actions">
           <span role="status">{list.status === 'loading' || loadingDetail ? '메모를 불러오는 중이에요.' : ''}</span>
@@ -204,13 +230,13 @@ function Memo() {
       <div className="memo-side">
         <div className="memo-header">
           <h2>메모</h2>
-          <button type="button" className="memo-plus" aria-label="새 메모 추가" onClick={handleAddMemo} disabled={busy || list.status !== 'ready' || !getToken()}>+</button>
+          <button type="button" className="memo-plus" aria-label="새 메모 추가" onClick={() => addDraft({}, true)} disabled={!canCreate}>+</button>
         </div>
         <div className="memo-list-box">
           <input className="memo-search" type="search" aria-label="메모 검색" placeholder="메모 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
           <div className="memo-list" ref={listRef} aria-label="메모 목록" aria-busy={list.status === 'loading'}>
             {list.status === 'loading' && <p className="memo-empty">메모를 불러오는 중이에요.</p>}
-            {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">메모가 없어요. + 버튼으로 새 메모를 추가해 보세요.</p>}
+            {list.status === 'ready' && memos.length === 0 && <p className="memo-empty">제목이나 내용을 입력하면 새 메모가 추가돼요.</p>}
             {list.status === 'ready' && memos.length > 0 && filteredMemos.length === 0 && <p className="memo-empty">검색 결과가 없어요.</p>}
             {filteredMemos.map((memo) => (
               <div key={memo.id} className={`memo-item${memo.id === selectedId ? ' selected' : ''}`}
@@ -223,7 +249,7 @@ function Memo() {
                 <div className="memo-item-top">
                   <p className="memo-item-title">{memo.title || '제목 없음'}</p>
                   <button type="button" className="memo-delete" aria-label={`${memo.title || '제목 없음'} 삭제`} disabled={busy}
-                    onClick={(event) => { event.stopPropagation(); handleDeleteMemo(memo) }}>삭제</button>
+                    onClick={(event) => { event.stopPropagation(); pendingDeleteRef.current = memo; deleteDialogRef.current.showModal() }}>삭제</button>
                 </div>
                 {memo.summary && <p className="memo-item-summary">{memo.summary}</p>}
               </div>

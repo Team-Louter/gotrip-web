@@ -6,7 +6,7 @@ import gotripcheck from '../images/gotrip-check.png';
 import { useNavigate } from 'react-router-dom';
 import '../styles/signUp.css';
 import { readSignupDraft, updateSignupDraft } from '../services/signupDraft';
-import { isValidSignupPassword, passwordTypeCount } from '../data/signupValidation';
+import { signupPasswordError, signupPasswordRules } from '../data/signupValidation';
 import Toast from '../components/Toast';
 
 function SignUp() {
@@ -17,20 +17,16 @@ function SignUp() {
   const [passwordConfirm, setPasswordConfirm] = useState(draft.passwordConfirm || '');
   const [error, setError] = useState('');
   const passwordsMatch = password === passwordConfirm;
-  const canContinue = Boolean(loginId.trim() && isValidSignupPassword(password) && passwordConfirm && passwordsMatch);
-  const passwordRules = [
-    { label: '8자 이상, 20자 이하', valid: password.length >= 8 && password.length <= 20 },
-    { label: '대문자·소문자·숫자·특수문자 중 3종 이상', valid: passwordTypeCount(password) >= 3 },
-    { label: '3자 이상 동일 문자/숫자 연속 사용 금지', valid: !/(.)\1\1/.test(password) },
-  ];
+  const canContinue = Boolean(loginId.trim() && password && passwordConfirm);
+  const passwordRules = signupPasswordRules(password);
 
   function next(event) {
     event.preventDefault();
     const enteredPassword = event.currentTarget.querySelector('#signup-password')?.value ?? password;
     const confirmedPassword = event.currentTarget.querySelector('#signup-password-confirm')?.value ?? passwordConfirm;
-    const validPassword = isValidSignupPassword(enteredPassword);
+    const passwordError = signupPasswordError(enteredPassword);
     if (!loginId.trim()) return setError('아이디를 입력해주세요.');
-    if (!validPassword) return setError('비밀번호는 8~20자이며 대문자·소문자·숫자·특수문자 중 3종 이상 포함하고 같은 문자를 3번 연속 사용할 수 없습니다.');
+    if (passwordError) return setError(passwordError);
     if (enteredPassword !== confirmedPassword) return setError('비밀번호가 동일하지 않습니다.');
     setError('');
     updateSignupDraft({ loginId: loginId.trim(), password: enteredPassword, passwordConfirm: confirmedPassword });
@@ -42,7 +38,7 @@ function SignUp() {
       <h1>회원 정보를 입력해주세요.</h1>
       <div className='card-wap'>
         <img className='gotrip-join' src={gotripjoin} srcSet={`${gotripjoin} 3024w, ${gotripjoinUpscaled} 6048w`} sizes="(max-width: 800px) 1px, 500px" alt="" decoding="async" />
-        <form className='card-from' onSubmit={next}>
+        <form className='card-from' onSubmit={next} noValidate>
           <img className='gotrip-logo' src={gotriplogo} alt="gotrip-logo" />
           <label htmlFor="signup-id">아이디</label>
           <input id="signup-id" type="text" autoComplete="username" value={loginId} onChange={(e) => setLoginId(e.target.value)} required />

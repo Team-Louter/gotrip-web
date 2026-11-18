@@ -1,6 +1,6 @@
 import { apiRequest } from '../api/client.js';
 import { saveToken } from '../api/session.js';
-import { isValidSignupBirthDate, isValidSignupEmail, isValidSignupPassword } from '../data/signupValidation.js';
+import { isValidSignupEmail, signupBirthDateError, signupPasswordError } from '../data/signupValidation.js';
 
 const environment = import.meta.env ?? {};
 const localAuthBaseUrl = 'http://localhost:8080';
@@ -28,9 +28,11 @@ export function createAuthApi({ request = apiRequest, prefix, storeToken = saveT
       email: email?.trim(), nickname: nickname?.trim(),
     };
     if (!body.loginId || !body.nickname) throw new Error('아이디와 닉네임을 입력해주세요.');
-    if (!isValidSignupPassword(password)) throw new Error('비밀번호는 8~20자이며 대문자·소문자·숫자·특수문자 중 3종 이상 포함하고 같은 문자를 3번 연속 사용할 수 없습니다.');
+    const passwordError = signupPasswordError(password);
+    if (passwordError) throw new Error(passwordError);
     if (password !== passwordConfirm) throw new Error('비밀번호가 동일하지 않습니다. 회원 정보를 다시 확인해주세요.');
-    if (!isValidSignupBirthDate(body.birthDate)) throw new Error('실제 날짜를 YYYYMMDD 형식으로 입력해주세요.');
+    const birthDateError = signupBirthDateError(body.birthDate);
+    if (birthDateError) throw new Error(birthDateError);
     if (!isValidSignupEmail(body.email)) throw new Error('올바른 이메일 주소를 입력해주세요.');
     // 로컬 인증 서버는 약관 동의 필드를 받고, 운영 Swagger는 회원 필드만 받습니다.
     if (base === '/api/auth') Object.assign(body, { termsAccepted, marketingAccepted });

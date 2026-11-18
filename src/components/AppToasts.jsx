@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import Toast from './Toast';
+import { createPortal } from 'react-dom';
+import Toast, { TOAST_DURATION } from './Toast';
 
 const listeners = new Set();
 let toastSequence = 0;
@@ -7,7 +8,7 @@ const MAX_VISIBLE_TOASTS = 2;
 
 export function showToast(message, tone = 'error') {
   if (!message) return;
-  const item = { id: ++toastSequence, message, tone };
+  const item = { id: ++toastSequence, message, tone, expiresAt: performance.now() + TOAST_DURATION };
   listeners.forEach((listener) => listener(item));
 }
 
@@ -21,6 +22,7 @@ export function showErrorToast(message) {
 
 export default function AppToasts() {
   const [activeToasts, setActiveToasts] = useState([]);
+  const [dialogTarget, setDialogTarget] = useState(null);
   const addToast = useCallback((item) => {
     setActiveToasts((current) => [item, ...current].slice(0, MAX_VISIBLE_TOASTS));
   }, []);
@@ -33,16 +35,29 @@ export default function AppToasts() {
     return () => listeners.delete(addToast);
   }, [addToast]);
 
-  return (
-    <div className="auth-toast-stack" aria-label="알림">
+  useEffect(() => {
+    const updateDialogTarget = () => {
+      setDialogTarget(document.querySelector('dialog[open]'));
+    };
+    updateDialogTarget();
+    const observer = new MutationObserver(updateDialogTarget);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const stack = (
+    <div className={`auth-toast-stack${dialogTarget ? ' auth-toast-stack-in-dialog' : ''}`} aria-label="알림">
       {activeToasts.map((item) => (
         <Toast
           key={item.id}
           message={item.message}
           tone={item.tone}
+          expiresAt={item.expiresAt}
           onClose={() => closeToast(item.id)}
         />
       ))}
     </div>
   );
+
+  return dialogTarget ? createPortal(stack, dialogTarget) : stack;
 }
