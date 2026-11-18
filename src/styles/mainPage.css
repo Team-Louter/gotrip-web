@@ -2,7 +2,6 @@
   flex: 1;
   min-height: 100vh;
 
-  background-image: url(../images/mainImg.png);
   background-size: cover;
   background-position: center;
 
@@ -26,6 +25,8 @@ a {
 .few-word {
   font-size: 30px;
   font-weight: bolder;
+  color: #fff;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
 }
 
 .project-button {
